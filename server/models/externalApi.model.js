@@ -9,16 +9,21 @@ const SESSION_TIMEOUT = 24 * 60 * 1000; // 24h session timeout
 
 export class ExternalApi {
   constructor() {
-    if (!process.env.XUI_USERNAME || !process.env.XUI_PASSWORD) {
+    const requiredEnvVars = ["XUI_WEB_URL", "XUI_USERNAME", "XUI_PASSWORD"];
+    const missingVars = requiredEnvVars.filter(
+      (envVar) => !process.env[envVar]
+    );
+
+    if (missingVars.length > 0) {
       throw new Error(
-        "XUI credentials not configured in environment variables"
+        `Missing required environment variables: ${missingVars.join(", ")}`
       );
     }
 
     this.cookieJar = new CookieJar();
     this.api = wrapper(
       axios.create({
-        baseURL: "https://iamdiamondone.online:2002/heoughten",
+        baseURL: process.env.XUI_WEB_URL,
         jar: this.cookieJar,
         withCredentials: true,
       })
