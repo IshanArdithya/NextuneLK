@@ -11,12 +11,8 @@ const UsageChecker = () => {
     download: 0.0,
     upload: 0.0,
     totalAvailable: 0.0,
-    expiration: new Date().toISOString(),
+    expiration: "",
   });
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [username, setUsername] = useState("");
 
   const [name, setName] = useState("");
   const [animatedTotalGB, setAnimatedTotalGB] = useState(0);
@@ -58,36 +54,6 @@ const UsageChecker = () => {
   };
 
   const theme = themes[selectedTheme];
-
-  useEffect(() => {
-    const fetchUsageData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/external/getUsage/${username}`);
-        if (!response.ok) throw new Error("Failed to fetch usage data");
-        const data = await response.json();
-
-        setUsage({
-          name: data.name,
-          status: data.status,
-          download: parseFloat(data.download),
-          upload: parseFloat(data.upload),
-          total: parseFloat(data.total),
-          expiry: data.expiry,
-        });
-
-        setIsVisible(true);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (username) {
-      fetchUsageData();
-    }
-  }, [username]);
 
   useEffect(() => {
     setTimeout(() => {
