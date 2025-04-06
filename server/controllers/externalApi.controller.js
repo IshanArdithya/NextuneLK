@@ -35,8 +35,10 @@ export const getClientUsage = async (req, res) => {
     const response = await externalApi.getClientTraffics(email);
 
     if (response.data.success) {
-      const { up, down, total, expiryTime } = response.data.obj;
+      const { email, enable, up, down, total, expiryTime } = response.data.obj;
       const processedData = {
+        name: email,
+        status: enable,
         upload: (up / 1073741824).toFixed(2) + " GB",
         download: (down / 1073741824).toFixed(2) + " GB",
         total: total === 0 ? 0 : (total / 1073741824).toFixed(2) + " GB",
