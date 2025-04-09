@@ -2,7 +2,6 @@
   "name": "web-3x",
   "version": "1.0.0",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "dev:server": "npm run dev --prefix server",
@@ -20,5 +19,8 @@
     "url": "https://github.com/IshanArdithya/web-3x/issues"
   },
   "homepage": "https://github.com/IshanArdithya/web-3x#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "concurrently": "^9.1.2"
+  }
 }
