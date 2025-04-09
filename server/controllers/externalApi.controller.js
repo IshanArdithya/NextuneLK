@@ -34,9 +34,18 @@ export const getClientUsage = async (req, res) => {
     const { email } = req.params;
     const response = await externalApi.getClientTraffics(email);
 
+    if (!response.data.obj) {
+      return res.status(404).json({
+        error: response.data.msg || "User not found",
+        code: "USER_NOT_FOUND",
+      });
+    }
+
     if (response.data.success) {
-      const { up, down, total, expiryTime } = response.data.obj;
+      const { email, enable, up, down, total, expiryTime } = response.data.obj;
       const processedData = {
+        name: email,
+        status: enable,
         upload: (up / 1073741824).toFixed(2) + " GB",
         download: (down / 1073741824).toFixed(2) + " GB",
         total: total === 0 ? 0 : (total / 1073741824).toFixed(2) + " GB",
@@ -53,17 +62,21 @@ export const getClientUsage = async (req, res) => {
 
     let statusCode = 500;
     let errorMessage = "Server Error";
+    let errorCode = "SERVER_ERROR";
 
     if (error.message.includes("authentication")) {
       statusCode = 401;
       errorMessage = "Authentication failed";
+      errorCode = "AUTH_FAILED";
     } else if (error.response) {
       statusCode = error.response.status || 500;
       errorMessage = error.response.data?.msg || error.message;
+      errorCode = error.response.data?.code || "API_ERROR";
     }
 
     res.status(statusCode).json({
       error: errorMessage,
+      code: errorCode,
       details:
         process.env.NODE_ENV === "development" ? error.message : undefined,
     });
