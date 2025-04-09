@@ -2,7 +2,13 @@
 
 import Cookies from "js-cookie";
 
-import { Calendar, Clock, Infinity, UserX } from "lucide-react";
+import {
+  Calendar,
+  CheckCircle2,
+  Hourglass,
+  Infinity,
+  UserX,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import {
@@ -33,10 +39,11 @@ const UsageChecker = () => {
 
   const [animatedTotalGB, setAnimatedTotalGB] = useState(0);
   const [animatedPercentage, setAnimatedPercentage] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { theme, setTheme } = useTheme();
   const [isVisible, setIsVisible] = useState(false);
-
   const [isLoading, setIsLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState<FetchError | undefined>();
 
   const fetchUsageData = async (username: string): Promise<void> => {
@@ -52,7 +59,7 @@ const UsageChecker = () => {
 
         if (response.status === 429) {
           toast.error(errorData.message || "Too many requests", {
-            icon: "⏳",
+            icon: <Hourglass />,
             duration: errorData.retryAfter * 1000,
           });
           throw {
@@ -62,7 +69,7 @@ const UsageChecker = () => {
           } as RateLimitError;
         } else if (errorData.error === "user_not_found") {
           toast.error(errorData.message || "User not found", {
-            icon: <UserX className="h-4 w-4" />,
+            icon: <UserX />,
           });
           throw {
             isUserNotFound: true,
@@ -83,7 +90,9 @@ const UsageChecker = () => {
         path: "/usage",
       });
 
-      toast.success("Usage data loaded successfully");
+      toast.success("Usage data loaded successfully", {
+        icon: <CheckCircle2 />,
+      });
     } catch (error: unknown) {
       if (isRateLimitError(error)) {
         setError(error);
@@ -220,25 +229,6 @@ const UsageChecker = () => {
             : "opacity-0 transform translate-y-5"
         }`}
       >
-        {/* error message */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-500/20 text-red-300 rounded-lg text-sm">
-            {isRateLimitError(error) ? (
-              <div className="flex items-center">
-                <Clock className="h-4 w-4 mr-2" />
-                <span>{error.message}</span>
-              </div>
-            ) : isUserNotFoundError(error) ? (
-              <div className="flex items-center">
-                <UserX className="h-4 w-4 mr-2" />
-                <span>{error.message}</span>
-              </div>
-            ) : (
-              error.message
-            )}
-          </div>
-        )}
-
         {/* loading indicator */}
         {isLoading && (
           <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center z-50">
