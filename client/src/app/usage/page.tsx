@@ -1,59 +1,114 @@
 "use client";
 
-import { Calendar } from "lucide-react";
+import Cookies from "js-cookie";
+
+import { Calendar, Clock, Infinity, UserX } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTheme } from "@/context/ThemeContext";
+import {
+  FetchError,
+  isRateLimitError,
+  isUserNotFoundError,
+  RateLimitError,
+  UserNotFoundError,
+} from "@/types/errors";
+import { toast } from "react-hot-toast";
+
+const cookiesExpiration = Number(process.env.COOKIES_EXP);
 
 const UsageChecker = () => {
   const [usage, setUsage] = useState({
     name: "",
     status: false,
-    total: 0.0,
+    totalUsed: 0.0,
     download: 0.0,
     upload: 0.0,
     totalAvailable: 0.0,
-    expiration: "",
+    expiry: "",
   });
 
-  const [name, setName] = useState("");
+  const [name, setName] = useState(() => {
+    return Cookies.get("username") || "";
+  });
+
   const [animatedTotalGB, setAnimatedTotalGB] = useState(0);
   const [animatedPercentage, setAnimatedPercentage] = useState(0);
-  const [selectedTheme, setSelectedTheme] = useState("teal");
+  const { theme, setTheme } = useTheme();
   const [isVisible, setIsVisible] = useState(false);
 
-  const themes = {
-    indigo: {
-      primary: "from-indigo-500 to-violet-600",
-      light: "from-indigo-400 to-violet-400",
-      accent: "bg-indigo-600 hover:bg-indigo-700",
-      border: "border-indigo-500/30",
-      ring: "ring-indigo-500",
-      text: "text-indigo-400",
-      icon: "text-indigo-400",
-      iconBg: "bg-indigo-500/20",
-    },
-    teal: {
-      primary: "from-teal-500 to-emerald-600",
-      light: "from-teal-400 to-emerald-400",
-      accent: "bg-teal-600 hover:bg-teal-700",
-      border: "border-teal-500/30",
-      ring: "ring-teal-500",
-      text: "text-teal-400",
-      icon: "text-teal-400",
-      iconBg: "bg-teal-500/20",
-    },
-    purple: {
-      primary: "from-purple-500 to-pink-600",
-      light: "from-purple-400 to-pink-400",
-      accent: "bg-purple-600 hover:bg-purple-700",
-      border: "border-purple-500/30",
-      ring: "ring-purple-500",
-      text: "text-purple-400",
-      icon: "text-purple-400",
-      iconBg: "bg-purple-500/20",
-    },
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<FetchError | undefined>();
+
+  const fetchUsageData = async (username: string): Promise<void> => {
+    setIsLoading(true);
+    setError(undefined);
+    try {
+      const response = await fetch(
+        `/api/usage/${encodeURIComponent(username)}`
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+
+        if (response.status === 429) {
+          toast.error(errorData.message || "Too many requests", {
+            icon: "⏳",
+            duration: errorData.retryAfter * 1000,
+          });
+          throw {
+            isRateLimit: true,
+            message: errorData.message,
+            retryAfter: errorData.retryAfter,
+          } as RateLimitError;
+        } else if (errorData.error === "user_not_found") {
+          toast.error(errorData.message || "User not found", {
+            icon: <UserX className="h-4 w-4" />,
+          });
+          throw {
+            isUserNotFound: true,
+            message: errorData.message || "User not found",
+          } as UserNotFoundError;
+        } else {
+          toast.error(errorData.message || "Failed to fetch data");
+          throw new Error(errorData.message || "Failed to fetch data");
+        }
+      }
+      const data = await response.json();
+      setUsage(data);
+
+      Cookies.set("username", username, {
+        expires: cookiesExpiration,
+        secure: true,
+        sameSite: "strict",
+        path: "/usage",
+      });
+
+      toast.success("Usage data loaded successfully");
+    } catch (error: unknown) {
+      if (isRateLimitError(error)) {
+        setError(error);
+      } else if (isUserNotFoundError(error)) {
+        setError(error);
+      } else if (error instanceof Error) {
+        setError(error);
+        toast.error(error.message);
+      } else {
+        const unknownError = new Error("An unknown error occurred");
+        setError(unknownError);
+        toast.error(unknownError.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const theme = themes[selectedTheme];
+  useEffect(() => {
+    const savedUsername = Cookies.get("username");
+    if (savedUsername && savedUsername.trim()) {
+      setName(savedUsername);
+      fetchUsageData(savedUsername);
+    }
+  }, []);
 
   useEffect(() => {
     setTimeout(() => {
@@ -61,14 +116,30 @@ const UsageChecker = () => {
     }, 100);
 
     const timer = setTimeout(() => {
-      if (usage.totalAvailable <= 0) {
-        setAnimatedTotalGB(0);
-        setAnimatedPercentage(0);
-        return;
+      if (!usage.totalAvailable || usage.totalAvailable <= 0) {
+        const targetTotalGB = usage.totalUsed || 0;
+        let progressTotalGB = 0;
+        const steps = 100;
+        const incrementTotalGB = targetTotalGB / steps;
+        const intervalTime = 20;
+
+        const interval = setInterval(() => {
+          progressTotalGB += incrementTotalGB;
+          const roundedTotalGB = Math.round(progressTotalGB * 10) / 10;
+
+          setAnimatedTotalGB(roundedTotalGB);
+
+          if (roundedTotalGB >= targetTotalGB) {
+            setAnimatedTotalGB(targetTotalGB);
+            clearInterval(interval);
+          }
+        }, intervalTime);
+
+        return () => clearInterval(interval);
       }
 
-      const targetTotalGB = usage.total;
-      const targetPercentage = (usage.total / usage.totalAvailable) * 100;
+      const targetTotalGB = usage.totalUsed;
+      const targetPercentage = (usage.totalUsed / usage.totalAvailable) * 100;
 
       let progressTotalGB = 0;
       let progressPercentage = 0;
@@ -98,36 +169,83 @@ const UsageChecker = () => {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [usage.total, usage.totalAvailable]);
+  }, [usage.totalUsed, usage.totalAvailable]);
 
   const circumference = 2 * Math.PI * 110;
   const strokeDashoffset =
     circumference - (animatedPercentage / 100) * circumference;
 
   const handleCheckUsage = () => {
-    if (name.trim()) {
-      // API call
-      console.log(`Checking usage for: ${name}`);
+    const trimmedName = name.trim();
+    if (trimmedName) {
+      fetchUsageData(trimmedName);
     }
   };
 
-  const formatDataAmount = (gb) => {
+  const formatDataAmount = (gb: number) => {
     return gb.toFixed(1);
   };
 
-  const daysLeft = Math.ceil(
-    (new Date(usage.expiration).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-  );
+  const getStatusText = (
+    status: boolean,
+    expiry: string,
+    totalUsed: number,
+    totalAvailable: number
+  ): string => {
+    if (status) return "Active";
+
+    const now = new Date();
+    const isExpired = new Date(expiry).getTime() < now.getTime();
+    const isQuotaExceeded = totalUsed >= totalAvailable;
+
+    if (isExpired) return "Inactive (Expired)";
+    if (isQuotaExceeded) return "Inactive (Quota Exceeded)";
+    return "Inactive";
+  };
+
+  const expirationDate = new Date(usage.expiry);
+  const now = new Date();
+  const timeDiff = expirationDate.getTime() - now.getTime();
+  const daysLeft = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+  const hoursLeft = Math.floor(timeDiff / (1000 * 60 * 60));
+  const minutesLeft = Math.floor(timeDiff / (1000 * 60));
+  const secondsLeft = Math.floor(timeDiff / 1000);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
       <div
-        className={`relative bg-gray-800/50 backdrop-blur-lg rounded-3xl p-8 w-full max-w-5xl border border-gray-700/50 shadow-2xl overflow-hidden transition-all duration-500 ease-out ${
+        className={`relative bg-slate-900 backdrop-blur-lg rounded-3xl p-8 w-full max-w-5xl border border-gray-700/50 shadow-2xl overflow-hidden transition-all duration-500 ease-out ${
           isVisible
             ? "opacity-100 transform translate-y-0"
             : "opacity-0 transform translate-y-5"
         }`}
       >
+        {/* error message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/20 text-red-300 rounded-lg text-sm">
+            {isRateLimitError(error) ? (
+              <div className="flex items-center">
+                <Clock className="h-4 w-4 mr-2" />
+                <span>{error.message}</span>
+              </div>
+            ) : isUserNotFoundError(error) ? (
+              <div className="flex items-center">
+                <UserX className="h-4 w-4 mr-2" />
+                <span>{error.message}</span>
+              </div>
+            ) : (
+              error.message
+            )}
+          </div>
+        )}
+
+        {/* loading indicator */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center z-50">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          </div>
+        )}
+
         {/* decorative elements */}
         <div className="absolute -top-12 -right-12 w-64 h-64 bg-gradient-to-br opacity-20 rounded-full blur-3xl" />
         <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-gradient-to-tr opacity-20 rounded-full blur-3xl" />
@@ -139,15 +257,13 @@ const UsageChecker = () => {
           }`}
         >
           <h1
-            className={`text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r ${theme.light} mb-3`}
+            className={`text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r ${theme.light} mb-5`}
           >
             Summary
           </h1>
 
-          <div className="flex items-center justify-center space-x-3">
-            <span className="text-gray-300 text-lg whitespace-nowrap">
-              HelloWorld-
-            </span>
+          <div className="flex items-center justify-center space-x-3 text-sm sm:text-base">
+            <span className="text-gray-300 whitespace-nowrap">HelloWorld-</span>
             <div className="relative flex-1 max-w-md">
               <input
                 type="text"
@@ -155,19 +271,26 @@ const UsageChecker = () => {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
                 className={`w-full bg-gray-700/50 border border-gray-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 ${theme.ring} transition-all`}
+                onKeyPress={(e) => e.key === "Enter" && handleCheckUsage()}
               />
             </div>
             <button
               onClick={handleCheckUsage}
-              className={`${theme.accent} text-white px-5 py-3 rounded-xl transition-all duration-200 whitespace-nowrap shadow-lg hover:scale-105 active:scale-95`}
+              disabled={isLoading}
+              className={`${theme.accent} text-white px-5 py-3 rounded-xl transition-all duration-200 whitespace-nowrap shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              Check
+              {isLoading ? (
+                <>
+                  <span className="hidden sm:inline">Checking...</span>
+                  <span className="sm:hidden">...</span>
+                </>
+              ) : (
+                <>
+                  <span className="hidden sm:inline">Check Usage</span>
+                  <span className="sm:hidden">Check</span>
+                </>
+              )}
             </button>
-            {/* <button
-              className={`py-3 px-5 ${theme.accent} rounded-xl text-white font-medium transition-all duration-200 flex items-center justify-center shadow-lg hover:scale-102 active:scale-98`}
-            >
-              <RefreshCw className="h-5 w-5" />
-            </button> */}
           </div>
         </div>
 
@@ -268,7 +391,10 @@ const UsageChecker = () => {
                           transition: "all 0.5s ease-out 0.4s",
                         }}
                       >
-                        of {usage.totalAvailable}GB
+                        of{" "}
+                        {usage.totalAvailable > 0
+                          ? `${usage.totalAvailable} GB`
+                          : `Unlimited`}
                       </div>
                       <div
                         className={`mt-2 px-3 py-1 rounded-full inline-block text-sm font-semibold font-[Poppins] ${
@@ -284,7 +410,11 @@ const UsageChecker = () => {
                           transition: "all 0.5s ease-out 0.5s",
                         }}
                       >
-                        {animatedPercentage.toFixed(1)}% used
+                        {usage.totalAvailable > 0 ? (
+                          `${animatedPercentage.toFixed(1)}% used`
+                        ) : (
+                          <Infinity className="h-3 w-3" />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -320,22 +450,51 @@ const UsageChecker = () => {
                   <div>
                     <p className="text-gray-300 text-xs">Expires on</p>
                     <p className="text-white text-sm font-medium">
-                      {new Date(usage.expiration).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
+                      {!usage.expiry
+                        ? "Never"
+                        : new Date(usage.expiry).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
                     </p>
                   </div>
                 </div>
                 <div
                   className={`text-xs px-2.5 py-1 rounded-full ${
-                    daysLeft <= 7
+                    !usage.expiry || usage.expiry === "0"
+                      ? "bg-white/10 text-white"
+                      : daysLeft <= 7
                       ? "bg-red-500/20 text-red-300"
                       : "bg-white/10 text-white"
-                  } transition-all group-hover:scale-105`}
+                  } transition-all group-hover:scale-105 flex items-center gap-1`}
                 >
-                  {daysLeft} days left
+                  {!usage.expiry || usage.expiry === "0" ? (
+                    <>
+                      <Infinity className="h-3 w-3" />
+                    </>
+                  ) : (
+                    <>
+                      {daysLeft > 1
+                        ? `${daysLeft} days left`
+                        : daysLeft === 1
+                        ? "1 day left"
+                        : hoursLeft >= 1
+                        ? `${hoursLeft} ${
+                            hoursLeft === 1 ? "hour" : "hours"
+                          } left`
+                        : minutesLeft >= 1
+                        ? `${minutesLeft} ${
+                            minutesLeft === 1 ? "minute" : "minutes"
+                          } left`
+                        : secondsLeft > 0
+                        ? "Less than 1 minute left"
+                        : "Expired"}
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -379,18 +538,16 @@ const UsageChecker = () => {
                           : "text-red-400"
                       }`}
                     >
-                      {usage.status ? "Active" : "Inactive"}
+                      {getStatusText(
+                        usage.status,
+                        usage.expiry,
+                        usage.totalUsed,
+                        usage.totalAvailable
+                      )}
                     </span>
                   </div>
                 </div>
               </div>
-
-              {/* Optional additional info - uncomment if needed */}
-              {/* <div className="mt-4 pt-4 border-t border-gray-600/50">
-    <div className="text-sm text-gray-400">
-      Last active: {lastActive || "Never"}
-    </div>
-  </div> */}
             </div>
 
             {/* stats cards */}
@@ -476,13 +633,19 @@ const UsageChecker = () => {
                       <span className="text-indigo-400 font-medium">
                         {formatDataAmount(usage.download)}GB
                       </span>
-                      <span className="text-gray-400 ml-2 xs:ml-0 xs:block">
-                        {(
-                          (usage.download / usage.totalAvailable) *
-                          100
-                        ).toFixed(1)}
-                        %
-                      </span>
+                      {!usage.totalAvailable ? (
+                        <></>
+                      ) : (
+                        <>
+                          <span className="text-gray-400 ml-2 xs:ml-0 xs:block">
+                            {(
+                              (usage.download / usage.totalAvailable) *
+                              100
+                            ).toFixed(1)}
+                            %
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="flex xs:flex-col justify-between xs:justify-start">
@@ -491,33 +654,50 @@ const UsageChecker = () => {
                       <span className="text-teal-400 font-medium">
                         {formatDataAmount(usage.upload)}GB
                       </span>
-                      <span className="text-gray-400 ml-2 xs:ml-0 xs:block">
-                        {((usage.upload / usage.totalAvailable) * 100).toFixed(
-                          1
-                        )}
-                        %
-                      </span>
+                      {!usage.totalAvailable ? (
+                        <></>
+                      ) : (
+                        <>
+                          <span className="text-gray-400 ml-2 xs:ml-0 xs:block">
+                            {(
+                              (usage.upload / usage.totalAvailable) *
+                              100
+                            ).toFixed(1)}
+                            %
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="flex xs:flex-col justify-between xs:justify-start">
                     <span className="text-gray-400 xs:mb-1">Remaining:</span>
                     <div>
-                      <span className="text-gray-300 font-medium">
-                        {formatDataAmount(
-                          usage.totalAvailable - usage.download - usage.upload
-                        )}
-                        GB
-                      </span>
-                      <span className="text-gray-400 ml-2 xs:ml-0 xs:block">
-                        {(
-                          ((usage.totalAvailable -
-                            usage.download -
-                            usage.upload) /
-                            usage.totalAvailable) *
-                          100
-                        ).toFixed(1)}
-                        %
-                      </span>
+                      {!usage.totalAvailable ? (
+                        <>
+                          <span>Unlimited</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-gray-300 font-medium">
+                            {formatDataAmount(
+                              usage.totalAvailable -
+                                usage.download -
+                                usage.upload
+                            )}
+                            GB
+                          </span>
+                          <span className="text-gray-400 ml-2 xs:ml-0 xs:block">
+                            {(
+                              ((usage.totalAvailable -
+                                usage.download -
+                                usage.upload) /
+                                usage.totalAvailable) *
+                              100
+                            ).toFixed(1)}
+                            %
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

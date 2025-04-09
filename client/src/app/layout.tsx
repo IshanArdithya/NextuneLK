@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import FrameHeader from "@/components/header";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { CustomToaster } from "@/components/CustomToast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,14 +25,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {/* <FrameHeader /> */}
-        {/* <div className="pt-16 pl-2 pr-2 pb-2 min-h-screen">{children}</div> */}
-        <div>{children}</div>
-      </body>
-    </html>
+    <ThemeProvider>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <div>{children}</div>
+          <CustomToaster />
+        </body>
+      </html>
+    </ThemeProvider>
   );
 }
