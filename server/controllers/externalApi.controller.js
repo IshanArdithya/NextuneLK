@@ -1,31 +1,43 @@
+import dotenv from "dotenv";
 import { ExternalApi } from "../models/externalApi.model.js";
 
+dotenv.config();
 const externalApi = new ExternalApi();
 
-// session maintenance
 const maintainSession = async () => {
   try {
-    if (externalApi.isLoggedIn) {
-      const now = Date.now();
-      if (now - externalApi.lastLoginTime > SESSION_TIMEOUT * 0.8) {
-        await externalApi.login(true);
-      }
-    } else {
-      await externalApi.login();
-    }
+    console.log("Running session maintenance...");
+    await externalApi.login(true);
   } catch (error) {
-    console.error("Session maintenance error:", error.message);
+    console.error(
+      "Session maintenance error:",
+      error.response?.data?.msg || error.message
+    );
   }
 };
 
-// start session maintenance interval (every 5 minutes)
-setInterval(maintainSession, 5 * 60 * 1000);
+// start session maintenance interval
+const MAINTENANCE_INTERVAL_MS = process.env.SESSION_DURATION * 60 * 60 * 1000;
+const maintenanceInterval = setInterval(
+  maintainSession,
+  MAINTENANCE_INTERVAL_MS
+);
+
+// cleanup on process exit
+process.on("SIGINT", () => {
+  clearInterval(maintenanceInterval);
+  process.exit();
+});
 
 export const getSessionStatus = async (req, res) => {
   try {
     res.json(externalApi.getSessionStatus());
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      msg: error.message,
+      obj: null,
+    });
   }
 };
 
@@ -36,8 +48,9 @@ export const getClientUsage = async (req, res) => {
 
     if (!response.data.obj) {
       return res.status(404).json({
-        error: response.data.msg || "User not found",
-        code: "USER_NOT_FOUND",
+        success: false,
+        msg: response.data.msg || "User not found",
+        obj: null,
       });
     }
 
@@ -46,39 +59,52 @@ export const getClientUsage = async (req, res) => {
       const processedData = {
         name: email,
         status: enable,
-        upload: (up / 1073741824).toFixed(2) + " GB",
-        download: (down / 1073741824).toFixed(2) + " GB",
-        total: total === 0 ? 0 : (total / 1073741824).toFixed(2) + " GB",
-        expiry: expiryTime === 0 ? 0 : new Date(expiryTime).toLocaleString(),
+        upload: (up / 1073741824).toFixed(2),
+        download: (down / 1073741824).toFixed(2),
+        total: total === 0 ? 0 : (total / 1073741824).toFixed(2),
+        expiry: expiryTime === 0 ? 0 : new Date(expiryTime).toISOString(),
         raw: response.data.obj,
       };
-      return res.json(processedData);
-    }
-    return res
-      .status(404)
-      .json({ error: response.data.msg || "User not found" });
-  } catch (error) {
-    console.error("API Error:", error.message);
-
-    let statusCode = 500;
-    let errorMessage = "Server Error";
-    let errorCode = "SERVER_ERROR";
-
-    if (error.message.includes("authentication")) {
-      statusCode = 401;
-      errorMessage = "Authentication failed";
-      errorCode = "AUTH_FAILED";
-    } else if (error.response) {
-      statusCode = error.response.status || 500;
-      errorMessage = error.response.data?.msg || error.message;
-      errorCode = error.response.data?.code || "API_ERROR";
+      return res.json({
+        success: true,
+        msg: "Data retrieved successfully",
+        obj: processedData,
+      });
     }
 
-    res.status(statusCode).json({
-      error: errorMessage,
-      code: errorCode,
-      details:
-        process.env.NODE_ENV === "development" ? error.message : undefined,
+    return res.status(404).json({
+      success: false,
+      msg: response.data.msg || "User not found",
+      obj: null,
     });
+  } catch (error) {
+    console.error("API Error:", error.response?.data?.msg || error.message);
+
+    const statusCode = error.response?.status || 500;
+    const errorData = error.response?.data || {
+      success: false,
+      msg: "Server Error",
+      obj: null,
+    };
+
+    res.status(statusCode).json(errorData);
   }
 };
+
+// export const logout = async (req, res) => {
+//   try {
+//     const result = await externalApi.logout();
+//     res.json({
+//       success: true,
+//       msg: "Logged out successfully",
+//       obj: result,
+//     });
+//   } catch (error) {
+//     console.error("Logout error:", error.response?.data?.msg || error.message);
+//     res.status(500).json({
+//       success: false,
+//       msg: error.response?.data?.msg || "Logout failed",
+//       obj: null,
+//     });
+//   }
+// };
