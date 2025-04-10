@@ -5,20 +5,12 @@ import { CookieJar } from "tough-cookie";
 
 dotenv.config();
 
-const SESSION_TIMEOUT = 24 * 60 * 1000; // 24h session timeout
+const SESSION_TIMEOUT = process.env.SESSION_DURATION * 60 * 60 * 1000; // 24h session timeout
+const MAX_RETRY_ATTEMPTS = 3;
 
 export class ExternalApi {
   constructor() {
-    const requiredEnvVars = ["XUI_WEB_URL", "XUI_USERNAME", "XUI_PASSWORD"];
-    const missingVars = requiredEnvVars.filter(
-      (envVar) => !process.env[envVar]
-    );
-
-    if (missingVars.length > 0) {
-      throw new Error(
-        `Missing required environment variables: ${missingVars.join(", ")}`
-      );
-    }
+    this.validateEnvVars();
 
     this.cookieJar = new CookieJar();
     this.api = wrapper(
@@ -30,6 +22,20 @@ export class ExternalApi {
     );
     this.lastLoginTime = 0;
     this.isLoggedIn = false;
+    this.loginAttempts = 0;
+  }
+
+  validateEnvVars() {
+    const requiredEnvVars = ["XUI_WEB_URL", "XUI_USERNAME", "XUI_PASSWORD"];
+    const missingVars = requiredEnvVars.filter(
+      (envVar) => !process.env[envVar]
+    );
+
+    if (missingVars.length > 0) {
+      throw new Error(
+        `Missing required environment variables: ${missingVars.join(", ")}`
+      );
+    }
   }
 
   async login(force = false) {
@@ -54,19 +60,42 @@ export class ExternalApi {
       );
 
       if (!res.data.success) {
-        throw new Error("Login failed: " + (res.data.msg || "Unknown error"));
+        throw {
+          response: {
+            data: {
+              success: false,
+              msg: res.data.msg || "Login failed",
+              obj: null,
+            },
+          },
+        };
       }
 
       this.isLoggedIn = true;
       this.lastLoginTime = now;
+      this.loginAttempts = 0;
       return true;
     } catch (error) {
       this.isLoggedIn = false;
+      this.loginAttempts++;
+
+      if (this.loginAttempts >= MAX_RETRY_ATTEMPTS) {
+        throw {
+          response: {
+            data: {
+              success: false,
+              msg: "Maximum login attempts reached",
+              obj: null,
+            },
+          },
+        };
+      }
+
       throw error;
     }
   }
 
-  async getClientTraffics(email) {
+  async getClientTraffics(email, attempt = 1) {
     try {
       if (!this.isLoggedIn) {
         await this.login();
@@ -80,13 +109,37 @@ export class ExternalApi {
         typeof response.data === "string" &&
         response.data.includes("<!DOCTYPE html>")
       ) {
-        await this.login(true); // force re-login
-        return this.api.get(`/panel/api/inbounds/getClientTraffics/${email}`);
+        if (attempt >= MAX_RETRY_ATTEMPTS) {
+          throw {
+            response: {
+              data: {
+                success: false,
+                msg: "Error Fetching Usage (Code - 001)",
+                obj: null,
+              },
+            },
+          };
+        }
+
+        await this.login(true);
+        return this.getClientTraffics(email, attempt + 1);
       }
 
       return response;
     } catch (error) {
-      throw error;
+      if (error.response && error.response.data) {
+        throw error;
+      }
+
+      throw {
+        response: {
+          data: {
+            success: false,
+            msg: error.message || "Unknown error",
+            obj: null,
+          },
+        },
+      };
     }
   }
 
@@ -103,4 +156,29 @@ export class ExternalApi {
         : 0,
     };
   }
+
+  // async logout() {
+  //   try {
+  //     const response = await this.api.get("/logout");
+  //     this.isLoggedIn = false;
+  //     this.lastLoginTime = 0;
+  //     return {
+  //       success: true,
+  //       msg: "Logged out successfully",
+  //       obj: response.data,
+  //     };
+  //   } catch (error) {
+  //     this.isLoggedIn = false;
+  //     this.lastLoginTime = 0;
+  //     throw {
+  //       response: {
+  //         data: {
+  //           success: false,
+  //           msg: error.response?.data?.msg || "Logout failed",
+  //           obj: null,
+  //         },
+  //       },
+  //     };
+  //   }
+  // }
 }
