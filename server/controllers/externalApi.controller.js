@@ -65,11 +65,7 @@ export const getClientUsage = async (req, res) => {
         expiry: expiryTime === 0 ? 0 : new Date(expiryTime).toISOString(),
         raw: response.data.obj,
       };
-      return res.json({
-        success: true,
-        msg: "Data retrieved successfully",
-        obj: processedData,
-      });
+      return res.json(processedData);
     }
 
     return res.status(404).json({
