@@ -8,5 +8,6 @@ const router = express.Router();
 
 router.get("/session-status", getSessionStatus);
 router.get("/getUsage/:email", getClientUsage);
+// router.get("/logout", logout);
 
 export default router;
