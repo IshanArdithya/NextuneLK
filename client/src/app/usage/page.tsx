@@ -85,9 +85,10 @@ const UsageChecker = () => {
 
       Cookies.set("username", username, {
         expires: cookiesExpiration,
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         path: "/usage",
+        domain: window.location.hostname,
       });
 
       toast.success("Usage data loaded successfully", {
