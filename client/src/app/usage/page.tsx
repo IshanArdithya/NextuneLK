@@ -1,7 +1,5 @@
 "use client";
 
-import Cookies from "js-cookie";
-
 import {
   Calendar,
   CheckCircle2,
@@ -20,8 +18,6 @@ import {
 } from "@/types/errors";
 import { toast } from "react-hot-toast";
 
-const cookiesExpiration = Number(process.env.COOKIES_EXP);
-
 const UsageChecker = () => {
   const [usage, setUsage] = useState({
     name: "",
@@ -33,9 +29,7 @@ const UsageChecker = () => {
     expiry: "",
   });
 
-  const [name, setName] = useState(() => {
-    return Cookies.get("username") || "";
-  });
+  const [name, setName] = useState("");
 
   const [animatedTotalGB, setAnimatedTotalGB] = useState(0);
   const [animatedPercentage, setAnimatedPercentage] = useState(0);
@@ -45,6 +39,18 @@ const UsageChecker = () => {
   const [isLoading, setIsLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState<FetchError | undefined>();
+
+  useEffect(() => {
+    const savedUsername =
+      typeof window !== "undefined"
+        ? localStorage.getItem("username") || ""
+        : "";
+    setName(savedUsername);
+
+    if (savedUsername && savedUsername.trim()) {
+      fetchUsageData(savedUsername);
+    }
+  }, []);
 
   const fetchUsageData = async (username: string): Promise<void> => {
     setIsLoading(true);
@@ -83,12 +89,9 @@ const UsageChecker = () => {
       const data = await response.json();
       setUsage(data);
 
-      Cookies.set("username", username, {
-        expires: cookiesExpiration,
-        secure: true,
-        sameSite: "strict",
-        path: "/usage",
-      });
+      if (typeof window !== "undefined") {
+        localStorage.setItem("username", username);
+      }
 
       toast.success("Usage data loaded successfully", {
         icon: <CheckCircle2 />,
@@ -110,14 +113,6 @@ const UsageChecker = () => {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    const savedUsername = Cookies.get("username");
-    if (savedUsername && savedUsername.trim()) {
-      setName(savedUsername);
-      fetchUsageData(savedUsername);
-    }
-  }, []);
 
   useEffect(() => {
     setTimeout(() => {
