@@ -7,6 +7,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Valid username required" });
   }
 
+  const normalizedUsername = username.toLowerCase().trim();
+
   const safeParse = (value) => {
     try {
       if (value === 0) return 0;
@@ -26,7 +28,9 @@ export default async function handler(req, res) {
 
   try {
     const backendResponse = await fetch(
-      `${backendUrl}/api/external/getUsage/${encodeURIComponent(username)}`,
+      `${backendUrl}/api/external/getUsage/${encodeURIComponent(
+        normalizedUsername
+      )}`,
       {
         headers: {
           "Content-Type": "application/json",
