@@ -54,7 +54,7 @@ export const CustomToaster = () => (
     position="top-center"
     gutter={8}
     toastOptions={{
-      duration: 15000,
+      duration: 3000,
       className: "",
       style: {
         border: "none",
