@@ -1,115 +1,112 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Menu } from "lucide-react";
+import { motion } from 'framer-motion'
+import { Menu, Shield, Zap, Globe, Settings } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
-const FrameHeader = () => {
-  const [showFrame, setShowFrame] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
+const navItems = [
+  { 
+    name: 'Features', 
+    path: '/features',
+    icon: <Zap className="w-4 h-4" />
+  },
+  { 
+    name: 'Servers', 
+    path: '/servers',
+    icon: <Globe className="w-4 h-4" />
+  },
+  { 
+    name: 'Security', 
+    path: '/security',
+    icon: <Shield className="w-4 h-4" />
+  },
+  { 
+    name: 'Usage', 
+    path: '/usage',
+    icon: <Settings className="w-4 h-4" />
+  },
+]
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (showFrame && !target.closest(".frame-container") && !isAnimating) {
-        setShowFrame(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showFrame, isAnimating]);
-
-  const toggleFrame = () => {
-    setIsAnimating(true);
-    setShowFrame(!showFrame);
-    setTimeout(() => setIsAnimating(false), 500);
-  };
+export default function Header() {
+  const pathname = usePathname()
 
   return (
-    <>
-      {/* Main Frame Container - Now using transform for smooth sliding */}
-      <div
-        className={`fixed left-0 right-0 z-50 bg-white border-b-2 border-l-2 border-r-2 border-white frame-container h-[150px] transition-transform duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] transform ${
-          showFrame ? "translate-y-0" : "-translate-y-[100px]"
-        }`}
-      >
-        {/* Navigation Content */}
-        <div
-          className={`px-6 py-4 transition-opacity duration-300 ${
-            showFrame
-              ? "opacity-100 delay-100"
-              : "opacity-0 h-0 overflow-hidden"
-          }`}
+    <motion.header 
+      className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-b border-zinc-800 shadow-lg"
+      initial={{ y: -100 }}
+      animate={{ 
+        y: 0,
+        transition: { type: 'spring', stiffness: 300, damping: 20 }
+      }}
+    >
+      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+        {/* Logo with connection animation */}
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2"
         >
-          <nav className="hidden md:flex w-full">
-            {[
-              { id: "home", heading: "Home", title: "Landing", active: true },
-              { id: "usage", heading: "Usage", title: "Data Usage" },
-              { id: "about", heading: "About Us", title: "How are we?" },
-              { id: "contact", heading: "Contact", title: "Contact Info" },
-            ].map((item) => (
+          <motion.div
+            animate={{ 
+              opacity: [0.6, 1, 0.6],
+              scale: [0.9, 1.1, 0.9]
+            }}
+            transition={{ 
+              repeat: Infinity, 
+              duration: 2,
+              ease: "easeInOut"
+            }}
+            className="w-2 h-2 rounded-full bg-teal-400"
+          />
+          <Link href="/" className="text-xl font-bold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
+            NexTuneLK
+          </Link>
+        </motion.div>
+
+        {/* Desktop Nav with connection indicators */}
+        <nav className="hidden md:flex gap-2">
+          {navItems.map((item) => (
+            <motion.div 
+              key={item.path}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative"
+            >
               <Link
-                key={item.id}
-                href={`/${item.id}`}
-                className="flex flex-col space-y-1 flex-1 text-center px-4 py-2"
+                href={item.path}
+                className={`flex items-center gap-1 px-4 py-2 rounded-lg transition-colors ${
+                  pathname === item.path 
+                    ? 'text-white font-medium bg-zinc-800/50' 
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/30'
+                }`}
               >
-                <span
-                  className={`text-lg font-medium ${
-                    item.active ? "text-orange-600" : "text-black"
-                  }`}
-                >
-                  {item.heading}
-                </span>
-                <span
-                  className={`text-lg font-medium ${
-                    item.active ? "text-black" : "text-gray-500"
-                  }`}
-                >
-                  {item.title}
-                </span>
+                {item.icon}
+                {item.name}
+                {pathname === item.path && (
+                  <motion.div 
+                    layoutId="nav-ping"
+                    className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-teal-400"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', bounce: 0.6 }}
+                  />
+                )}
               </Link>
-            ))}
-          </nav>
-        </div>
+            </motion.div>
+          ))}
+        </nav>
 
-        {/* Menu Button - Fixed at what appears to be the bottom */}
-        <div className="absolute bottom-0 left-0 right-0 flex justify-center py-2">
-          <button
-            onClick={toggleFrame}
-            className="flex items-center justify-center w-8 h-8 focus:outline-none transition-transform duration-500 hover:scale-110"
-          >
-            <Menu
-              className={`w-6 h-6 transition-transform duration-500 ${
-                showFrame ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-        </div>
+        {/* Connection status button */}
+        <motion.button
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-zinc-800 to-zinc-700 text-sm font-medium"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          Connect
+        </motion.button>
       </div>
-
-      {/* Left Frame */}
-      <div
-        className={`fixed left-0 top-0 bottom-0 w-5 bg-white z-40 transition-all duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
-          showFrame ? "translate-x-0" : "-translate-x-full"
-        }`}
-      />
-
-      {/* Right Frame */}
-      <div
-        className={`fixed right-0 top-0 bottom-0 w-5 bg-white z-40 transition-all duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
-          showFrame ? "translate-x-0" : "translate-x-full"
-        }`}
-      />
-
-      {/* Bottom Frame */}
-      <div
-        className={`fixed bottom-0 left-0 right-0 h-5 bg-white z-40 transition-all duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
-          showFrame ? "translate-y-0" : "translate-y-full"
-        }`}
-      />
-    </>
-  );
-};
-
-export default FrameHeader;
+    </motion.header>
+  )
+}
