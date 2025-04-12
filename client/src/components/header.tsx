@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Menu, Shield, Zap, Globe, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { themes, type ThemeKey } from '@/lib/themes'
 
 const navItems = [
   { 
@@ -28,20 +29,26 @@ const navItems = [
   },
 ]
 
-export default function Header() {
+export default function Header({ themeKey = 'teal' }: { themeKey?: ThemeKey }) {
   const pathname = usePathname()
+  const theme = themes[themeKey]
 
   return (
     <motion.header 
-      className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-b border-zinc-800 shadow-lg"
+      className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md shadow-lg"
+      style={{ borderBottom: `1px solid ${theme.border.replace('/30', '/50')}` }}
       initial={{ y: -100 }}
       animate={{ 
         y: 0,
-        transition: { type: 'spring', stiffness: 300, damping: 20 }
+        transition: { 
+          type: 'spring', 
+          stiffness: 300, 
+          damping: 20,
+        }
       }}
     >
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-        {/* Logo with connection animation */}
+        {/* Logo */}
         <motion.div
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -57,14 +64,14 @@ export default function Header() {
               duration: 2,
               ease: "easeInOut"
             }}
-            className="w-2 h-2 rounded-full bg-teal-400"
+            className={`w-2 h-2 rounded-full ${theme.icon}`}
           />
-          <Link href="/" className="text-xl font-bold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
+          <Link href="/" className={`text-xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent`}>
             NexTuneLK
           </Link>
         </motion.div>
 
-        {/* Desktop Nav with connection indicators */}
+        {/* Nav */}
         <nav className="hidden md:flex gap-2">
           {navItems.map((item) => (
             <motion.div 
@@ -77,33 +84,24 @@ export default function Header() {
                 href={item.path}
                 className={`flex items-center gap-1 px-4 py-2 rounded-lg transition-colors ${
                   pathname === item.path 
-                    ? 'text-white font-medium bg-zinc-800/50' 
+                    ? `text-white font-medium ${theme.iconBg}`
                     : 'text-zinc-400 hover:text-white hover:bg-zinc-800/30'
                 }`}
               >
                 {item.icon}
                 {item.name}
-                {pathname === item.path && (
-                  <motion.div 
-                    layoutId="nav-ping"
-                    className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-teal-400"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', bounce: 0.6 }}
-                  />
-                )}
               </Link>
             </motion.div>
           ))}
         </nav>
 
-        {/* Connection status button */}
+        {/* Connect button */}
         <motion.button
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-zinc-800 to-zinc-700 text-sm font-medium"
+          className={`flex items-center gap-2 px-4 py-2 rounded-full ${theme.accent} text-sm font-medium`}
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
         >
-          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          <span className={`w-2 h-2 rounded-full ${theme.icon} animate-pulse`}></span>
           Connect
         </motion.button>
       </div>
