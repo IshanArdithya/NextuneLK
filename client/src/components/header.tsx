@@ -5,6 +5,8 @@ import { Menu, Shield, Zap, Globe, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { themes, type ThemeKey } from '@/lib/themes'
+import { useTheme } from '@/context/ThemeContext'
+import { type Theme } from '@/lib/themes'
 
 const navItems = [
   { 
@@ -31,8 +33,9 @@ const navItems = [
 
 export default function Header({ themeKey = 'teal' }: { themeKey?: ThemeKey }) {
   const pathname = usePathname()
-  const theme = themes[themeKey]
 
+  const { theme } = useTheme()
+  const currentTheme = themes[themeKey] || themes.teal
   return (
     <motion.header 
       className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md shadow-lg"
@@ -64,7 +67,7 @@ export default function Header({ themeKey = 'teal' }: { themeKey?: ThemeKey }) {
               duration: 2,
               ease: "easeInOut"
             }}
-            className={`w-2 h-2 rounded-full ${theme.icon}`}
+            className={`w-2 h-2 rounded-full ${theme.icon} animate-pulse`}
           />
           <Link href="/" className={`text-xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent`}>
             NexTuneLK

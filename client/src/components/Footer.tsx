@@ -4,6 +4,9 @@ import { motion } from 'framer-motion'
 import { Github, Twitter, Instagram, Youtube } from 'lucide-react'
 import Link from 'next/link'
 import { themes, type ThemeKey } from '@/lib/themes'
+import { useTheme } from '@/context/ThemeContext'
+import { type Theme } from '@/lib/themes'
+
 
 const socialLinks = [
   { icon: <Twitter size={18} />, url: '#' },
@@ -13,7 +16,9 @@ const socialLinks = [
 ]
 
 export default function Footer({ themeKey = 'teal' }: { themeKey?: ThemeKey }) {
-  const theme = themes[themeKey]
+
+  const { theme } = useTheme()
+  const currentTheme = themes[themeKey] || themes.teal
 
   return (
     <motion.footer
@@ -62,7 +67,7 @@ export default function Footer({ themeKey = 'teal' }: { themeKey?: ThemeKey }) {
 
           {/* Copyright */}
           <motion.p 
-            className={`text-xs ${theme.text}`}
+            className={`text-xs ${theme.primary}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
