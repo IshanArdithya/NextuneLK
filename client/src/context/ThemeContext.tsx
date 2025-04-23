@@ -1,31 +1,30 @@
-"use client";
+'use client'
 
-import { createContext, useContext, useState } from "react";
-import { ThemeKey, themes } from "@/lib/themes";
+import { createContext, useContext, useState, ReactNode } from 'react'
+import { themes, type ThemeKey, type Theme } from '@/lib/themes'
 
-type ThemeContextType = {
-  themeKey: ThemeKey;
-  theme: (typeof themes)[ThemeKey];
-  setTheme: (theme: ThemeKey) => void;
-};
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [themeKey, setThemeKey] = useState<ThemeKey>("emerald");
-  const theme = themes[themeKey];
-
-  return (
-    <ThemeContext.Provider value={{ themeKey, theme, setTheme: setThemeKey }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+interface ThemeContextType {
+  currentTheme: ThemeKey
+  theme: Theme
+  setTheme: (theme: ThemeKey) => void
 }
 
-export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider");
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+  const [currentTheme, setCurrentTheme] = useState<ThemeKey>('teal')
+
+  const value: ThemeContextType = {
+    currentTheme,
+    theme: themes[currentTheme],
+    setTheme: setCurrentTheme
   }
-  return context;
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+}
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext)
+  if (!context) throw new Error('useTheme must be used within a ThemeProvider')
+  return context
 }

@@ -6,7 +6,8 @@ import Header from "@/components/header"
 import Footer from "@/components/Footer"
 import type { ReactNode } from "react"
 import { motion } from "framer-motion"
-// import { ThemeSwitcher } from "@/components/ThemeSwitcher"
+import { useTheme } from "@/context/ThemeContext"
+import ThemeSwitcher from "@/components/ThemeSwitcher"
 
 
 export const metadata: Metadata = {
@@ -28,7 +29,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </main>
           
           <Footer />
-          {/* <ThemeSwitcher /> */}
+          <ThemeSwitcher />
           <CustomToaster />
         </ThemeProvider>
       </body>
