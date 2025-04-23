@@ -5,12 +5,15 @@ import { Zap, Shield, Globe, Server, Lock, Rocket, Cpu, BarChart2, User, Activit
 import Image from 'next/image'
 import { themes, type ThemeKey } from '@/lib/themes'
 import { useState } from 'react'
+import { useTheme } from '@/context/ThemeContext'
+import { type Theme } from '@/lib/themes'
 
 const themeKeys: ThemeKey[] = ['teal', 'indigo', 'purple', 'emerald']
 
 export default function Home() {
-  const [currentTheme, setCurrentTheme] = useState<ThemeKey>('teal')
-  const theme = themes[currentTheme]
+  const { currentTheme, theme } = useTheme()
+  const [currentThemeKey, setCurrentTheme] = useState<ThemeKey>(currentTheme)
+
 
   return (
     <div className={`min-h-screen bg-black ${theme.text}`}>
@@ -91,7 +94,133 @@ export default function Home() {
         </motion.div>
       </section>
 
-      
+      {/* Features Section */}
+      <section className="py-20 bg-gradient-to-b from-zinc-900 to-zinc-950">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold text-white mb-4">The Sri Lankan Advantage</h2>
+            <p className="text-xl text-zinc-400 max-w-3xl mx-auto">
+              Local expertise with world-class Singaporean infrastructure
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                icon: <Server className={`w-8 h-8 ${theme.icon}`} />,
+                title: "Singapore Powered",
+                description: "Premium offshore servers for maximum uptime"
+              },
+              {
+                icon: <Shield className={`w-8 h-8 ${theme.icon}`} />,
+                title: "Local Support",
+                description: "24/7 assistance from our Colombo team"
+              },
+              {
+                icon: <Zap className={`w-8 h-8 ${theme.icon}`} />,
+                title: "Optimized Routing",
+                description: "Specialized paths for Sri Lankan ISPs"
+              },
+              {
+                icon: <Lock className={`w-8 h-8 ${theme.icon}`} />,
+                title: "No Data Limits",
+                description: "Unrestricted bandwidth for all users"
+              }
+            ].map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.6 }}
+                className={`p-6 rounded-xl border ${theme.border} bg-zinc-900/50 backdrop-blur-sm hover:bg-zinc-800/30 transition-all`}
+              >
+                <div className={`w-12 h-12 rounded-lg ${theme.iconBg} flex items-center justify-center mb-4`}>
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-zinc-400">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <motion.h2 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="text-4xl font-bold text-white mb-4"
+            >
+              <span className={`bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent`}>Why</span> Singapore Servers?
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+              className="text-xl text-zinc-400 max-w-3xl mx-auto"
+            >
+              We use Singapore's world-class datacenters to provide Sri Lankans with:
+            </motion.p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center"
+            >
+              <div className={`w-16 h-16 mx-auto rounded-xl ${theme.iconBg} flex items-center justify-center mb-4`}>
+                <Activity className={theme.icon} />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">99.99% Uptime</h3>
+              <p className="text-zinc-400">Enterprise-grade reliability from Singapore's Tier-4 datacenters</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center"
+            >
+              <div className={`w-16 h-16 mx-auto rounded-xl ${theme.iconBg} flex items-center justify-center mb-4`}>
+                <Globe className={theme.icon} />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Global Content</h3>
+              <p className="text-zinc-400">Access international services with Singapore IP addresses</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center"
+            >
+              <div className={`w-16 h-16 mx-auto rounded-xl ${theme.iconBg} flex items-center justify-center mb-4`}>
+                <Shield className={theme.icon} />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Enhanced Privacy</h3>
+              <p className="text-zinc-400">Singapore's strong privacy laws protect your data</p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
