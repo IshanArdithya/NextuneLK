@@ -13,6 +13,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  scroll-behavior: smooth;
+}
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -30,6 +33,7 @@ body {
   backface-visibility: hidden;
   transform-style: preserve-3d;
 }
+
 
 @keyframes text-shimmer {
   0%,
