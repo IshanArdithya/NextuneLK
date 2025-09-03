@@ -1,34 +1,35 @@
-name: NextuneLK Web
+name: Deploy to Server
 
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - temp
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
-
-      - name: Deploy to VPS
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: deploy
-          key: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script_stop: true
           script: |
-            cd /home/deploy/NextuneLK/client
-            git pull origin main
+            set -e
 
+            echo "Pulling latest code from temp branch..."
+            cd /home/deploy/NextuneLK/client
+            git fetch origin temp
+            git reset --hard origin/temp
+
+            echo "Building client..."
             docker build \
               --build-arg BACKEND_URL=${{ secrets.BACKEND_URL }} \
               --build-arg COOKIES_EXP=${{ secrets.COOKIES_EXP }} \
@@ -37,22 +38,26 @@ jobs:
 
             docker stop nextunelk-client || true
             docker rm nextunelk-client || true
-            docker run -d --restart unless-stopped -p 3000:3000 \
+            docker run -d --restart unless-stopped \
+              -p 3000:3000 \
               --name nextunelk-client nextunelk-client
 
+            echo "Building server..."
             cd /home/deploy/NextuneLK/server
-            git pull origin main
+            git fetch origin temp
+            git reset --hard origin/temp
 
             docker build -t nextunelk-server .
 
             docker stop nextunelk-server || true
             docker rm nextunelk-server || true
-            docker run -d --restart unless-stopped -p 5000:5000 \
-              -e MONGO_URI=${{ secrets.MONGO_URI }} \
-              -e PORT=${{ secrets.PORT }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e XUI_WEB_URL=${{ secrets.XUI_WEB_URL }} \
-              -e XUI_USERNAME=${{ secrets.XUI_USERNAME }} \
-              -e XUI_PASSWORD=${{ secrets.XUI_PASSWORD }} \
-              -e SESSION_DURATION=${{ secrets.SESSION_DURATION }} \
+            docker run -d --restart unless-stopped \
+              -p 5000:5000 \
+              -e MONGO_URI="${{ secrets.MONGO_URI }}" \
+              -e PORT="${{ secrets.PORT }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              -e XUI_WEB_URL="${{ secrets.XUI_WEB_URL }}" \
+              -e XUI_USERNAME="${{ secrets.XUI_USERNAME }}" \
+              -e XUI_PASSWORD="${{ secrets.XUI_PASSWORD }}" \
+              -e SESSION_DURATION="${{ secrets.SESSION_DURATION }}" \
               --name nextunelk-server nextunelk-server
