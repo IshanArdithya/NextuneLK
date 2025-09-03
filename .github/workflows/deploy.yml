@@ -28,20 +28,31 @@ jobs:
           script: |
             cd /home/deploy/NextuneLK/client
             git pull origin main
-            docker build -t nextunelk-client .
+
+            docker build \
+              --build-arg BACKEND_URL=${{ secrets.BACKEND_URL }} \
+              --build-arg COOKIES_EXP=${{ secrets.COOKIES_EXP }} \
+              --build-arg NODE_ENV=${{ secrets.NODE_ENV }} \
+              -t nextunelk-client .
+
             docker stop nextunelk-client || true
             docker rm nextunelk-client || true
-            docker run -d --restart unless-stopped \
-              -p 3000:3000 \
-              --env-file /home/deploy/NextuneLK/client/.env.local \
+            docker run -d --restart unless-stopped -p 3000:3000 \
               --name nextunelk-client nextunelk-client
-      
+
             cd /home/deploy/NextuneLK/server
             git pull origin main
+
             docker build -t nextunelk-server .
+
             docker stop nextunelk-server || true
             docker rm nextunelk-server || true
-            docker run -d --restart unless-stopped \
-              -p 5000:5000 \
-              --env-file /home/deploy/NextuneLK/server/.env \
+            docker run -d --restart unless-stopped -p 5000:5000 \
+              -e MONGO_URI=${{ secrets.MONGO_URI }} \
+              -e PORT=${{ secrets.PORT }} \
+              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+              -e XUI_WEB_URL=${{ secrets.XUI_WEB_URL }} \
+              -e XUI_USERNAME=${{ secrets.XUI_USERNAME }} \
+              -e XUI_PASSWORD=${{ secrets.XUI_PASSWORD }} \
+              -e SESSION_DURATION=${{ secrets.SESSION_DURATION }} \
               --name nextunelk-server nextunelk-server
