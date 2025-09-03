@@ -1,0 +1,41 @@
+name: NextuneLK Web
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: deploy
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /home/deploy/NextuneLK/client
+            git pull origin main
+            docker build -t nextunelk-client .
+            docker stop nextunelk-client || true
+            docker rm nextunelk-client || true
+            docker run -d --restart unless-stopped -p 3000:3000 --name nextunelk-client nextunelk-client
+
+            cd /home/deploy/NextuneLK/server
+            git pull origin main
+            docker build -t nextunelk-server .
+            docker stop nextunelk-server || true
+            docker rm nextunelk-server || true
+            docker run -d --restart unless-stopped -p 5000:5001 --name nextunelk-server nextunelk-server
