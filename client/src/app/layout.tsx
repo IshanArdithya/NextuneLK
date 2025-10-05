@@ -12,7 +12,7 @@ import ThemeSwitcher from "@/components/ThemeSwitcher"
 
 export const metadata: Metadata = {
   title: "NexTuneLK - Sri Lanka's Premium VPN Platform",
-  description: "Discover, stream, and enjoy the best music in Sri Lanka",
+  description: "Discover, stream, and enjoy the best VPN service in Sri Lanka",
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
