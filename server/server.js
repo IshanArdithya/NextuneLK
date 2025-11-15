@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import { rateLimit } from "express-rate-limit";
 import { MemoryStore } from "express-rate-limit";
 import { connectDB } from "./config/db.js";
@@ -10,6 +11,17 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT;
+
+app.use(
+  cors({
+    origin: ["http://localhost:3000"],
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
+
+app.use(express.json());
+connectDB();
 
 const dataRateLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -25,9 +37,6 @@ const dataRateLimiter = rateLimit({
   skip: (req) => req.method !== "GET",
   keyGenerator: (req) => req.ip,
 });
-
-app.use(express.json());
-connectDB();
 
 app.use("/api/admins", dataRateLimiter, adminRoutes);
 app.use("/api/external", dataRateLimiter, externalApiRoutes);

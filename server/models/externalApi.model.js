@@ -143,6 +143,93 @@ export class ExternalApi {
     }
   }
 
+  async getServerStatus(attempt = 1) {
+    try {
+      if (!this.isLoggedIn) {
+        await this.login();
+      }
+
+      const response = await this.api.post(`/server/status`);
+
+      if (
+        typeof response.data === "string" &&
+        response.data.includes("<!DOCTYPE html>")
+      ) {
+        if (attempt >= MAX_RETRY_ATTEMPTS) {
+          throw {
+            response: {
+              data: {
+                success: false,
+                msg: "Error Fetching Server Status (Code - 001)",
+                obj: null,
+              },
+            },
+          };
+        }
+
+        await this.login(true);
+        return this.getServerStatus(attempt + 1);
+      }
+      return response;
+    } catch (error) {
+      if (error.response && error.response.data) {
+        throw error;
+      }
+      throw {
+        response: {
+          data: {
+            success: false,
+            msg: error.message || "Unknown error",
+            obj: null,
+          },
+        },
+      };
+    }
+  }
+
+  async getOnlineUsers(attempt = 1) {
+    try {
+      if (!this.isLoggedIn) {
+        await this.login();
+      }
+
+      const response = await this.api.post(`/panel/api/inbounds/onlines`);
+
+      if (
+        typeof response.data === "string" &&
+        response.data.includes("<!DOCTYPE html>")
+      ) {
+        if (attempt >= MAX_RETRY_ATTEMPTS) {
+          throw {
+            response: {
+              data: {
+                success: false,
+                msg: "Error Fetching Online Users (Code - 001)",
+                obj: null,
+              },
+            },
+          };
+        }
+        await this.login(true);
+        return this.getOnlineUsers(attempt + 1);
+      }
+      return response;
+    } catch (error) {
+      if (error.response && error.response.data) {
+        throw error;
+      }
+      throw {
+        response: {
+          data: {
+            success: false,
+            msg: error.message || "Unknown error",
+            obj: null,
+          },
+        },
+      };
+    }
+  }
+
   getSessionStatus() {
     const now = Date.now();
     const sessionActive =
@@ -156,29 +243,4 @@ export class ExternalApi {
         : 0,
     };
   }
-
-  // async logout() {
-  //   try {
-  //     const response = await this.api.get("/logout");
-  //     this.isLoggedIn = false;
-  //     this.lastLoginTime = 0;
-  //     return {
-  //       success: true,
-  //       msg: "Logged out successfully",
-  //       obj: response.data,
-  //     };
-  //   } catch (error) {
-  //     this.isLoggedIn = false;
-  //     this.lastLoginTime = 0;
-  //     throw {
-  //       response: {
-  //         data: {
-  //           success: false,
-  //           msg: error.response?.data?.msg || "Logout failed",
-  //           obj: null,
-  //         },
-  //       },
-  //     };
-  //   }
-  // }
 }
