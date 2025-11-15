@@ -1,81 +1,72 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import { Github, Twitter, Instagram, Youtube } from 'lucide-react'
-import Link from 'next/link'
-import { themes, type ThemeKey } from '@/lib/themes'
-import { useTheme } from '@/context/ThemeContext'
-import { type Theme } from '@/lib/themes'
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { footerContent, footerLinks } from "@/constants/footer";
 
-
-const socialLinks = [
-  { icon: <Twitter size={18} />, url: '#' },
-  { icon: <Github size={18} />, url: '#' },
-  { icon: <Instagram size={18} />, url: '#' },
-  { icon: <Youtube size={18} />, url: '#' },
-]
-
-export default function Footer({ themeKey = 'teal' }: { themeKey?: ThemeKey }) {
-
-  const { theme } = useTheme()
-  const currentTheme = themes[themeKey] || themes.teal
-
+export default function Footer() {
   return (
-    <motion.footer
-      className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md"
-      style={{ borderTop: `1px solid ${theme.border.replace('/30', '/50')}` }}
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-    >
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          {/* Logo */}
+    <footer className="bg-background border-t border-border/50">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="grid md:grid-cols-2 gap-12 pb-8 border-b border-border/50 mb-8">
+          {/* l: logo & tagline */}
           <motion.div
-            animate={{ 
-              rotate: [0, 0, -0, 0],
-            }}
-            transition={{ 
-              repeat: Infinity, 
-              repeatType: "reverse", 
-              duration: 4 
-            }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            <Link href="/" className={`text-xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent`}>
-              NexTuneLK
+            <Link href="/" className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">
+                  {footerContent.logoShort}
+                </span>
+              </div>
+              <span className="font-bold text-lg">
+                {footerContent.logoText}
+              </span>
             </Link>
+            <p className="text-foreground/60 text-sm leading-relaxed">
+              {footerContent.tagline}
+            </p>
           </motion.div>
 
-          {/* Social links */}
-          <div className="flex gap-4">
-            {socialLinks.map((link, i) => (
-              <motion.a
-                key={i}
-                href={link.url}
-                target="_blank"
-                className={`text-zinc-400 hover:${theme.iconBg} p-2 rounded-full`}
-                whileHover={{ y: -3, scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-              >
-                {link.icon}
-              </motion.a>
-            ))}
-          </div>
-
-          {/* Copyright */}
-          <motion.p 
-            className={`text-xs ${theme.primary}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+          {/* right: quick links */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="grid grid-cols-2 gap-8"
           >
-            © {new Date().getFullYear()} NexTuneLK. All rights reserved.
-          </motion.p>
+            <div>
+              <h4 className="font-semibold text-sm mb-4">Services</h4>
+              <ul className="space-y-2 text-sm text-foreground/60 hover:text-foreground transition-colors">
+                {footerLinks.services.map((link, index) => (
+                  <li key={index}>
+                    <Link href={link.href}>{link.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-sm mb-4">Quick Links</h4>
+              <ul className="space-y-2 text-sm text-foreground/60 hover:text-foreground transition-colors">
+                {footerLinks.quickLinks.map((link, index) => (
+                  <li key={index}>
+                    <Link href={link.href}>{link.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <p className="text-sm text-foreground/50">
+            {footerContent.copyright}
+          </p>
+          <div className="flex gap-6 mt-6 md:mt-0"></div>
         </div>
       </div>
-    </motion.footer>
-  )
+    </footer>
+  );
 }
