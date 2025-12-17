@@ -6,10 +6,10 @@ export default function UsagePage() {
   return (
     <main className="bg-background text-foreground">
       <Navigation />
-      <div className="pt-20">
+      <div className="py-20">
         <UsageDashboard />
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </main>
   );
 }

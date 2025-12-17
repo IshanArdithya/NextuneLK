@@ -97,7 +97,7 @@ const ServerStatusIndicator = ({ status }: { status: string }) => {
         duration: 0.6,
         repeat: Number.POSITIVE_INFINITY,
         repeatDelay: 3,
-        ease: "easeInOut",
+        ease: "easeInOut" as const,
       },
     },
     flicker: {
@@ -111,7 +111,7 @@ const ServerStatusIndicator = ({ status }: { status: string }) => {
         duration: 0.5,
         repeat: Number.POSITIVE_INFINITY,
         repeatDelay: 3,
-        ease: "easeInOut",
+        ease: "easeInOut" as const,
       },
     },
     "double-blink": {
@@ -121,7 +121,7 @@ const ServerStatusIndicator = ({ status }: { status: string }) => {
         duration: 0.6,
         repeat: Number.POSITIVE_INFINITY,
         repeatDelay: 4,
-        ease: "easeInOut",
+        ease: "easeInOut" as const,
       },
     },
     fade: {
@@ -130,7 +130,7 @@ const ServerStatusIndicator = ({ status }: { status: string }) => {
         duration: 2,
         repeat: Number.POSITIVE_INFINITY,
         repeatDelay: 2,
-        ease: "easeInOut",
+        ease: "easeInOut" as const,
       },
     },
   };
@@ -143,7 +143,7 @@ const ServerStatusIndicator = ({ status }: { status: string }) => {
         className={`w-2.5 h-2.5 rounded-full ${styles.dotColor}`}
         animate={
           dotAnimationVariants[
-            styles.animationType as keyof typeof dotAnimationVariants
+          styles.animationType as keyof typeof dotAnimationVariants
           ]
         }
       />
@@ -156,60 +156,46 @@ const LockedPlaceholder = ({ isLoading }: { isLoading: boolean }) => {
   const pulseVariants = {
     animate: isLoading
       ? {
-          opacity: [0.6, 1, 0.6],
-          boxShadow: [
-            "0 0 0 0 rgba(249, 115, 22, 0.1)",
-            "0 4px 6px -1px rgba(249, 115, 22, 0.15)",
-            "0 0 0 0 rgba(249, 115, 22, 0.1)",
-          ],
-        }
+        opacity: [0.6, 1, 0.6],
+        boxShadow: [
+          "0 0 0 0 rgba(249, 115, 22, 0.1)",
+          "0 4px 6px -1px rgba(249, 115, 22, 0.15)",
+          "0 0 0 0 rgba(249, 115, 22, 0.1)",
+        ],
+      }
       : {
-          opacity: 0.6,
-        },
+        opacity: 0.6,
+      },
     transition: isLoading
       ? {
-          duration: 1.2,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: "easeInOut",
-        }
+        duration: 1.2,
+        repeat: Number.POSITIVE_INFINITY,
+        ease: "easeInOut" as const,
+      }
       : {
-          duration: 0,
-        },
+        duration: 0,
+      },
   };
 
   return (
     <div className="flex flex-col gap-8">
-      {isLoading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="flex justify-center"
-        >
-          <div className="flex flex-col items-center gap-3">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{
-                duration: 2,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "linear",
-              }}
-              className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full"
-            />
-            <p className="text-foreground/60 font-medium">
-              {usageContent.fetchMessage}
-            </p>
-          </div>
-        </motion.div>
-      )}
+
 
       {/* placeholder cards grid */}
-      <div className="grid md:grid-cols-2 gap-8 items-end">
+      <motion.div
+        className="grid md:grid-cols-2 gap-8 items-end"
+        variants={{
+          animate: { transition: { staggerChildren: 0.1 } },
+        }}
+        initial="initial"
+        animate="animate"
+      >
         {/* left col: circular progress + connection insights */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
+          variants={{
+            initial: { opacity: 0, scale: 0.95 },
+            animate: { opacity: 1, scale: 1 },
+          }}
           transition={{ duration: 0.4 }}
           className="flex flex-col items-center justify-start"
         >
@@ -256,9 +242,10 @@ const LockedPlaceholder = ({ isLoading }: { isLoading: boolean }) => {
 
         {/* right col: acc details & data breakdown */}
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 20 }}
+          variants={{
+            initial: { opacity: 0, x: 20 },
+            animate: { opacity: 1, x: 0 },
+          }}
           transition={{ duration: 0.4 }}
           className="flex flex-col space-y-6"
         >
@@ -297,7 +284,7 @@ const LockedPlaceholder = ({ isLoading }: { isLoading: boolean }) => {
             </div>
           </motion.div>
         </motion.div>
-      </div>
+      </motion.div>
     </div>
   );
 };
@@ -313,6 +300,7 @@ export default function UsageDashboard() {
   });
   const [displayData, setDisplayData] = useState<DashboardData | null>(null);
   const [secondsSinceCheck, setSecondsSinceCheck] = useState(0);
+  const [lastCheckedTime, setLastCheckedTime] = useState<number | null>(null);
   const [serverStatus, setServerStatus] = useState<
     "Online" | "Issues Detected" | "Offline" | "Maintenance"
   >("Online");
@@ -323,17 +311,30 @@ export default function UsageDashboard() {
   const { toast } = useToast();
   const animationRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const minuteIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
+  const hasFetchedRef = useRef(false);
   useEffect(() => {
-    if (!isSubmitted) return;
+    if (!isSubmitted || !lastCheckedTime) return;
+
+    // Update immediately to avoid delay
+    setSecondsSinceCheck(Math.floor((Date.now() - lastCheckedTime) / 1000));
 
     const updateInterval = setInterval(() => {
-      setSecondsSinceCheck((prev) => prev + 60);
-    }, 60000);
+      setSecondsSinceCheck(Math.floor((Date.now() - lastCheckedTime) / 1000));
+    }, 1000);
 
     return () => clearInterval(updateInterval);
-  }, [isSubmitted]);
+  }, [isSubmitted, lastCheckedTime]);
+
+  useEffect(() => {
+    const storedUsername = localStorage.getItem("nextune_username");
+    if (storedUsername && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      setUsername(storedUsername);
+      checkUsage(storedUsername);
+    }
+  }, []);
+
+
 
   const shakeInput = () => {
     if (inputRef.current) {
@@ -354,8 +355,10 @@ export default function UsageDashboard() {
     }
   };
 
-  const handleCheckUsage = async () => {
-    if (!username.trim()) {
+  const checkUsage = async (inputUsername?: string, signal?: AbortSignal) => {
+    const targetUsername = inputUsername || username;
+
+    if (!targetUsername.trim()) {
       setHasError(true);
       shakeInput();
       return;
@@ -366,7 +369,8 @@ export default function UsageDashboard() {
 
     try {
       const res = await api.get(
-        `/external/getUsage/${encodeURIComponent(username.trim())}`
+        `/external/getUsage/${encodeURIComponent(targetUsername.trim().toLowerCase())}`,
+        { signal }
       );
       const data = await res.data;
       console.log(data);
@@ -380,9 +384,16 @@ export default function UsageDashboard() {
       // res ok and user exists
       const apiUser = data.user;
 
+      const isExpired = apiUser.expiry.remaining === "Expired";
+      const isLimitExceeded =
+        apiUser.quota.total !== null &&
+        Number(apiUser.quota.totalUsed) >= Number(apiUser.quota.total);
+
+      const derivedStatus = isExpired || isLimitExceeded ? "Inactive" : apiUser.status;
+
       const dashboardData: DashboardData = {
         username: apiUser.name,
-        status: apiUser.status,
+        status: derivedStatus,
         download: Number(apiUser.quota.download),
         upload: Number(apiUser.quota.upload),
         remaining:
@@ -401,6 +412,7 @@ export default function UsageDashboard() {
       setDisplayData(dashboardData);
       setIsSubmitted(true);
       setSecondsSinceCheck(0);
+      setLastCheckedTime(Date.now());
       setDisplayedUsed(0);
       setPreviousUsed(0);
       setIsLoadingCheck(false);
@@ -410,10 +422,16 @@ export default function UsageDashboard() {
         description: `Usage data loaded for ${apiUser.name}.`,
       });
 
+      localStorage.setItem("nextune_username", apiUser.name);
+
       animateUsageCounter(Number(apiUser.quota.totalUsed));
-    } catch (error) {
+    } catch (error: any) {
       setIsLoadingCheck(false);
-      setErrorModal({ type: "server_error", visible: true });
+      if (error.response && error.response.status === 404) {
+        setErrorModal({ type: "not_found", visible: true });
+      } else {
+        setErrorModal({ type: "server_error", visible: true });
+      }
     }
   };
 
@@ -454,7 +472,7 @@ export default function UsageDashboard() {
   const handleRetry = () => {
     setErrorModal({ type: null, visible: false });
     if (errorModal.type === "server_error") {
-      handleCheckUsage();
+      checkUsage();
     }
   };
 
@@ -470,9 +488,7 @@ export default function UsageDashboard() {
       if (animationRef.current) {
         clearInterval(animationRef.current);
       }
-      if (minuteIntervalRef.current) {
-        clearInterval(minuteIntervalRef.current);
-      }
+
     };
   }, []);
 
@@ -490,16 +506,17 @@ export default function UsageDashboard() {
   const isValidData =
     displayData &&
     !isUnlimited &&
+    displayData.total !== null &&
     displayData.total > 0 &&
     displayData.used >= 0;
-  const isLimitExceeded = isValidData && displayData.used > displayData.total;
+  const isLimitExceeded = isValidData && displayData.used > (displayData.total ?? 0);
   const calculatePercentage = (value: number) =>
-    displayData ? (value / displayData.total) * 100 : 0;
+    displayData && displayData.total !== null ? (value / displayData.total) * 100 : 0;
   const progressPercentage = isValidData
-    ? Math.min((displayedUsed / displayData.total) * 100, 100)
+    ? Math.min((displayedUsed / (displayData.total ?? 1)) * 100, 100)
     : 0;
   const actualPercentage = isValidData
-    ? (displayedUsed / displayData.total) * 100
+    ? (displayedUsed / (displayData.total ?? 1)) * 100
     : 0;
 
   // --------------------
@@ -519,7 +536,7 @@ export default function UsageDashboard() {
   return (
     <section
       id="usage"
-      className="py-20 px-4 bg-gradient-to-b from-background to-background/50"
+      className="px-4 bg-gradient-to-b from-background to-background/50"
     >
       <div className="max-w-6xl mx-auto">
         {/* section header */}
@@ -546,9 +563,8 @@ export default function UsageDashboard() {
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 flex items-center px-6 py-3 rounded-lg border border-border bg-card focus-within:ring-2 focus-within:ring-orange-500/50 transition-all">
               <span
-                className={`font-medium pr-1 whitespace-nowrap transition-colors duration-200 ${
-                  inputFocused ? "text-gray-700" : "text-gray-500"
-                }`}
+                className={`font-medium pr-1 whitespace-nowrap transition-colors duration-200 ${inputFocused ? "text-gray-700" : "text-gray-500"
+                  }`}
               >
                 {usageContent.inputPrefix}
               </span>
@@ -557,8 +573,8 @@ export default function UsageDashboard() {
                 type="text"
                 placeholder={usageContent.emptyMessage}
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleCheckUsage()}
+                onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                onKeyDown={(e) => e.key === "Enter" && checkUsage()}
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setInputFocused(false)}
                 className={`flex-1 bg-transparent text-foreground placeholder:text-foreground/40 focus:outline-none transition-all`}
@@ -566,15 +582,14 @@ export default function UsageDashboard() {
             </div>
 
             <motion.button
-              onClick={handleCheckUsage}
+              onClick={() => checkUsage()}
               disabled={isAnimating || isLoadingCheck}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={`px-8 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:shadow-lg hover:shadow-orange-500/30 transition-all duration-300 flex items-center justify-center gap-2 group whitespace-nowrap ${
-                isAnimating || isLoadingCheck
-                  ? "opacity-70 cursor-not-allowed"
-                  : ""
-              }`}
+              className={`px-8 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:shadow-lg hover:shadow-orange-500/30 transition-all duration-300 flex items-center justify-center gap-2 group whitespace-nowrap ${isAnimating || isLoadingCheck
+                ? "opacity-70 cursor-not-allowed"
+                : ""
+                }`}
             >
               {isLoadingCheck ? (
                 <motion.div
@@ -689,17 +704,14 @@ export default function UsageDashboard() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.4 }}
-              className="grid md:grid-cols-2 gap-8 items-end"
+              className="grid md:grid-cols-2 gap-8"
             >
               {/* left col: circular progress + connection insights */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6 }}
-                className="flex flex-col items-center justify-start"
+                className="flex flex-col items-center h-full"
               >
                 {/* circular progress meter */}
-                <div className="relative w-64 h-64">
+                <div className="relative w-64 h-64 my-auto">
                   {/* unlimited */}
                   {isUnlimited ? (
                     <svg
@@ -717,81 +729,80 @@ export default function UsageDashboard() {
                       />
                     </svg>
                   ) : /* limited */
-                  isValidData ? (
-                    <svg
-                      className="w-full h-full transform -rotate-90"
-                      viewBox="0 0 200 200"
-                    >
-                      {/* bg */}
-                      <circle
-                        cx="100"
-                        cy="100"
-                        r="90"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="8"
-                        className="text-border/50"
-                      />
+                    isValidData ? (
+                      <svg
+                        className="w-full h-full transform -rotate-90"
+                        viewBox="0 0 200 200"
+                      >
+                        {/* bg */}
+                        <circle
+                          cx="100"
+                          cy="100"
+                          r="90"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="8"
+                          className="text-border/50"
+                        />
 
-                      {/* progress */}
-                      <circle
-                        cx="100"
-                        cy="100"
-                        r="90"
-                        fill="none"
-                        stroke={`url(#gradient${
-                          isLimitExceeded ? "Warning" : ""
-                        })`}
-                        strokeWidth="8"
-                        strokeDasharray={2 * Math.PI * 90}
-                        strokeDashoffset={
-                          2 * Math.PI * 90 * (1 - progressPercentage / 100)
-                        }
-                        strokeLinecap="round"
-                        style={{ transition: "stroke-dashoffset 0.05s linear" }}
-                      />
+                        {/* progress */}
+                        <circle
+                          cx="100"
+                          cy="100"
+                          r="90"
+                          fill="none"
+                          stroke={`url(#gradient${isLimitExceeded ? "Warning" : ""
+                            })`}
+                          strokeWidth="8"
+                          strokeDasharray={2 * Math.PI * 90}
+                          strokeDashoffset={
+                            2 * Math.PI * 90 * (1 - progressPercentage / 100)
+                          }
+                          strokeLinecap="round"
+                          style={{ transition: "stroke-dashoffset 0.05s linear" }}
+                        />
 
-                      <defs>
-                        <linearGradient
-                          id="gradient"
-                          x1="0%"
-                          y1="0%"
-                          x2="100%"
-                          y2="100%"
-                        >
-                          <stop offset="0%" stopColor="rgb(249,115,22)" />
-                          <stop offset="100%" stopColor="rgb(255,59,48)" />
-                        </linearGradient>
+                        <defs>
+                          <linearGradient
+                            id="gradient"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="100%"
+                          >
+                            <stop offset="0%" stopColor="rgb(249,115,22)" />
+                            <stop offset="100%" stopColor="rgb(255,59,48)" />
+                          </linearGradient>
 
-                        <linearGradient
-                          id="gradientWarning"
-                          x1="0%"
-                          y1="0%"
-                          x2="100%"
-                          y2="100%"
-                        >
-                          <stop offset="0%" stopColor="rgb(255,107,61)" />
-                          <stop offset="100%" stopColor="rgb(255,59,48)" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  ) : (
-                    /* fallback when not unlimited & no data */
-                    <svg
-                      className="w-full h-full transform -rotate-90"
-                      viewBox="0 0 200 200"
-                    >
-                      <circle
-                        cx="100"
-                        cy="100"
-                        r="90"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="8"
-                        className="text-gray-300"
-                      />
-                    </svg>
-                  )}
+                          <linearGradient
+                            id="gradientWarning"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="100%"
+                          >
+                            <stop offset="0%" stopColor="rgb(255,107,61)" />
+                            <stop offset="100%" stopColor="rgb(255,59,48)" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    ) : (
+                      /* fallback when not unlimited & no data */
+                      <svg
+                        className="w-full h-full transform -rotate-90"
+                        viewBox="0 0 200 200"
+                      >
+                        <circle
+                          cx="100"
+                          cy="100"
+                          r="90"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="8"
+                          className="text-gray-300"
+                        />
+                      </svg>
+                    )}
 
                   {/* center content */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -812,9 +823,8 @@ export default function UsageDashboard() {
                     ) : isValidData ? (
                       <>
                         <p
-                          className={`text-5xl font-bold ${
-                            isLimitExceeded ? "text-red-500" : "text-orange-500"
-                          }`}
+                          className={`text-4xl font-bold ${isLimitExceeded ? "text-red-500" : "text-orange-500"
+                            }`}
                         >
                           {displayedUsed.toFixed(1)} GB
                         </p>
@@ -824,11 +834,10 @@ export default function UsageDashboard() {
                         </p>
 
                         <span
-                          className={`mt-4 px-3 py-1 rounded-full text-xs font-semibold ${
-                            isLimitExceeded
-                              ? "bg-red-500/10 text-red-600"
-                              : "bg-orange-500/10 text-orange-500"
-                          }`}
+                          className={`mt-4 px-3 py-1 rounded-full text-xs font-semibold ${isLimitExceeded
+                            ? "bg-red-500/10 text-red-600"
+                            : "bg-orange-500/10 text-orange-500"
+                            }`}
                         >
                           {actualPercentage.toFixed(1)}% used
                         </span>
@@ -847,11 +856,8 @@ export default function UsageDashboard() {
                   </div>
                 </div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                  className="w-full mt-8 p-6 rounded-2xl border border-border/50 bg-card shadow-lg hover:border-orange-500/30 transition-all"
+                <div
+                  className="hidden lg:block w-full p-6 rounded-2xl border border-border/50 bg-card shadow-lg hover:border-orange-500/30 transition-all mb-6"
                 >
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">
                     Connection Insights
@@ -876,23 +882,25 @@ export default function UsageDashboard() {
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               </motion.div>
 
               {/* right col: acc details & data breakdown */}
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6 }}
+                variants={{
+                  initial: { opacity: 0, x: 20 },
+                  animate: { opacity: 1, x: 0 },
+                }}
+                transition={{ duration: 0.4 }}
                 className="flex flex-col space-y-6"
               >
                 <div className="p-6 rounded-2xl border border-border/50 bg-card shadow-lg hover:border-orange-500/30 transition-all">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-foreground/60 mb-1">
+                      <p className="text-sm text-foreground/60 mb-2">
                         Account Name
                       </p>
-                      <p className="text-2xl font-bold">
+                      <p className="text-lg font-bold">
                         {displayData.username}
                       </p>
                     </div>
@@ -937,8 +945,14 @@ export default function UsageDashboard() {
                         <Infinity size={15} />
                       </span>
                     ) : (
-                      <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 text-xs font-semibold whitespace-nowrap">
-                        {displayData.expiry_remaining} left
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${displayData.expiry_remaining === "Expired"
+                          ? "bg-red-500/10 text-red-600"
+                          : "bg-blue-500/10 text-blue-600"
+                          }`}
+                      >
+                        {displayData.expiry_remaining}
+                        {displayData.expiry_remaining !== "Expired" && " left"}
                       </span>
                     )}
                   </div>
@@ -950,7 +964,7 @@ export default function UsageDashboard() {
                   </p>
 
                   {isUnlimited ? (
-                    <div className="flex gap-1 h-2 rounded-full overflow-hidden mb-6 bg-gray-200">
+                    <div className="flex h-2 rounded-full overflow-hidden mb-6 bg-gray-200">
                       {/* download */}
                       <motion.div
                         initial={{ width: 0 }}
@@ -970,7 +984,7 @@ export default function UsageDashboard() {
                       {/* no remaining bar in unlimited */}
                     </div>
                   ) : (
-                    <div className="flex gap-1 h-2 rounded-full overflow-hidden mb-6 bg-gray-200">
+                    <div className="flex h-2 rounded-full overflow-hidden mb-6 bg-gray-200">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{
@@ -1061,8 +1075,8 @@ export default function UsageDashboard() {
                         </span>
                       ) : (
                         <span className="font-semibold text-foreground">
-                          {displayData.remaining.toFixed(1)} GB (
-                          {calculatePercentage(displayData.remaining).toFixed(
+                          {(displayData.remaining ?? 0).toFixed(1)} GB (
+                          {calculatePercentage(displayData.remaining ?? 0).toFixed(
                             1
                           )}
                           %)
@@ -1071,11 +1085,39 @@ export default function UsageDashboard() {
                     </div>
                   </div>
                 </div>
+
+                <div
+                  className="block lg:hidden w-full p-6 rounded-2xl border border-border/50 bg-card shadow-lg hover:border-orange-500/30 transition-all"
+                >
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    Connection Insights
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 tracking-wider mb-3">
+                        SERVER STATUS
+                      </p>
+                      <ServerStatusIndicator status={serverStatus} />
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 tracking-wider mb-3">
+                        LAST CHECKED
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Clock size={14} className="text-orange-500" />
+                        <p className="font-semibold text-gray-800 text-sm">
+                          {formatLastChecked(secondsSinceCheck)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             </motion.div>
           ) : null}
         </AnimatePresence>
       </div>
-    </section>
+    </section >
   );
 }

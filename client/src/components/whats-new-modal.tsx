@@ -12,7 +12,7 @@ import {
 } from "@/lib/animation-variants";
 
 const WHATS_NEW_VERSION_KEY = "whats_new_version";
-const CURRENT_WHATS_NEW_VERSION = "1.0";
+const CURRENT_WHATS_NEW_VERSION = "0.1";
 
 const updates = [
   {
@@ -115,9 +115,8 @@ export default function WhatsNewModal() {
                 transition={{ duration: 0.4, delay: 0.15 }}
                 className="text-gray-600 mb-6 leading-relaxed"
               >
-                NextuneLK just got its biggest update yet! Previously, it only
-                had a basic usage checker, now it&apos;s a complete, polished
-                experience.
+                The previous site was down for a while, so we had to bring up
+                this part of the site while the full experience is being built.
               </motion.p>
 
               <motion.div
@@ -126,7 +125,7 @@ export default function WhatsNewModal() {
                 animate="visible"
                 className="space-y-4 mb-8"
               >
-                {updates.map((update, index) => (
+                {/* {updates.map((update, index) => (
                   <motion.div
                     key={index}
                     variants={listItemVariants}
@@ -145,7 +144,7 @@ export default function WhatsNewModal() {
                       </p>
                     </div>
                   </motion.div>
-                ))}
+                ))} */}
               </motion.div>
 
               {/* btn */}

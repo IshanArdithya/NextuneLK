@@ -20,7 +20,7 @@ export default function NotFound() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { duration: 0.6, ease: "easeOut" as const },
     },
   }
 
@@ -29,7 +29,7 @@ export default function NotFound() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
+      transition: { duration: 0.5, ease: "easeOut" as const },
     },
     hover: { scale: 1.05, transition: { duration: 0.2 } },
   }
