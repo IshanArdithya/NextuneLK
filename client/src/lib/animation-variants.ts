@@ -1,4 +1,6 @@
-export const containerVariants = {
+import { Variants } from "framer-motion";
+
+export const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -9,7 +11,7 @@ export const containerVariants = {
   },
 };
 
-export const itemVariants = {
+export const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
@@ -22,7 +24,7 @@ export const itemVariants = {
 };
 
 // page/section entrance animations
-export const fadeUpVariants = {
+export const fadeUpVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
@@ -34,7 +36,7 @@ export const fadeUpVariants = {
   },
 };
 
-export const slideInFromLeftVariants = {
+export const slideInFromLeftVariants: Variants = {
   hidden: { opacity: 0, x: -20 },
   visible: {
     opacity: 1,
@@ -46,7 +48,7 @@ export const slideInFromLeftVariants = {
   },
 };
 
-export const slideInFromRightVariants = {
+export const slideInFromRightVariants: Variants = {
   hidden: { opacity: 0, x: 20 },
   visible: {
     opacity: 1,
@@ -59,7 +61,7 @@ export const slideInFromRightVariants = {
 };
 
 // card animations
-export const cardVariants = {
+export const cardVariants: Variants = {
   hidden: { opacity: 0, y: 20, scale: 0.95 },
   visible: {
     opacity: 1,
@@ -81,7 +83,7 @@ export const cardVariants = {
 };
 
 // btn animations
-export const buttonVariants = {
+export const buttonVariants: Variants = {
   hover: {
     scale: 1.05,
     transition: {
@@ -99,7 +101,7 @@ export const buttonVariants = {
 };
 
 // modal animations
-export const modalVariants = {
+export const modalVariants: Variants = {
   hidden: { opacity: 0, scale: 0.9, y: 20 },
   visible: {
     opacity: 1,
@@ -121,7 +123,7 @@ export const modalVariants = {
   },
 };
 
-export const overlayVariants = {
+export const overlayVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -140,7 +142,7 @@ export const overlayVariants = {
 };
 
 // scroll-triggered animations
-export const scrollRevealVariants = {
+export const scrollRevealVariants: Variants = {
   hidden: { opacity: 0, y: 40 },
   visible: {
     opacity: 1,
@@ -153,7 +155,7 @@ export const scrollRevealVariants = {
 };
 
 // staggered list animations
-export const listContainerVariants = {
+export const listContainerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -164,7 +166,7 @@ export const listContainerVariants = {
   },
 };
 
-export const listItemVariants = {
+export const listItemVariants: Variants = {
   hidden: { opacity: 0, x: -10 },
   visible: {
     opacity: 1,
@@ -177,7 +179,7 @@ export const listItemVariants = {
 };
 
 // page transition
-export const pageVariants = {
+export const pageVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,

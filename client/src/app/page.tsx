@@ -1,35 +1,21 @@
 "use client";
 
-import { motion } from "framer-motion";
-import Navigation from "@/components/header";
-import Hero from "@/components/hero";
-import Features from "@/components/features";
-// import ProductSection from "@/components/product-section";
-import Pricing from "@/components/pricing";
-import Testimonials from "@/components/testimonials";
-// import CTA from "@/components/cta";
-import Footer from "@/components/footer";
-import ContactUs from "@/components/contact-us";
-import { pageVariants } from "@/lib/animation-variants";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push("/usage");
+  }, [router]);
+
   return (
-    <motion.main
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      variants={pageVariants}
-      className="bg-background text-foreground"
-    >
-      <Navigation />
-      <Hero />
-      <Features />
-      {/* <ProductSection /> */}
-      <Pricing />
-      <Testimonials />
-      {/* <CTA /> */}
-      <ContactUs />
-      <Footer />
-    </motion.main>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="animate-pulse flex flex-col items-center gap-4">
+        <div className="w-12 h-12 bg-orange-500/20 rounded-full"></div>
+        <p className="text-foreground/60 text-sm">Redirecting to Usage Dashboard...</p>
+      </div>
+    </div>
   );
 }

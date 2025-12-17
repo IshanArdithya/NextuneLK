@@ -1,9 +1,9 @@
 export const usageContent = {
-  sectionTitle: "Monitor Your Data in Real-Time",
+  sectionTitle: "Check Your Usage",
   sectionDescription:
-    "Track your data usage, plan details, and expiry from one clean dashboard.",
-  inputPrefix: "HelloWorld–",
-  placeholder: "Enter your username or ID...",
+    "View your current data usage and account status.",
+  inputPrefix: "HelloWorld-",
+  placeholder: "",
   checkButtonLabel: "Check Usage",
   checkingLabel: "Checking...",
   fetchMessage: "Fetching your tunnel data...",

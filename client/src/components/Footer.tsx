@@ -6,8 +6,8 @@ import { footerContent, footerLinks } from "@/constants/footer";
 
 export default function Footer() {
   return (
-    <footer className="bg-background border-t border-border/50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <footer className="bg-background border-t border-border/50 px-4">
+      <div className="max-w-6xl mx-auto py-8">
         <div className="grid md:grid-cols-2 gap-12 pb-8 border-b border-border/50 mb-8">
           {/* l: logo & tagline */}
           <motion.div

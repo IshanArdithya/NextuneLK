@@ -149,7 +149,7 @@ export class ExternalApi {
         await this.login();
       }
 
-      const response = await this.api.post(`/server/status`);
+      const response = await this.api.get(`/panel/api/server/status`);
 
       if (
         typeof response.data === "string" &&
