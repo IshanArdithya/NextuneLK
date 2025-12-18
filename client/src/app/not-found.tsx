@@ -11,7 +11,6 @@ export default function NotFound() {
     router.replace("/usage");
   }, [router]);
 
-  // Return empty while redirecting
   return null;
 }
 

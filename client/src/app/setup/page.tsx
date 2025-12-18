@@ -1,5 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export default function SetupPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push("/usage");
+  }, [router]);
+
+  return null;
+}
+
+/*
 import { useState } from "react";
 import Navigation from "@/components/header";
 import Footer from "@/components/footer";
@@ -9,7 +23,7 @@ import AppSelection from "@/components/setup/app-selection";
 import SetupGuide from "@/components/setup/setup-guide";
 import SetupBreadcrumb from "@/components/setup/breadcrumb";
 
-export default function SetupPage() {
+export default function SetupPageOriginal() {
   const [selectedOS, setSelectedOS] = useState<string | null>(null);
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
 
@@ -58,3 +72,4 @@ export default function SetupPage() {
     </main>
   );
 }
+*/
