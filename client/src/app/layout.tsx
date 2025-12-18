@@ -5,7 +5,7 @@ import ClientLayout from "./ClientLayout";
 
 export const metadata: Metadata = {
   title: "NextuneLK",
-  description: "",
+  description: "View your current data usage and account status",
 };
 
 export default function RootLayout({
