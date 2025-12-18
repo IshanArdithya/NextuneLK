@@ -1,6 +1,6 @@
 import Navigation from "@/components/header";
 import UsageDashboard from "@/components/usage-dashboard";
-import Footer from "@/components/footer";
+// import Footer from "@/components/footer";
 
 export default function UsagePage() {
   return (

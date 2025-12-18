@@ -1,6 +1,7 @@
 "use client"
 import { motion } from "framer-motion"
 import { ArrowLeft, AlertCircle } from "lucide-react"
+import Image from "next/image"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import {
   scrollRevealVariants,
@@ -321,10 +322,11 @@ export default function SetupGuide({ os, app, onBack }: SetupGuideProps) {
       >
         <h2 className="text-2xl font-bold mb-6">Watch the Video Tutorial</h2>
         <div className="relative aspect-video bg-gray-900 rounded-2xl overflow-hidden shadow-lg">
-          <img
+          <Image
             src="/placeholder.svg?height=600&width=1200"
             alt="Video tutorial"
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
           <motion.div
             whileHover={{ scale: 1.1 }}
@@ -364,7 +366,7 @@ export default function SetupGuide({ os, app, onBack }: SetupGuideProps) {
               className="p-6 rounded-2xl bg-white border border-border shadow-md hover:shadow-lg transition-shadow"
             >
               <div className="flex gap-4">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <motion.div
                     initial={{ scale: 0 }}
                     whileInView={{ scale: 1 }}
@@ -379,11 +381,14 @@ export default function SetupGuide({ os, app, onBack }: SetupGuideProps) {
                   <h3 className="text-lg font-bold mb-2">{step.title}</h3>
                   <p className="text-muted-foreground mb-4">{step.description}</p>
                   {step.image && (
-                    <img
-                      src={step.image || "/placeholder.svg"}
-                      alt={step.title}
-                      className="rounded-lg w-full max-w-md cursor-pointer hover:opacity-80 transition-opacity"
-                    />
+                    <div className="relative w-full max-w-md aspect-video rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
+                      <Image
+                        src={step.image || "/placeholder.svg"}
+                        alt={step.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                   )}
                 </div>
               </div>

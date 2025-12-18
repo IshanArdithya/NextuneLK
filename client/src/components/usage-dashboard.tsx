@@ -301,10 +301,11 @@ export default function UsageDashboard() {
   const [displayData, setDisplayData] = useState<DashboardData | null>(null);
   const [secondsSinceCheck, setSecondsSinceCheck] = useState(0);
   const [lastCheckedTime, setLastCheckedTime] = useState<number | null>(null);
-  const [serverStatus, setServerStatus] = useState<
+  const [serverStatus] = useState<
     "Online" | "Issues Detected" | "Offline" | "Maintenance"
   >("Online");
   const [displayedUsed, setDisplayedUsed] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [previousUsed, setPreviousUsed] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isLoadingCheck, setIsLoadingCheck] = useState(false);
@@ -312,6 +313,7 @@ export default function UsageDashboard() {
   const animationRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasFetchedRef = useRef(false);
+
   useEffect(() => {
     if (!isSubmitted || !lastCheckedTime) return;
 
@@ -332,6 +334,7 @@ export default function UsageDashboard() {
       setUsername(storedUsername);
       checkUsage(storedUsername);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -425,8 +428,9 @@ export default function UsageDashboard() {
       localStorage.setItem("nextune_username", apiUser.name);
 
       animateUsageCounter(Number(apiUser.quota.totalUsed));
-    } catch (error: any) {
+    } catch (error: unknown) {
       setIsLoadingCheck(false);
+      // @ts-expect-error - axios error structure
       if (error.response && error.response.status === 404) {
         setErrorModal({ type: "not_found", visible: true });
       } else {
