@@ -15,32 +15,7 @@ export const usageContent = {
       "We couldn't find an account with that name. Please check and try again.",
     serverErrorTitle: "Server Connection Error",
     serverErrorDesc: "Server connection error. Please try again later.",
+    rateLimitTitle: "Too Many Requests",
+    rateLimitDesc: "You are checking too fast. Please wait 15 minutes.",
   },
 };
-
-export const MOCK_USERS = [
-  {
-    username: "heo",
-    total_gb: 100,
-    used_gb: 65,
-    expiry_date: "2025-11-25T18:00:00Z",
-    download_gb: 52.9,
-    upload_gb: 8.1,
-  },
-  {
-    username: "nsc",
-    total_gb: 100,
-    used_gb: 110,
-    expiry_date: "2025-11-27T09:00:00Z",
-    download_gb: 85.5,
-    upload_gb: 24.5,
-  },
-  {
-    username: "reale",
-    total_gb: 100,
-    used_gb: 60,
-    expiry_date: "2025-10-20T14:00:00Z",
-    download_gb: 45.2,
-    upload_gb: 14.8,
-  },
-];
