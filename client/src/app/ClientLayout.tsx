@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
 import WhatsNewModal from "@/components/whats-new-modal";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AnimatePresence } from "framer-motion";
@@ -24,7 +23,6 @@ export default function ClientLayout({
       </ThemeTransitionWrapper>
       <WhatsNewModal />
       <Toaster />
-      <Analytics />
     </ThemeProvider>
   );
 }
