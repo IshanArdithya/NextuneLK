@@ -85,7 +85,7 @@ jobs:
             docker run -d \
               --name nextunelk-client-dev \
               --restart unless-stopped \
-              -p 3005:3000 \
+              -p 3006:3000 \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_CLIENT }}:dev
             
             echo "Deployment successful."
