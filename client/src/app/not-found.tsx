@@ -1,8 +1,18 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 // temp redirect all 404s to /usage
 export default function NotFound() {
-  redirect("/usage");
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/usage");
+  }, [router]);
+
+  // Return empty while redirecting
+  return null;
 }
 
 /*
