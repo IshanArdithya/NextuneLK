@@ -3,16 +3,15 @@
 import type React from "react";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle } from "lucide-react";
+// import { MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { scrollRevealVariants, buttonVariants } from "@/lib/animation-variants";
 import { contactContent } from "@/constants/contactus";
 import { FaWhatsapp } from "react-icons/fa";
 
 export default function ContactUs() {
-  const whatsappLink = `https://wa.me/${
-    contactContent.whatsappNumber
-  }?text=${encodeURIComponent(contactContent.whatsappMessage)}`;
+  const whatsappLink = `https://wa.me/${contactContent.whatsappNumber
+    }?text=${encodeURIComponent(contactContent.whatsappMessage)}`;
   const [isCopied, setIsCopied] = useState(false);
 
   const handleWhatsAppClick = () => {
@@ -50,7 +49,7 @@ export default function ContactUs() {
               whileInView={{ width: 64 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
               viewport={{ once: true }}
-              className="h-1 bg-gradient-to-r from-orange-500 to-orange-400 rounded-full"
+              className="h-1 bg-linear-to-r from-orange-500 to-orange-400 rounded-full"
             />
           </div>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">

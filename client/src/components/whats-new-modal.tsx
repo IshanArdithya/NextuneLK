@@ -2,37 +2,37 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check } from "lucide-react";
+// import { Check } from "lucide-react";
 import {
   modalVariants,
   overlayVariants,
   listContainerVariants,
-  listItemVariants,
+  // listItemVariants,
   buttonVariants,
 } from "@/lib/animation-variants";
 
 const WHATS_NEW_VERSION_KEY = "whats_new_version";
 const CURRENT_WHATS_NEW_VERSION = "0.1";
 
-const updates = [
-  {
-    icon: "🏠",
-    title: "Added a clean landing page",
-    description: "introducing NextuneLK with modern design and animations.",
-  },
-  {
-    icon: "📊",
-    title: "Improved usage dashboard",
-    description:
-      "now includes usage insights, smoother progress animations, and a full UI remake.",
-  },
-  {
-    icon: "⚙️",
-    title: "Better structure",
-    description:
-      "navigation and setup flow redesigned for a consistent user experience.",
-  },
-];
+// const updates = [
+//   {
+//     icon: "🏠",
+//     title: "Added a clean landing page",
+//     description: "introducing NextuneLK with modern design and animations.",
+//   },
+//   {
+//     icon: "📊",
+//     title: "Improved usage dashboard",
+//     description:
+//       "now includes usage insights, smoother progress animations, and a full UI remake.",
+//   },
+//   {
+//     icon: "⚙️",
+//     title: "Better structure",
+//     description:
+//       "navigation and setup flow redesigned for a consistent user experience.",
+//   },
+// ];
 
 export default function WhatsNewModal() {
   const [isOpen, setIsOpen] = useState(false);

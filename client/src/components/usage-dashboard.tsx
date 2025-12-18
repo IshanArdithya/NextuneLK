@@ -29,7 +29,7 @@ interface DashboardData {
 }
 
 interface ErrorModal {
-  type: "not_found" | "server_error" | null;
+  type: "not_found" | "server_error" | "rate_limit" | null;
   visible: boolean;
 }
 
@@ -49,35 +49,35 @@ const getServerStatusStyles = (
   switch (status) {
     case "Online":
       return {
-        bg: "bg-green-100",
+        bg: "bg-green-500/10",
         text: "text-green-700",
         dotColor: "bg-green-500",
         animationType: "pulse",
       };
     case "Issues Detected":
       return {
-        bg: "bg-amber-100",
+        bg: "bg-amber-500/10",
         text: "text-amber-700",
         dotColor: "bg-amber-500",
         animationType: "flicker",
       };
     case "Offline":
       return {
-        bg: "bg-red-100",
+        bg: "bg-red-500/10",
         text: "text-red-700",
         dotColor: "bg-red-500",
         animationType: "double-blink",
       };
     case "Maintenance":
       return {
-        bg: "bg-gray-100",
+        bg: "bg-gray-500/10",
         text: "text-gray-700",
         dotColor: "bg-gray-500",
         animationType: "fade",
       };
     default:
       return {
-        bg: "bg-green-100",
+        bg: "bg-green-500/10",
         text: "text-green-700",
         dotColor: "bg-green-500",
         animationType: "pulse",
@@ -301,10 +301,11 @@ export default function UsageDashboard() {
   const [displayData, setDisplayData] = useState<DashboardData | null>(null);
   const [secondsSinceCheck, setSecondsSinceCheck] = useState(0);
   const [lastCheckedTime, setLastCheckedTime] = useState<number | null>(null);
-  const [serverStatus, setServerStatus] = useState<
+  const [serverStatus] = useState<
     "Online" | "Issues Detected" | "Offline" | "Maintenance"
   >("Online");
   const [displayedUsed, setDisplayedUsed] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [previousUsed, setPreviousUsed] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isLoadingCheck, setIsLoadingCheck] = useState(false);
@@ -312,6 +313,7 @@ export default function UsageDashboard() {
   const animationRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasFetchedRef = useRef(false);
+
   useEffect(() => {
     if (!isSubmitted || !lastCheckedTime) return;
 
@@ -332,6 +334,7 @@ export default function UsageDashboard() {
       setUsername(storedUsername);
       checkUsage(storedUsername);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -425,10 +428,13 @@ export default function UsageDashboard() {
       localStorage.setItem("nextune_username", apiUser.name);
 
       animateUsageCounter(Number(apiUser.quota.totalUsed));
-    } catch (error: any) {
+    } catch (error: unknown) {
       setIsLoadingCheck(false);
-      if (error.response && error.response.status === 404) {
+      const err = error as any;
+      if (err.response && err.response.status === 404) {
         setErrorModal({ type: "not_found", visible: true });
+      } else if (err.response && err.response.status === 429) {
+        setErrorModal({ type: "rate_limit", visible: true });
       } else {
         setErrorModal({ type: "server_error", visible: true });
       }
@@ -471,7 +477,7 @@ export default function UsageDashboard() {
 
   const handleRetry = () => {
     setErrorModal({ type: null, visible: false });
-    if (errorModal.type === "server_error") {
+    if (errorModal.type === "server_error" || errorModal.type === "rate_limit") {
       checkUsage();
     }
   };
@@ -493,13 +499,13 @@ export default function UsageDashboard() {
   }, []);
 
   const getStatusColor = (status: UserStatus) => {
-    if (status === "Active") return "bg-green-100 text-green-700";
+    if (status === "Active") return "bg-green-500/10 text-green-700";
     if (status === "Inactive - Quota Exceeded")
-      return "bg-orange-100 text-orange-700";
-    if (status === "Expired") return "bg-orange-100 text-orange-700";
-    if (status === "Disabled") return "bg-gray-100 text-gray-700";
-    if (status === "Unknown") return "bg-gray-100 text-gray-700";
-    return "bg-gray-100 text-gray-700";
+      return "bg-orange-500/10 text-orange-700";
+    if (status === "Expired") return "bg-orange-500/10 text-orange-700";
+    if (status === "Disabled") return "bg-gray-500/10 text-gray-700";
+    if (status === "Unknown") return "bg-gray-500/10 text-gray-700";
+    return "bg-gray-500/10 text-gray-700";
   };
 
   const isUnlimited = displayData?.total === null;
@@ -663,6 +669,31 @@ export default function UsageDashboard() {
                       </button>
                     </div>
                   </>
+                ) : errorModal.type === "rate_limit" ? (
+                  <>
+                    <h3 className="text-xl font-bold mb-2">
+                      {usageContent.errorMessages.rateLimitTitle}
+                    </h3>
+                    <p className="text-foreground/60 mb-6">
+                      {usageContent.errorMessages.rateLimitDesc}
+                    </p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleRetry}
+                        className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold"
+                      >
+                        Retry
+                      </button>
+                      <button
+                        onClick={() =>
+                          setErrorModal({ type: null, visible: false })
+                        }
+                        className="flex-1 px-4 py-2 bg-border text-foreground rounded-lg hover:bg-border/80 transition-colors font-semibold"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
                 ) : (
                   <>
                     <h3 className="text-xl font-bold mb-2">
@@ -704,11 +735,11 @@ export default function UsageDashboard() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.4 }}
-              className="grid md:grid-cols-2 gap-8"
+              className="grid md:grid-cols-2 gap-6 md:gap-8 md:gap-y-0"
             >
               {/* left col: circular progress + connection insights */}
               <motion.div
-                className="flex flex-col items-center h-full"
+                className="flex flex-col items-center justify-center md:h-full md:order-1 order-1"
               >
                 {/* circular progress meter */}
                 <div className="relative w-64 h-64 my-auto">
@@ -856,33 +887,6 @@ export default function UsageDashboard() {
                   </div>
                 </div>
 
-                <div
-                  className="hidden lg:block w-full p-6 rounded-2xl border border-border/50 bg-card shadow-lg hover:border-orange-500/30 transition-all mb-6"
-                >
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Connection Insights
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 tracking-wider mb-3">
-                        SERVER STATUS
-                      </p>
-                      <ServerStatusIndicator status={serverStatus} />
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 tracking-wider mb-3">
-                        LAST CHECKED
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Clock size={14} className="text-orange-500" />
-                        <p className="font-semibold text-gray-800 text-sm">
-                          {formatLastChecked(secondsSinceCheck)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </motion.div>
 
               {/* right col: acc details & data breakdown */}
@@ -892,18 +896,16 @@ export default function UsageDashboard() {
                   animate: { opacity: 1, x: 0 },
                 }}
                 transition={{ duration: 0.4 }}
-                className="flex flex-col space-y-6"
+                className="flex flex-col space-y-6 md:row-span-2 md:order-2 order-2"
               >
                 <div className="p-6 rounded-2xl border border-border/50 bg-card shadow-lg hover:border-orange-500/30 transition-all">
+                  <p className="text-sm text-foreground/60 mb-2 font-semibold">
+                    Account Name
+                  </p>
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-foreground/60 mb-2">
-                        Account Name
-                      </p>
-                      <p className="text-lg font-bold">
-                        {displayData.username}
-                      </p>
-                    </div>
+                    <p className="text-lg font-bold">
+                      {displayData.username}
+                    </p>
                     <div
                       className={`flex items-center gap-2 px-3 py-1 rounded-full ${getStatusColor(
                         displayData.status
@@ -918,7 +920,7 @@ export default function UsageDashboard() {
                 </div>
 
                 <div className="p-6 rounded-2xl border border-border/50 bg-card shadow-lg hover:border-orange-500/30 transition-all">
-                  <p className="text-sm text-foreground/60 mb-2">
+                  <p className="text-sm text-foreground/60 mb-2 font-semibold">
                     Plan Expires
                   </p>
                   <div className="flex items-center justify-between gap-4">
@@ -1086,38 +1088,46 @@ export default function UsageDashboard() {
                   </div>
                 </div>
 
-                <div
-                  className="block lg:hidden w-full p-6 rounded-2xl border border-border/50 bg-card shadow-lg hover:border-orange-500/30 transition-all"
-                >
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Connection Insights
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 tracking-wider mb-3">
-                        SERVER STATUS
-                      </p>
-                      <ServerStatusIndicator status={serverStatus} />
-                    </div>
 
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 tracking-wider mb-3">
-                        LAST CHECKED
+              </motion.div>
+
+              <motion.div
+                className="w-full h-fit p-6 rounded-2xl border border-border/50 bg-card shadow-lg hover:border-orange-500/30 transition-all md:col-start-1 md:row-start-2 md:order-3 order-3 self-end"
+                variants={{
+                  initial: { opacity: 0, x: -20 },
+                  animate: { opacity: 1, x: 0 },
+                }}
+                transition={{ duration: 0.4 }}
+              >
+                <p className="text-sm text-foreground/60 mb-4 font-semibold">
+                  Connection Info
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 tracking-wider mb-3">
+                      SERVER STATUS
+                    </p>
+                    <ServerStatusIndicator status={serverStatus} />
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 tracking-wider mb-3">
+                      LAST CHECKED
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Clock size={14} className="text-orange-500" />
+                      <p className="font-semibold  text-sm">
+                        {formatLastChecked(secondsSinceCheck)}
                       </p>
-                      <div className="flex items-center gap-2">
-                        <Clock size={14} className="text-orange-500" />
-                        <p className="font-semibold text-gray-800 text-sm">
-                          {formatLastChecked(secondsSinceCheck)}
-                        </p>
-                      </div>
                     </div>
                   </div>
                 </div>
               </motion.div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-      </div>
+            </motion.div >
+          ) : null
+          }
+        </AnimatePresence >
+      </div >
     </section >
   );
 }

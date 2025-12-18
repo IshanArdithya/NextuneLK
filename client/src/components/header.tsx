@@ -96,9 +96,7 @@ export default function Navigation() {
 
           {/* r: theme toggle*/}
           <div className="hidden md:flex items-center gap-4">
-            <ComingSoonWrapper>
-              <ThemeToggle />
-            </ComingSoonWrapper>
+            <ThemeToggle />
             <ComingSoonWrapper>
               <motion.button
                 variants={buttonVariants}
@@ -113,9 +111,7 @@ export default function Navigation() {
 
           {/* mobile menu btn */}
           <div className="md:hidden flex items-center gap-2">
-            <ComingSoonWrapper>
-              <ThemeToggle />
-            </ComingSoonWrapper>
+            <ThemeToggle />
             <ComingSoonWrapper>
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -140,7 +136,7 @@ export default function Navigation() {
               className="md:hidden"
             >
               <div className="pb-4 space-y-3">
-                {navLinks.map((link, index) => {
+                {navLinks.map((link) => {
                   const isUsage = link.label === "Usage";
                   return (
                     <motion.div
