@@ -1,9 +1,17 @@
+import { redirect } from "next/navigation";
+
+// temp redirect all 404s to /usage
+export default function NotFound() {
+  redirect("/usage");
+}
+
+/*
 "use client"
 
 import { motion } from "framer-motion"
 import Link from "next/link"
 
-export default function NotFound() {
+export default function NotFoundOriginal() {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -41,7 +49,7 @@ export default function NotFound() {
     },
   }
 
-  // Network dots background pattern
+  // network dots background pattern
   const dots = Array.from({ length: 20 }).map((_, i) => ({
     id: i,
     size: Math.random() * 2 + 1,
@@ -76,27 +84,23 @@ export default function NotFound() {
         ))}
       </div>
 
-      {/* Main content container */}
       <motion.div
         className="relative z-10 flex flex-col items-center gap-8 px-4"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Heading */}
         <motion.div variants={itemVariants} className="space-y-2">
           <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-[#FF6B3D] to-[#FF3B30] bg-clip-text text-transparent">
             Connection Lost
           </h1>
           <p className="text-2xl md:text-3xl font-bold text-gray-700 dark:text-gray-300">Page Not Found</p>
 
-          {/* Glowing dot indicator */}
           <motion.div className="flex justify-center pt-2" variants={dotVariants} animate="pulse">
             <div className="w-2 h-2 bg-orange-accent dark:bg-orange-accent-dark rounded-full shadow-lg shadow-orange-accent/50 dark:shadow-orange-accent-dark/50" />
           </motion.div>
         </motion.div>
 
-        {/* Subtext */}
         <motion.p
           variants={itemVariants}
           className="text-gray-500 dark:text-gray-400 text-lg max-w-md mx-auto leading-relaxed"
@@ -104,7 +108,6 @@ export default function NotFound() {
           Looks like this route doesn't exist. Let's get you back on track.
         </motion.p>
 
-        {/* Illustration - Minimal SVG disconnected cable */}
         <motion.svg
           variants={itemVariants}
           className="w-32 h-32 opacity-60 dark:opacity-40"
@@ -149,9 +152,7 @@ export default function NotFound() {
           />
         </motion.svg>
 
-        {/* Navigation buttons */}
         <motion.div variants={itemVariants} className="flex flex-col md:flex-row gap-4 mt-4">
-          {/* Home button */}
           <motion.div
             variants={buttonVariants}
             whileHover="hover"
@@ -167,7 +168,6 @@ export default function NotFound() {
             </Link>
           </motion.div>
 
-          {/* Usage button */}
           <motion.div
             variants={buttonVariants}
             whileHover="hover"
@@ -184,7 +184,6 @@ export default function NotFound() {
           </motion.div>
         </motion.div>
 
-        {/* Lighthearted footer */}
         <motion.p
           variants={itemVariants}
           transition={{ delay: 0.5 }}
@@ -196,3 +195,4 @@ export default function NotFound() {
     </div>
   )
 }
+*/
