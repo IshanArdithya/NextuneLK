@@ -24,6 +24,7 @@ interface DashboardData {
   used: number;
   expiry_date: string | null;
   expiry_remaining: string | null;
+  expiry_pending_duration: string | null;
   server_status: "Online" | "Issues Detected" | "Offline" | "Maintenance";
   last_checked: string;
 }
@@ -408,6 +409,7 @@ export default function UsageDashboard() {
         used: Number(apiUser.quota.totalUsed),
         expiry_date: apiUser.expiry.date,
         expiry_remaining: apiUser.expiry.remaining,
+        expiry_pending_duration: apiUser.expiry.pending_duration,
         server_status: data.serverStatus,
         last_checked: "just now",
       };
@@ -924,9 +926,8 @@ export default function UsageDashboard() {
                     Plan Expires
                   </p>
                   <div className="flex items-center justify-between gap-4">
-                    {displayData.expiry_date === null ? (
-                      <p className="text-lg font-bold">Never Expires</p>
-                    ) : (
+
+                    {displayData.expiry_date ? (
                       <p className="text-lg font-bold">
                         {new Date(displayData.expiry_date).toLocaleString(
                           "en-US",
@@ -940,9 +941,21 @@ export default function UsageDashboard() {
                           }
                         )}
                       </p>
+                    ) : displayData.expiry_pending_duration ? (
+                      <p className="text-lg font-bold">
+                        {displayData.expiry_pending_duration}{" "}
+                        <span className="text-sm font-semibold text-foreground/60">
+                          (Starts after first use)
+                        </span>
+                      </p>
+                    ) : (
+                      <p className="text-lg font-bold">Never Expires</p>
                     )}
 
-                    {displayData.expiry_remaining === null ? (
+                    {/* expiry pill - hide if pending start */}
+                    {displayData.expiry_pending_duration ? null : displayData
+                      .expiry_remaining === null ||
+                      displayData.expiry_remaining === "N/A" ? (
                       <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 text-xs font-semibold whitespace-nowrap">
                         <Infinity size={15} />
                       </span>
