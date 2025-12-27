@@ -61,31 +61,43 @@ export const getClientUsage = async (req, res) => {
       const downloadGB = down / 1073741824;
       const totalUsedGB = uploadGB + downloadGB;
 
-      // expiry conversion
-      let expiryISO = expiryTime === 0 ? null : new Date(expiryTime);
-      let formattedExpiry = expiryISO
-        ? expiryISO.toLocaleString("en-US", {
+      // conversion & calc
+      let formattedExpiry = null;
+      let expiryRemaining = "N/A";
+      let pendingDuration = null;
+      let isExpired = false;
+      const now = new Date();
+
+      if (expiryTime < 0) {
+        // start after first use
+        const durationMs = Math.abs(expiryTime);
+        const mins = Math.floor(durationMs / (1000 * 60));
+        const hours = Math.floor(durationMs / (1000 * 60 * 60));
+        const days = Math.floor(durationMs / (1000 * 60 * 60 * 24));
+
+        if (days >= 1) {
+          pendingDuration = `${days} day${days > 1 ? "s" : ""}`;
+        } else if (hours >= 1) {
+          pendingDuration = `${hours} hour${hours > 1 ? "s" : ""}`;
+        } else {
+          pendingDuration = `${mins} minute${mins > 1 ? "s" : ""}`;
+        }
+      } else if (expiryTime > 0) {
+        const expiryISO = new Date(expiryTime);
+        formattedExpiry = expiryISO.toLocaleString("en-US", {
             month: "short",
             day: "numeric",
             year: "numeric",
             hour: "numeric",
             minute: "numeric",
             hour12: true,
-          })
-        : null;
+          });
 
-      // calc expiry remaining
-      const now = new Date();
-      let expiryRemaining = "N/A";
-      let isExpired = false;
-
-      if (expiryISO) {
         if (expiryISO < now) {
           expiryRemaining = "Expired";
           isExpired = true;
         } else {
           const diffMs = expiryISO - now;
-
           const mins = Math.floor(diffMs / (1000 * 60));
           const hours = Math.floor(diffMs / (1000 * 60 * 60));
           const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -178,8 +190,9 @@ export const getClientUsage = async (req, res) => {
             total: total === 0 ? null : (total / 1073741824).toFixed(2),
           },
           expiry: {
-            date: expiryTime === 0 ? null : formattedExpiry,
-            remaining: expiryTime === 0 ? null : expiryRemaining,
+            date: formattedExpiry,
+            remaining: expiryRemaining,
+            pending_duration: pendingDuration,
           },
         },
         serverStatus,
