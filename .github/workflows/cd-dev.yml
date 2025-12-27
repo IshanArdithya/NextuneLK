@@ -75,6 +75,8 @@ jobs:
               --network host \
               --env-file .env.nextunelk \
               -v $HOME/logs:/app/logs \
+              -v /etc/localtime:/etc/localtime:ro \
+              -v /etc/timezone:/etc/timezone:ro \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev
 
             # --- Deploy Client ---
@@ -86,6 +88,8 @@ jobs:
               --name nextunelk-client-dev \
               --restart unless-stopped \
               -p 3006:3000 \
+              -v /etc/localtime:/etc/localtime:ro \
+              -v /etc/timezone:/etc/timezone:ro \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_CLIENT }}:dev
             
             echo "Deployment successful."
