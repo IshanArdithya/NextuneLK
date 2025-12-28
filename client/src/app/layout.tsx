@@ -2,6 +2,7 @@ import type React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import ClientLayout from "./ClientLayout";
+import { SnowEffect } from "../components/SnowEffect";
 
 export const metadata: Metadata = {
   title: "NextuneLK",
@@ -17,6 +18,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <ClientLayout>{children}</ClientLayout>
+        {/* <SnowEffect /> */}
       </body>
     </html>
   );
