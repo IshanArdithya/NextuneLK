@@ -12,7 +12,7 @@ import {
 } from "@/lib/animation-variants";
 
 const WHATS_NEW_VERSION_KEY = "whats_new_version";
-const CURRENT_WHATS_NEW_VERSION = "0.1";
+const CURRENT_WHATS_NEW_VERSION = "0.2";
 
 // const updates = [
 //   {
@@ -115,8 +115,11 @@ export default function WhatsNewModal() {
                 transition={{ duration: 0.4, delay: 0.15 }}
                 className="text-gray-600 mb-6 leading-relaxed"
               >
-                The previous site was down for a while, so we had to bring up
-                this part of the site while the full experience is being built.
+                Our domain has changed to{" "}
+                <span className="font-bold text-gray-900">
+                  web.nextune.live
+                </span>
+                {" "}. Please update your bookmarks!
               </motion.p>
 
               <motion.div
