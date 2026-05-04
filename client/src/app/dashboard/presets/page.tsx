@@ -7,15 +7,10 @@ import {
   Plus,
   Trash2,
   Edit2,
-  Check,
-  X,
   Loader2,
   Zap,
   Clock,
   Database,
-  ArrowRight,
-  ShieldCheck,
-  AlertCircle,
   MoreVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -188,40 +183,37 @@ export default function PresetsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+      >
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-[family-name:var(--font-headline)] mb-1">
+          <h1 className="text-2xl font-bold font-[family-name:var(--font-headline)] tracking-tight">
             Service Presets
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm mt-1">
             Manage your predefined VPN plans and pricing configurations.
           </p>
         </div>
         <Button
           onClick={() => handleOpenModal()}
-          className="bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/20 group"
+          className="bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/20 group text-xs h-9"
         >
           <Plus className="mr-2 h-4 w-4 transition-transform group-hover:rotate-90" />
           Create New Plan
         </Button>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 gap-6">
-        <Card className="border-white/10 dark:border-white/5 bg-white/50 dark:bg-black/50 backdrop-blur-xl shadow-2xl overflow-hidden">
-          <CardHeader className="border-b border-border/50 bg-muted/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>All Presets</CardTitle>
-                <CardDescription>
-                  Choose which plans are visible to the system.
-                </CardDescription>
-              </div>
-              <Badge variant="outline" className="bg-background/50">
-                {presets.length} Total Plans
-              </Badge>
-            </div>
-          </CardHeader>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card className="overflow-hidden py-0 gap-0 border border-border/50 bg-white/50 dark:bg-black/50 backdrop-blur-xl transition-all duration-300 hover:border-foreground/20 hover:shadow-md rounded-2xl">
+
           <CardContent className="p-0">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -234,25 +226,25 @@ export default function PresetsPage() {
                   <Zap className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">No Presets Found</h3>
-                <p className="text-muted-foreground max-w-sm mb-6">
+                <p className="text-muted-foreground max-w-sm mb-6 text-sm">
                   You haven&apos;t created any service plans yet. Create your first one to start adding clients.
                 </p>
-                <Button onClick={() => handleOpenModal()} variant="outline">
+                <Button onClick={() => handleOpenModal()} variant="outline" size="sm">
                   <Plus className="mr-2 h-4 w-4" />
                   Create First Plan
                 </Button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto px-4 py-4 sm:px-6">
                 <Table>
                   <TableHeader className="bg-muted/30">
                     <TableRow>
-                      <TableHead className="font-semibold">Plan Name</TableHead>
-                      <TableHead className="font-semibold text-center">Data Quota</TableHead>
-                      <TableHead className="font-semibold text-center">Validity</TableHead>
-                      <TableHead className="font-semibold text-center">Price</TableHead>
-                      <TableHead className="font-semibold text-center">Status</TableHead>
-                      <TableHead className="text-right"></TableHead>
+                      <TableHead className="font-semibold h-12">Plan Name</TableHead>
+                      <TableHead className="font-semibold text-center h-12">Data Quota</TableHead>
+                      <TableHead className="font-semibold text-center h-12">Validity</TableHead>
+                      <TableHead className="font-semibold text-center h-12">Price</TableHead>
+                      <TableHead className="font-semibold text-center h-12">Status</TableHead>
+                      <TableHead className="text-right h-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -260,41 +252,42 @@ export default function PresetsPage() {
                       {presets.map((preset) => (
                         <TableRow
                           key={preset.id}
-                          className={`group transition-colors ${!preset.isActive ? 'opacity-60 bg-muted/20' : 'hover:bg-muted/30'}`}
+                          className={`group transition-colors border-border/40 ${!preset.isActive ? 'opacity-60 bg-muted/20' : 'hover:bg-muted/30'}`}
                         >
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${!preset.isActive ? 'bg-slate-200 dark:bg-slate-800' : 'bg-violet-500/10 text-violet-600'}`}>
-                                <Zap className="h-5 w-5" />
+                              <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${!preset.isActive ? 'bg-slate-200 dark:bg-slate-800' : 'bg-violet-500/10 text-violet-600'}`}>
+                                <Zap className="h-4 w-4" />
                               </div>
-                              <div className="font-medium">{preset.name}</div>
+                              <div className="font-medium text-sm">{preset.name}</div>
                             </div>
                           </TableCell>
-                          <TableCell className="text-center font-medium">
+                          <TableCell className="text-center font-medium text-sm">
                             <div className="flex items-center justify-center gap-2">
                               <Database className="h-3 w-3 text-muted-foreground" />
                               {preset.quotaGB === 0 ? "Unlimited" : `${preset.quotaGB} GB`}
                             </div>
                           </TableCell>
-                          <TableCell className="text-center text-muted-foreground">
+                          <TableCell className="text-center text-muted-foreground text-sm">
                             <div className="flex items-center justify-center gap-2">
                               <Clock className="h-3 w-3" />
                               {preset.days} Days
                             </div>
                           </TableCell>
-                          <TableCell className="text-center font-bold text-foreground">
+                          <TableCell className="text-center font-bold text-foreground text-sm">
                             {preset.amount.toLocaleString()} {preset.currency || "LKR"}
                           </TableCell>
                           <TableCell className="text-center">
                             <Switch
                               checked={preset.isActive}
                               onCheckedChange={() => handleToggleActive(preset)}
+                              className="scale-75"
                             />
                           </TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -323,7 +316,7 @@ export default function PresetsPage() {
             )}
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[450px]">
