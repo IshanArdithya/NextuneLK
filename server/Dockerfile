@@ -14,6 +14,9 @@ RUN npm ci --legacy-peer-deps
 # copy source code
 COPY . .
 
+# Generate Prisma Client
+RUN npx prisma generate
+
 # production stage
 FROM node:20-alpine AS runner
 
