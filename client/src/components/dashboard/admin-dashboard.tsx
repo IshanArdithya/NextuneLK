@@ -133,7 +133,7 @@ export default function AdminDashboard() {
   const fetchInbounds = useCallback(async () => {
     try {
       setError(null);
-      const res = await api.get("/dashboard/inbounds");
+      const res = await api.get("/admin/inbounds");
       if (res.data.success) {
         setInbounds(res.data.obj);
         // auto-open first inbound on initial load
@@ -255,14 +255,14 @@ export default function AdminDashboard() {
         transition={{ delay: 0.1 }}
         className="grid grid-cols-1 sm:grid-cols-3 gap-4"
       >
-        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
+        <Card className="bg-white dark:bg-zinc-950 border-border/50 shadow-sm transition-all hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-blue-500/15 flex items-center justify-center">
-                <Server className="h-4 w-4 text-blue-500" />
+              <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <Server className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
                   Total Inbounds
                 </p>
                 <p className="text-lg font-bold">{inbounds.length}</p>
@@ -271,14 +271,14 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20">
+        <Card className="bg-white dark:bg-zinc-950 border-border/50 shadow-sm transition-all hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-emerald-500/15 flex items-center justify-center">
-                <Users className="h-4 w-4 text-emerald-500" />
+              <div className="h-9 w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
                   Total Clients
                 </p>
                 <p className="text-lg font-bold">{totalClients}</p>
@@ -287,25 +287,25 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-violet-500/10 to-violet-600/5 border-violet-500/20">
+        <Card className="bg-white dark:bg-zinc-950 border-border/50 shadow-sm transition-all hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-violet-500/15 flex items-center justify-center">
-                <Wifi className="h-4 w-4 text-violet-500" />
+              <div className="h-9 w-9 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                <Wifi className="h-4 w-4 text-violet-600 dark:text-violet-400" />
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
                   Online Now
                 </p>
-                <p className="text-lg font-bold flex items-center gap-2">
-                  {onlineClients}
-                  {onlineClients > 0 && (
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                    </span>
-                  )}
-                </p>
+                <div className="flex items-center gap-2">
+                    <p className="text-lg font-bold">{onlineClients}</p>
+                    {onlineClients > 0 && (
+                        <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                        </span>
+                    )}
+                </div>
               </div>
             </div>
           </CardContent>

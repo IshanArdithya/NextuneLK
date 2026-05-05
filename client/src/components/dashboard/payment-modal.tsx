@@ -107,7 +107,7 @@ export default function PaymentModal({
     if (!customerEmail) return;
     setLoading(true);
     try {
-      const res = await api.get(`/dashboard/payments/${customerEmail}`);
+      const res = await api.get(`/admin/payments/${customerEmail}`);
       if (res.data.success) {
         setPayments(res.data.obj);
       }
@@ -132,7 +132,7 @@ export default function PaymentModal({
 
   const handleMarkAsPaid = async (payment: Payment) => {
     try {
-      await api.put(`/dashboard/payments/${payment.id}`, {
+      await api.put(`/admin/payments/${payment.id}`, {
         status: "PAID",
         amountPaid: payment.amountPaid,
       });
@@ -149,7 +149,7 @@ export default function PaymentModal({
 
   const handleUpdatePayment = async (id: string) => {
     try {
-      await api.put(`/dashboard/payments/${id}`, {
+      await api.put(`/admin/payments/${id}`, {
         amountPaid: parseFloat(formAmount) || 0,
         status: formStatus,
         notes: formNotes,
@@ -168,7 +168,7 @@ export default function PaymentModal({
 
   const handleAddPayment = async () => {
     try {
-      await api.post(`/dashboard/payments`, {
+      await api.post(`/admin/payments`, {
         customerEmail,
         inboundId,
         amountPaid: parseFloat(formAmount) || 0,
@@ -192,7 +192,7 @@ export default function PaymentModal({
 
   const handleDeletePayment = async (id: string) => {
     try {
-      await api.delete(`/dashboard/payments/${id}`);
+      await api.delete(`/admin/payments/${id}`);
       toast({ title: "Success", description: "Payment record deleted" });
       fetchPayments();
     } catch {

@@ -5,16 +5,20 @@ export const PaymentService = {
     return prisma.payment.create({ data });
   },
 
-  getAllPayments: async (filters: { status?: string; email?: string }, skip: number, take: number) => {
+  getAllPayments: async (filters: { status?: string; email?: string; sortBy?: string }, skip: number, take: number) => {
     const where: any = {};
-    if (filters.status) where.status = filters.status;
+    if (filters.status && filters.status !== "ALL") where.status = filters.status;
     if (filters.email) where.customerEmail = { contains: filters.email, mode: "insensitive" };
+
+    let orderBy: any = { createdAt: "desc" };
+    if (filters.sortBy === "oldest") orderBy = { createdAt: "asc" };
+    if (filters.sortBy === "amount") orderBy = { amountPaid: "desc" };
 
     const [payments, total] = await Promise.all([
       prisma.payment.findMany({
         where,
         include: { preset: true },
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip,
         take,
       }),

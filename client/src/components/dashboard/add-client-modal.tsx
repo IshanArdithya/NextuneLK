@@ -83,7 +83,7 @@ export default function AddClientModal({
   const executeSubmit = async (submitData: any) => {
     setLoading(true);
     try {
-      await api.post("/dashboard/client/add", submitData);
+      await api.post("/admin/client/add", submitData);
 
       toast({
         title: "Client Added",
@@ -133,7 +133,7 @@ export default function AddClientModal({
 
       let linkAction = "skip";
       if (notificationEmail) {
-        const checkRes = await api.get(`/dashboard/client/check-email?email=${encodeURIComponent(notificationEmail)}`);
+        const checkRes = await api.get(`/admin/client/check-email?email=${encodeURIComponent(notificationEmail)}`);
         if (checkRes.data.obj.exists) {
           setPendingSubmitData({ ...baseData, linkAction: "link" });
           setShowLinkPrompt(true);

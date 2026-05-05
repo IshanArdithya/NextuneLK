@@ -113,7 +113,7 @@ export default function EditClientModal({
         comment,
       };
 
-      await api.put("/dashboard/client/update", submitData);
+      await api.put("/admin/client/update", submitData);
 
       toast({
         title: "Client Updated",
@@ -139,7 +139,7 @@ export default function EditClientModal({
     if (!client || !customerEmail) return;
     setLinking(true);
     try {
-      await api.post("/dashboard/client/link", {
+      await api.post("/admin/client/link", {
         xuiId: client.id,
         email: customerEmail,
       });
@@ -160,7 +160,7 @@ export default function EditClientModal({
     
     setLinking(true);
     try {
-      const checkRes = await api.get(`/dashboard/client/check-email?email=${encodeURIComponent(customerEmail)}`);
+      const checkRes = await api.get(`/admin/client/check-email?email=${encodeURIComponent(customerEmail)}`);
       if (!checkRes.data.obj.exists) {
         setShowCreateConfirm(true);
         setLinking(false);
@@ -180,7 +180,7 @@ export default function EditClientModal({
     
     setLinking(true);
     try {
-      await api.post("/dashboard/client/unlink", { xuiId: client.id });
+      await api.post("/admin/client/unlink", { xuiId: client.id });
       toast({ title: "Customer Unlinked", description: "Successfully unlinked from customer." });
       setIsLinked(false);
       setCustomerEmail("");

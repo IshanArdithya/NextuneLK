@@ -25,11 +25,12 @@ export default function AdminSetupPage() {
     const { data: session, isPending } = authClient.useSession();
 
     useEffect(() => {
+        const secretPath = process.env.NEXT_PUBLIC_ADMIN_URI_PATH || "admin";
         if (!isPending && !session) {
-            router.push("/login");
+            router.push(`/${secretPath}/admin/login`);
         }
         if (session?.user && !(session.user as any).needsPasswordChange) {
-            router.push("/dashboard");
+            router.push(`/${secretPath}/admin`);
         }
     }, [session, isPending, router]);
 
@@ -51,7 +52,7 @@ export default function AdminSetupPage() {
 
         try {
             const response = await api.post(
-                "/dashboard/auth/finalize-setup",
+                "/admin/auth/finalize-setup",
                 { newEmail, newPassword }
             );
 
@@ -62,8 +63,9 @@ export default function AdminSetupPage() {
             }
 
             setSuccess(true);
+            const secretPath = process.env.NEXT_PUBLIC_ADMIN_URI_PATH || "admin";
             setTimeout(() => {
-                router.push("/dashboard");
+                router.push(`/${secretPath}/admin`);
             }, 2000);
 
         } catch (err: any) {

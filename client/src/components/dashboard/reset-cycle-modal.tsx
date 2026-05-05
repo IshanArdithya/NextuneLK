@@ -62,7 +62,7 @@ export default function ResetCycleModal({
   useEffect(() => {
     if (open) {
       api
-        .get("/dashboard/presets")
+        .get("/admin/presets")
         .then((res) => {
           if (res.data.success) {
             setPresets(res.data.obj);
@@ -123,7 +123,7 @@ export default function ResetCycleModal({
         };
       }
 
-      await api.post("/dashboard/client/reset-cycle", submitData);
+      await api.post("/admin/client/reset-cycle", submitData);
 
       toast({
         title: "Cycle Reset",

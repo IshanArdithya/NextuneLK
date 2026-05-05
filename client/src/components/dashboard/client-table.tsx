@@ -170,7 +170,7 @@ export default function ClientTable({
 
   const handleToggleEnable = async (client: ClientData) => {
     try {
-      await api.put("/dashboard/client/update", {
+      await api.put("/admin/client/update", {
         inboundId: inboundId.toString(),
         clientId: client.id,
         xuiEmail: client.email,
