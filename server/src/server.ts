@@ -67,7 +67,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authLimiter, toNodeHandler(auth));
-app.use("/api/external", protectDashboard, generalLimiter, externalApiRoutes);
+app.use("/api/external", generalLimiter, externalApiRoutes);
 app.use("/api/dashboard", protectDashboard, generalLimiter, dashboardRoutes);
 
 // 404 hygiene
