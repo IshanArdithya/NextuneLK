@@ -199,7 +199,7 @@ export default function PresetsPage() {
         </div>
         <Button
           onClick={() => handleOpenModal()}
-          className="bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/20 group text-xs h-9"
+          className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-500/20 group text-xs h-9"
         >
           <Plus className="mr-2 h-4 w-4 transition-transform group-hover:rotate-90" />
           Create New Plan
@@ -216,7 +216,7 @@ export default function PresetsPage() {
           <CardContent className="p-0">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
                 <p className="text-sm text-muted-foreground animate-pulse">Loading presets...</p>
               </div>
             ) : presets.length === 0 ? (
@@ -316,7 +316,7 @@ export default function PresetsPage() {
         <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              <Zap className="h-6 w-6 text-violet-500" />
+              <Zap className="h-6 w-6 text-orange-500" />
               {editingPreset ? "Edit Service Plan" : "Create Service Plan"}
             </DialogTitle>
             <DialogDescription>
@@ -397,7 +397,7 @@ export default function PresetsPage() {
               <Button
                 type="submit"
                 disabled={saving}
-                className="bg-violet-600 hover:bg-violet-700 text-white min-w-[120px]"
+                className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px]"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

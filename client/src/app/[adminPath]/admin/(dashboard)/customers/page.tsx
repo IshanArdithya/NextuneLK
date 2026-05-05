@@ -159,7 +159,7 @@ export default function CustomersPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 placeholder="Search customers..."
-                className="pl-9 h-9 bg-background/50 border-border/40 focus:border-violet-500/50 focus:ring-violet-500/10 transition-all text-sm"
+                className="pl-9 h-9 bg-background/50 border-border/40 focus:border-orange-500/50 focus:ring-orange-500/10 transition-all text-sm"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -203,7 +203,7 @@ export default function CustomersPage() {
           {/* Conditional Content inside the Card */}
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+              <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
               <p className="text-sm text-muted-foreground animate-pulse">Loading data...</p>
             </div>
           ) : error ? (
@@ -224,7 +224,7 @@ export default function CustomersPage() {
                   : "Add a notification email when creating a client to see them here."}
               </p>
               {(search || statusFilter !== "ALL") && (
-                <Button variant="link" size="sm" className="mt-2 text-violet-500" onClick={() => { setSearch(""); setStatusFilter("ALL"); }}>
+                <Button variant="link" size="sm" className="mt-2 text-orange-500" onClick={() => { setSearch(""); setStatusFilter("ALL"); }}>
                   Reset all filters
                 </Button>
               )}
@@ -247,15 +247,14 @@ export default function CustomersPage() {
                       <TableRow key={customer.id} className="group hover:bg-muted/20 transition-colors border-border/40">
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-violet-500/10 flex items-center justify-center shrink-0">
-                              <Mail className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                            <div className="h-9 w-9 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
+                              <Mail className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                             </div>
                             <div className="min-w-0">
                               <p className="font-medium text-sm truncate">{customer.email}</p>
                               <Badge
                                 variant={customer.status === "ACTIVE" ? "outline" : "secondary"}
-                                className={`text-[10px] px-1.5 py-0 mt-0.5 ${customer.status === "ACTIVE"
-                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                                className={`text-[10px] px-1.5 py-0 mt-0.5 ${customer.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                                   : ""
                                   }`}
                               >

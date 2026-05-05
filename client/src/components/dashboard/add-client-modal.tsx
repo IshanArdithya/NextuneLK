@@ -264,7 +264,10 @@ export default function AddClientModal({
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     {protocol === "vless" && (
-                      <SelectItem value="xtls-rprx-vision">XTLS Vision</SelectItem>
+                      <>
+                        <SelectItem value="xtls-rprx-vision">xtls-rprx-vision</SelectItem>
+                        <SelectItem value="xtls-rprx-vision-udp443">xtls-rprx-vision-udp443</SelectItem>
+                      </>
                     )}
                   </SelectContent>
                 </Select>
@@ -322,7 +325,7 @@ export default function AddClientModal({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <LinkIcon className="h-5 w-5 text-violet-500" />
+              <LinkIcon className="h-5 w-5 text-orange-500" />
               Customer Found
             </AlertDialogTitle>
             <AlertDialogDescription>
@@ -338,7 +341,7 @@ export default function AddClientModal({
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-violet-600 hover:bg-violet-700"
+              className="bg-orange-600 hover:bg-orange-700"
               onClick={() => executeSubmit(pendingSubmitData)}
             >
               Yes, Link Account
@@ -350,7 +353,7 @@ export default function AddClientModal({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <LinkIcon className="h-5 w-5 text-emerald-500" />
+              <LinkIcon className="h-5 w-5 text-orange-500" />
               New Customer
             </AlertDialogTitle>
             <AlertDialogDescription>
@@ -366,7 +369,7 @@ export default function AddClientModal({
               No, Skip Linking
             </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-orange-600 hover:bg-orange-700"
               onClick={() => executeSubmit(pendingSubmitData)}
             >
               Yes, Create Account

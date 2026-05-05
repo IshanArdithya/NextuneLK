@@ -956,14 +956,14 @@ export default function UsageDashboard() {
                     {displayData.expiry_pending_duration ? null : displayData
                       .expiry_remaining === null ||
                       displayData.expiry_remaining === "N/A" ? (
-                      <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 text-xs font-semibold whitespace-nowrap">
+                      <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-600 text-xs font-semibold whitespace-nowrap">
                         <Infinity size={15} />
                       </span>
                     ) : (
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${displayData.expiry_remaining === "Expired"
                           ? "bg-red-500/10 text-red-600"
-                          : "bg-blue-500/10 text-blue-600"
+                          : "bg-orange-500/10 text-orange-600"
                           }`}
                       >
                         {displayData.expiry_remaining}

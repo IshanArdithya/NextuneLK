@@ -173,6 +173,7 @@ export const XuiService = {
         totalFormatted: inbound.total === 0 ? "Unlimited" : formatBytes(inbound.total),
         clients: enrichedClients,
         clientCount: enrichedClients.length,
+        streamSettings: inbound.streamSettings ? JSON.parse(inbound.streamSettings) : null,
       };
     });
 

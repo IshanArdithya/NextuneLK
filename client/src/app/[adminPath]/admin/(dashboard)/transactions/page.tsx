@@ -167,7 +167,7 @@ export default function TransactionsPage() {
             <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm text-xs h-9 px-4">
+          <Button className="bg-orange-600 hover:bg-orange-700 text-white shadow-sm text-xs h-9 px-4">
             <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
@@ -179,8 +179,8 @@ export default function TransactionsPage() {
         <Card className="bg-white dark:bg-zinc-950 border-border/50 shadow-sm transition-all hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <Banknote className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                <Banknote className="h-4 w-4 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
@@ -195,14 +195,14 @@ export default function TransactionsPage() {
         <Card className="bg-white dark:bg-zinc-950 border-border/50 shadow-sm transition-all hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                <Wallet className="h-4 w-4 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
                   Collected
                 </p>
-                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">LKR {stats.paid.toLocaleString()}</p>
+                <p className="text-lg font-bold text-orange-600 dark:text-orange-400">LKR {stats.paid.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
@@ -234,7 +234,7 @@ export default function TransactionsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 placeholder="Search email or ID..."
-                className="pl-9 h-9 bg-background/50 border-border/40 focus:border-violet-500/50 focus:ring-violet-500/10 transition-all text-sm"
+                className="pl-9 h-9 bg-background/50 border-border/40 focus:border-orange-500/50 focus:ring-orange-500/10 transition-all text-sm"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -277,7 +277,7 @@ export default function TransactionsPage() {
           {/* Conditional Content */}
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
               <p className="text-sm text-muted-foreground animate-pulse">Syncing ledger...</p>
             </div>
           ) : transactions.length === 0 ? (
@@ -290,7 +290,7 @@ export default function TransactionsPage() {
                   : "All client payments and invoices will appear here."}
               </p>
               {(search || statusFilter !== "ALL") && (
-                <Button variant="link" size="sm" className="mt-2 text-blue-600" onClick={() => { setSearch(""); setStatusFilter("ALL"); }}>
+                <Button variant="link" size="sm" className="mt-2 text-orange-600" onClick={() => { setSearch(""); setStatusFilter("ALL"); }}>
                   Reset all filters
                 </Button>
               )}
@@ -324,7 +324,7 @@ export default function TransactionsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2.5">
-                            <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center text-[10px] font-bold text-blue-600 border border-blue-500/10 shrink-0">
+                            <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center text-[10px] font-bold text-orange-600 border border-orange-500/10 shrink-0">
                               {t.clientEmail[0].toUpperCase()}
                             </div>
                             <span className="font-medium truncate max-w-[150px]">{t.clientEmail}</span>
@@ -345,8 +345,7 @@ export default function TransactionsPage() {
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge
-                            className={`text-[10px] gap-1 font-bold ${t.status === "PAID"
-                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                            className={`text-[10px] gap-1 font-bold ${t.status === "PAID" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                               : "bg-amber-500/10 text-amber-600 border-amber-500/20"
                               }`}
                             variant="outline"
@@ -376,7 +375,7 @@ export default function TransactionsPage() {
                                   onClick={() => handleMarkAsPaid(t)}
                                   className="cursor-pointer"
                                 >
-                                  <Check className="mr-2 h-4 w-4 text-emerald-500" />
+                                  <Check className="mr-2 h-4 w-4 text-orange-500" />
                                   Mark as Paid
                                 </DropdownMenuItem>
                               )}

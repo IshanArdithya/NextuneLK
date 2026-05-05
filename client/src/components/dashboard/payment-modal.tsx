@@ -65,7 +65,7 @@ function StatusBadge({ status }: { status: string }) {
   switch (status) {
     case "PAID":
       return (
-        <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px]">
+        <Badge className="bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30 text-[10px]">
           <Check className="h-3 w-3 mr-1" />
           Paid
         </Badge>
@@ -355,7 +355,7 @@ export default function PaymentModal({
                                   onClick={() => handleMarkAsPaid(payment)}
                                   title="Mark as Paid"
                                 >
-                                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                                  <Check className="h-3.5 w-3.5 text-orange-500" />
                                 </Button>
                               )}
                               <Button

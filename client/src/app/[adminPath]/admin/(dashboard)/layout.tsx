@@ -93,7 +93,7 @@ export default function DashboardLayout({
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
                 <Link href={`/${secretPath}/admin`}>
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-md">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-md">
                     <Zap className="size-4" />
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">

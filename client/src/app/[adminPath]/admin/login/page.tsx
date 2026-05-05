@@ -51,7 +51,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-[#fafafa] selection:bg-blue-600/10 font-sans">
+        <div className="min-h-screen flex items-center justify-center p-6 bg-[#fafafa] selection:bg-orange-600/10 font-sans">
             <div className="absolute inset-0 z-0 opacity-[0.4] pointer-events-none"
                 style={{ backgroundImage: `radial-gradient(#e5e7eb 1px, transparent 1px)`, backgroundSize: '24px 24px' }}
             />
@@ -76,7 +76,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Login Card */}
-                <Card className="bg-white border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-t-2 border-t-blue-600">
+                <Card className="bg-white border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-t-2 border-t-orange-600">
                     <CardContent className="p-8">
                         <form onSubmit={handleLogin} className="space-y-5">
                             <AnimatePresence mode="wait">
@@ -100,12 +100,12 @@ export default function LoginPage() {
                                         Email Address
                                     </Label>
                                     <div className="relative group">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-orange-600 transition-colors" />
                                         <Input
                                             id="email"
                                             type="email"
                                             placeholder="admin@nextune.com"
-                                            className="pl-9 h-11 bg-white border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all text-slate-900 placeholder:text-slate-300"
+                                            className="pl-9 h-11 bg-white border-slate-200 focus:border-orange-600 focus:ring-4 focus:ring-orange-600/5 transition-all text-slate-900 placeholder:text-slate-300"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             required
@@ -118,12 +118,12 @@ export default function LoginPage() {
                                         Password
                                     </Label>
                                     <div className="relative group">
-                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-orange-600 transition-colors" />
                                         <Input
                                             id="password"
                                             type="password"
                                             placeholder="••••••••••••"
-                                            className="pl-9 h-11 bg-white border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all text-slate-900 placeholder:text-slate-300"
+                                            className="pl-9 h-11 bg-white border-slate-200 focus:border-orange-600 focus:ring-4 focus:ring-orange-600/5 transition-all text-slate-900 placeholder:text-slate-300"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             required
@@ -134,7 +134,7 @@ export default function LoginPage() {
 
                             <Button
                                 type="submit"
-                                className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all duration-200 shadow-md shadow-blue-600/10 mt-2 active:scale-[0.98]"
+                                className="w-full h-11 bg-orange-600 hover:bg-orange-700 text-white font-bold transition-all duration-200 shadow-md shadow-orange-600/10 mt-2 active:scale-[0.98]"
                                 disabled={loading}
                             >
                                 {loading ? (
