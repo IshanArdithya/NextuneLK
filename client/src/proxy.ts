@@ -26,7 +26,7 @@ export function proxy(request: NextRequest) {
     const sessionToken = request.cookies.get("better-auth.session_token");
 
     // login redirect
-    if (pathname === `/${secretPath}/admin/login`) {
+    if (pathname === `/${secretPath}/admin/login` || pathname === `/${secretPath}/login`) {
       // already authed
       if (sessionToken) {
         return NextResponse.redirect(new URL(`/${secretPath}/admin`, request.url));
