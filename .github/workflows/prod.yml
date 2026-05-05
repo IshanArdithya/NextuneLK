@@ -48,7 +48,7 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_CLIENT }}:latest
           build-args: |
-            NEXT_PUBLIC_API_BASE_URL=https://api.ishanardithya.me:8443/nextunelk
+            NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
