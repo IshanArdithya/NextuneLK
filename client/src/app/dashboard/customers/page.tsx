@@ -196,8 +196,12 @@ export default function CustomersPage() {
                       <div className="min-w-0">
                         <p className="font-medium text-sm truncate">{customer.email}</p>
                         <Badge
-                          variant={customer.status === "ACTIVE" ? "success" : "secondary"}
-                          className="text-[10px] px-1.5 py-0 mt-0.5"
+                          variant={customer.status === "ACTIVE" ? "outline" : "secondary"}
+                          className={`text-[10px] px-1.5 py-0 mt-0.5 ${
+                            customer.status === "ACTIVE" 
+                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
+                              : ""
+                          }`}
                         >
                           {customer.status}
                         </Badge>
