@@ -1,0 +1,163 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Preset {
+  id        String   @id @default(uuid())
+  name      String                        // e.g. "Basic 100GB"
+  quotaGB   Float    @map("quota_gb")     // e.g. 100
+  days      Int                           // e.g. 30
+  amount    Float                         // e.g. 250
+  currency  String   @default("LKR")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  payments Payment[]
+
+  @@map("presets")
+}
+
+model Customer {
+  id        String         @id @default(uuid())
+  email     String         @unique                    // customer's unique email
+  notes     String?
+  status    CustomerStatus @default(ACTIVE)
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  services  Service[]      // vpn tunnels linked to this customer
+  payments  Payment[]      // all payment history
+
+  @@index([status])
+  @@map("customers")
+}
+
+enum CustomerStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model Service {
+  id         String        @id @default(uuid())
+  xuiId      String        @unique @map("xui_id")        // uuid from xui panel
+  xuiEmail   String        @map("xui_email")              // name/remark in xui
+  inboundId  Int           @map("inbound_id")             // xui inbound
+  customerId String?       @map("customer_id")            // linked customer (nullable)
+  customer   Customer?     @relation(fields: [customerId], references: [id])
+  status     ServiceStatus @default(ACTIVE)
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([inboundId])
+  @@index([status])
+  @@map("services")
+}
+
+enum ServiceStatus {
+  ACTIVE
+  DISABLED
+}
+
+model Payment {
+  id           String        @id @default(uuid())
+  customerId   String?       @map("customer_id")
+  customer     Customer?     @relation(fields: [customerId], references: [id])
+  customerEmail String?      @map("customer_email")           // for history
+  inboundId    Int           @map("inbound_id")
+  quotaGB      Float?        @map("quota_gb")
+  amountPaid   Float         @default(0) @map("amount_paid")
+  currency     String        @default("LKR")
+  paymentDate  DateTime?     @map("payment_date")
+  status       PaymentStatus @default(UNPAID)
+  cycleStart   DateTime?     @map("cycle_start")
+  cycleEnd     DateTime?     @map("cycle_end")
+  isNewClient  Boolean       @default(true) @map("is_new_client")
+  notes        String?
+  presetId     String?       @map("preset_id")
+  preset       Preset?       @relation(fields: [presetId], references: [id])
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@index([customerEmail])
+  @@index([customerId])
+  @@index([inboundId])
+  @@index([status])
+  @@index([presetId])
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+  REFUNDED
+}
+
+// better auth
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false) @map("email_verified")
+  image         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  
+  needsPasswordChange Boolean @default(true) @map("needs_password_change")
+
+  sessions Session[]
+  accounts Account[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime @map("expires_at")
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime  @map("expires_at")
+  createdAt  DateTime? @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+
+  @@map("verification")
+}

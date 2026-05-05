@@ -1,0 +1,95 @@
+name: Prod
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/nextunelk-server
+  IMAGE_NAME_CLIENT: ${{ github.repository }}/nextunelk-client
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # lowercase the image name
+      - name: Lowercase Image Name
+        run: |
+          echo "IMAGE_NAME=${IMAGE_NAME,,}" >> $GITHUB_ENV
+          echo "IMAGE_NAME_CLIENT=${IMAGE_NAME_CLIENT,,}" >> $GITHUB_ENV
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Server Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./server
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Build and push Client Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./client
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_CLIENT }}:latest
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            echo "Logging into Registry..."
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            echo "Pulling latest images..."
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_CLIENT }}:latest
+            
+            # --- Deploy Server ---
+            echo "Deploying Production Server..."
+            docker stop nextunelk-server || true
+            docker rm nextunelk-server || true
+            
+            docker run -d \
+              --name nextunelk-server \
+              --restart unless-stopped \
+              --network host \
+              --env-file .env.nextunelk.prod \
+              -v $HOME/logs/prod:/app/logs \
+              -v /etc/localtime:/etc/localtime:ro \
+              -v /etc/timezone:/etc/timezone:ro \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+            # --- Deploy Client ---
+            echo "Deploying Production Client..."
+            docker stop nextunelk-client || true
+            docker rm nextunelk-client || true
+            
+            docker run -d \
+              --name nextunelk-client \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              -v /etc/localtime:/etc/localtime:ro \
+              -v /etc/timezone:/etc/timezone:ro \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_CLIENT }}:latest
+            
+            echo "Production Deployment successful."

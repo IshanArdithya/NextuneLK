@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Outfit:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -117,6 +119,25 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Inter", sans-serif;
+  --font-outfit: "Outfit", sans-serif;
+
+  --color-primary-container: #ff784f;
+  --color-on-primary-container: #470e00;
+  --color-primary: #aa2f00;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface: #f5f6f7;
+  --color-on-surface: #2c2f30;
+  --color-on-surface-variant: #595c5d;
+  --color-outline-variant: #abadae;
+  --color-surface-container-low: #eff1f2;
+
+  /* Global scale overrides */
+  --spacing-7xl: 1440px;
+  --container-7xl: 1440px;
 }
 
 @layer base {
@@ -132,11 +153,11 @@
 /* Orange gradient utilities */
 @layer utilities {
   .bg-orange-gradient {
-    @apply bg-gradient-to-r from-orange-500 to-orange-600;
+    @apply bg-linear-to-r from-orange-500 to-orange-600;
   }
 
   .text-gradient {
-    @apply text-transparent bg-clip-text bg-gradient-to-r;
+    @apply text-transparent bg-clip-text bg-linear-to-r;
   }
 
   /* Add no-scrollbar utility for breadcrumb overflow handling */
@@ -147,5 +168,20 @@
 
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+
+  .bg-pattern {
+    background-image: radial-gradient(circle at 2px 2px, #e2e8f0 1px, transparent 0);
+    background-size: 40px 40px;
+  }
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
   }
 }

@@ -49,8 +49,8 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-border/50 px-4">
-      <div className="max-w-6xl mx-auto">
+    <nav className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-border/50">
+      <div className="max-w-7xl mx-auto w-full px-6">
         <div className="flex justify-between items-center h-16">
           {/* logo */}
           <ComingSoonWrapper>
