@@ -88,7 +88,7 @@ jobs:
             docker run -d \
               --name nextunelk-client \
               --restart unless-stopped \
-              -p 3000:3000 \
+              -p 3006:3000 \
               -v /etc/localtime:/etc/localtime:ro \
               -v /etc/timezone:/etc/timezone:ro \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_CLIENT }}:latest
