@@ -21,7 +21,7 @@ export default function AnalyticsPage() {
         {/* Main Chart Area */}
         <div className="col-span-1 md:col-span-2 h-[300px] rounded-xl bg-muted border flex items-center justify-center relative overflow-hidden">
           {/* Fake lines */}
-          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-violet-500/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-orange-500/20 to-transparent" />
           <svg viewBox="0 0 100 50" className="w-full h-full opacity-20" preserveAspectRatio="none">
             <polyline points="0,50 20,30 40,40 60,10 80,20 100,5" fill="none" stroke="currentColor" strokeWidth="2" />
           </svg>
@@ -41,7 +41,7 @@ export default function AnalyticsPage() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="relative max-w-md w-full px-8 py-10"
         >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full bg-orange-500/10 blur-3xl pointer-events-none" />
 
           <div className="relative rounded-2xl border border-white/10 dark:border-white/5 bg-white/50 dark:bg-black/50 backdrop-blur-2xl shadow-2xl p-8 flex flex-col items-center text-center">
 
@@ -51,7 +51,7 @@ export default function AnalyticsPage() {
               transition={{ delay: 0.2, duration: 0.8, type: "spring" }}
               className="relative mb-6"
             >
-              <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.3)]">
+              <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.3)]">
                 <Lock className="h-8 w-8 text-white" />
               </div>
 
@@ -67,8 +67,8 @@ export default function AnalyticsPage() {
 
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 border text-xs font-medium text-muted-foreground">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
               </span>
               Under Active Development
             </div>

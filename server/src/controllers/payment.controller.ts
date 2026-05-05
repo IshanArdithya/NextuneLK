@@ -4,10 +4,10 @@ import { catchAsync } from "../utils/catchAsync.js";
 import { AppError } from "../utils/AppError.js";
 
 export const getAllPayments = catchAsync(async (req: any, res: any) => {
-  const { status, email, page = 1, limit = 50 } = req.query;
+  const { status, email, sortBy = "newest", page = 1, limit = 50 } = req.query;
   const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
-  const { payments, total } = await PaymentService.getAllPayments({ status, email }, skip, parseInt(limit as string));
+  const { payments, total } = await PaymentService.getAllPayments({ status, email, sortBy }, skip, parseInt(limit as string));
 
   return res.json({
     success: true,

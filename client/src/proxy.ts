@@ -10,11 +10,34 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/usage", request.url));
   }
 
-  if (pathname.startsWith("/dashboard")) {
+  const secretPath = process.env.NEXT_PUBLIC_ADMIN_URI_PATH || "admin";
+  const pathSegments = pathname.split("/").filter(Boolean);
+  const firstSegment = pathSegments[0];
+
+  // block fake admin paths
+  if (firstSegment && firstSegment !== secretPath && firstSegment !== "usage") {
+    if (pathSegments[1] === "admin") {
+      return NextResponse.redirect(new URL("/usage", request.url));
+    }
+  }
+
+  // secret uri protection
+  if (pathname.startsWith(`/${secretPath}/admin`)) {
     const sessionToken = request.cookies.get("better-auth.session_token");
+
+    // login redirect
+    if (pathname === `/${secretPath}/admin/login`) {
+      // already authed
+      if (sessionToken) {
+        return NextResponse.redirect(new URL(`/${secretPath}/admin`, request.url));
+      }
+      return NextResponse.next();
+    }
+
+    // protect admin pages
     if (!sessionToken) {
       const url = request.nextUrl.clone();
-      url.pathname = "/login";
+      url.pathname = `/${secretPath}/admin/login`;
       return NextResponse.redirect(url);
     }
   }
@@ -23,5 +46,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/setup", "/dashboard/:path*"],
+  matcher: ["/", "/setup", "/:path*"],
 };

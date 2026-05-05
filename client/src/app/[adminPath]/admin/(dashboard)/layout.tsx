@@ -33,30 +33,30 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
-const navItems = [
+const getNavItems = (secretPath: string) => [
   {
     title: "Analytics",
-    href: "/dashboard",
+    href: `/${secretPath}/admin`,
     icon: BarChart3,
   },
   {
     title: "Clients",
-    href: "/dashboard/clients",
+    href: `/${secretPath}/admin/clients`,
     icon: Server,
   },
   {
     title: "Customers",
-    href: "/dashboard/customers",
+    href: `/${secretPath}/admin/customers`,
     icon: Users,
   },
   {
     title: "Transactions",
-    href: "/dashboard/transactions",
+    href: `/${secretPath}/admin/transactions`,
     icon: CreditCard,
   },
   {
     title: "Presets",
-    href: "/dashboard/presets",
+    href: `/${secretPath}/admin/presets`,
     icon: Package,
   },
 ];
@@ -68,13 +68,15 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const secretPath = process.env.NEXT_PUBLIC_ADMIN_URI_PATH || "admin";
+  const navItems = getNavItems(secretPath);
 
   const handleLogout = async () => {
     try {
       await authClient.signOut({
         fetchOptions: {
           onSuccess: () => {
-            router.push("/login");
+            router.push(`/${secretPath}/admin/login`);
           },
         },
       });
@@ -90,8 +92,8 @@ export default function DashboardLayout({
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
-                <Link href="/dashboard">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-md">
+                <Link href={`/${secretPath}/admin`}>
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-md">
                     <Zap className="size-4" />
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
@@ -114,8 +116,8 @@ export default function DashboardLayout({
               <SidebarMenu>
                 {navItems.map((item) => {
                   const isActive =
-                    item.href === "/dashboard"
-                      ? pathname === "/dashboard"
+                    item.href === `/${secretPath}/admin`
+                      ? pathname === `/${secretPath}/admin`
                       : pathname.startsWith(item.href);
                   return (
                     <SidebarMenuItem key={item.href}>
@@ -157,8 +159,8 @@ export default function DashboardLayout({
           <div className="flex items-center gap-2 text-sm flex-1">
             <span className="font-medium text-muted-foreground">
               {navItems.find((item) =>
-                item.href === "/dashboard"
-                  ? pathname === "/dashboard"
+                item.href === `/${secretPath}/admin`
+                  ? pathname === `/${secretPath}/admin`
                   : pathname.startsWith(item.href)
               )?.title || "Dashboard"}
             </span>

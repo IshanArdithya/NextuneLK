@@ -14,12 +14,13 @@ import { Copy, Check, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { ClientData } from "./admin-dashboard";
 
-const SUB_URI = process.env.NEXT_PUBLIC_SUB_URI || "";
-
 interface QRCodeModalProps {
   open: boolean;
   client: ClientData | null;
   inboundRemark: string;
+  inboundProtocol: string;
+  inboundPort: number;
+  streamSettings: any;
   onClose: () => void;
 }
 
@@ -44,8 +45,8 @@ function CopyableLink({
 
   const colors =
     variant === "purple"
-      ? "border-violet-500/30 bg-violet-500/5"
-      : "border-emerald-500/30 bg-emerald-500/5";
+      ? "border-orange-500/30 bg-orange-500/5"
+      : "border-orange-500/30 bg-orange-500/5";
 
   return (
     <div className={`rounded-xl border p-4 space-y-3 ${colors}`}>
@@ -53,8 +54,8 @@ function CopyableLink({
         <Badge
           variant="outline"
           className={`text-[10px] ${variant === "purple"
-            ? "border-violet-500/40 text-violet-600 dark:text-violet-400"
-            : "border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+            ? "border-orange-500/40 text-orange-600 dark:text-orange-400"
+            : "border-orange-500/40 text-orange-600 dark:text-orange-400"
             }`}
         >
           {label}
@@ -66,7 +67,7 @@ function CopyableLink({
           className="h-7 text-xs gap-1"
         >
           {copied ? (
-            <Check className="h-3 w-3 text-emerald-500" />
+            <Check className="h-3 w-3 text-orange-500" />
           ) : (
             <Copy className="h-3 w-3" />
           )}
@@ -99,7 +100,7 @@ function CopyableLink({
       {/* Link preview */}
       <div className="flex items-center gap-2 bg-muted/50 rounded-md px-2 py-1.5">
         <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-        <p className="text-[10px] text-muted-foreground truncate font-mono">
+        <p className="text-[10px] text-muted-foreground break-all font-mono">
           {link}
         </p>
       </div>
@@ -111,18 +112,49 @@ export default function QRCodeModal({
   open,
   client,
   inboundRemark,
+  inboundProtocol,
+  inboundPort,
+  streamSettings,
   onClose,
 }: QRCodeModalProps) {
   if (!client) return null;
 
-  const subLink = SUB_URI && client.subId ? `${SUB_URI}${client.subId}` : null;
+  // extract host from external proxy destination
+  const vlessHost = streamSettings?.externalProxy?.[0]?.dest;
+
+  // extract settings from XUI streamSettings
+  const network = streamSettings?.network;
+  const security = streamSettings?.security;
+  const tlsSettings = streamSettings?.tlsSettings || streamSettings?.xtlsSettings || streamSettings?.realitySettings || {};
+  const sni = tlsSettings?.serverName || tlsSettings?.sni || "";
+  const fp = tlsSettings?.fingerprint || tlsSettings?.fp || tlsSettings?.settings?.fingerprint || tlsSettings?.settings?.fp || "";
+  const alpn = tlsSettings?.alpn
+    ? encodeURIComponent(Array.isArray(tlsSettings.alpn) ? tlsSettings.alpn.join(",") : tlsSettings.alpn)
+    : "";
+
+  // constructing link
+  let vlessLink = `${inboundProtocol}://${client.id}@${vlessHost}:${inboundPort}`;
+  const queryParts = [];
+  if (network) queryParts.push(`type=${network}`);
+  if (inboundProtocol === "vless") queryParts.push(`encryption=none`);
+  if (security) queryParts.push(`security=${security}`);
+  if (fp) queryParts.push(`fp=${fp}`);
+  if (alpn) queryParts.push(`alpn=${alpn}`);
+  if (sni) queryParts.push(`sni=${sni}`);
+  if (client.flow && client.flow !== "none") queryParts.push(`flow=${client.flow}`);
+
+  if (queryParts.length > 0) {
+    vlessLink += `?${queryParts.join("&")}`;
+  }
+
+  vlessLink += `#${inboundRemark}-${client.email}`;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[440px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            QR Codes
+            Direct VLESS Link
             <Badge variant="secondary" className="text-[10px] font-normal">
               {client.email}
             </Badge>
@@ -130,22 +162,31 @@ export default function QRCodeModal({
         </DialogHeader>
 
         <div className="space-y-4">
-          {subLink && (
-            <CopyableLink
-              label="Subscription"
-              link={subLink}
-              variant="purple"
-            />
-          )}
+          {vlessHost ? (
+            <>
+              <CopyableLink
+                label="Direct VLESS URL"
+                link={vlessLink}
+                variant="purple"
+              />
 
-          {!subLink && (
-            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-              <p className="text-sm text-center">
-                Configure <code className="text-xs bg-muted px-1 py-0.5 rounded">NEXT_PUBLIC_SUB_URI</code> in your environment to enable QR codes.
-              </p>
-              <p className="text-xs mt-2 text-center">
-                Example: <code className="bg-muted px-1 py-0.5 rounded">https://yourdomain.com/sub/</code>
-              </p>
+              <div className="p-3 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/20">
+                <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+                  Scan this QR code with any compatible client (V2RayNG, Shadowrocket) for instant connection.
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="p-6 border border-dashed border-orange-500/30 bg-orange-500/5 rounded-xl text-center space-y-3">
+              <div className="mx-auto w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                <ExternalLink className="h-5 w-5 text-orange-500" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium">External Proxy Required</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Please configure an <strong>External Proxy</strong> destination in your X-UI inbound settings to generate direct connection links.
+                </p>
+              </div>
             </div>
           )}
         </div>

@@ -65,7 +65,7 @@ function StatusBadge({ status }: { status: string }) {
   switch (status) {
     case "PAID":
       return (
-        <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px]">
+        <Badge className="bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30 text-[10px]">
           <Check className="h-3 w-3 mr-1" />
           Paid
         </Badge>
@@ -107,7 +107,7 @@ export default function PaymentModal({
     if (!customerEmail) return;
     setLoading(true);
     try {
-      const res = await api.get(`/dashboard/payments/${customerEmail}`);
+      const res = await api.get(`/admin/payments/${customerEmail}`);
       if (res.data.success) {
         setPayments(res.data.obj);
       }
@@ -132,7 +132,7 @@ export default function PaymentModal({
 
   const handleMarkAsPaid = async (payment: Payment) => {
     try {
-      await api.put(`/dashboard/payments/${payment.id}`, {
+      await api.put(`/admin/payments/${payment.id}`, {
         status: "PAID",
         amountPaid: payment.amountPaid,
       });
@@ -149,7 +149,7 @@ export default function PaymentModal({
 
   const handleUpdatePayment = async (id: string) => {
     try {
-      await api.put(`/dashboard/payments/${id}`, {
+      await api.put(`/admin/payments/${id}`, {
         amountPaid: parseFloat(formAmount) || 0,
         status: formStatus,
         notes: formNotes,
@@ -168,7 +168,7 @@ export default function PaymentModal({
 
   const handleAddPayment = async () => {
     try {
-      await api.post(`/dashboard/payments`, {
+      await api.post(`/admin/payments`, {
         customerEmail,
         inboundId,
         amountPaid: parseFloat(formAmount) || 0,
@@ -192,7 +192,7 @@ export default function PaymentModal({
 
   const handleDeletePayment = async (id: string) => {
     try {
-      await api.delete(`/dashboard/payments/${id}`);
+      await api.delete(`/admin/payments/${id}`);
       toast({ title: "Success", description: "Payment record deleted" });
       fetchPayments();
     } catch {
@@ -355,7 +355,7 @@ export default function PaymentModal({
                                   onClick={() => handleMarkAsPaid(payment)}
                                   title="Mark as Paid"
                                 >
-                                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                                  <Check className="h-3.5 w-3.5 text-orange-500" />
                                 </Button>
                               )}
                               <Button

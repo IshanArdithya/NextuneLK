@@ -3,14 +3,19 @@ import { AppError } from "../utils/AppError.js";
 import prisma from "../config/prisma.js";
 
 export const getAllCustomers = catchAsync(async (req: any, res: any) => {
-  const { search, status, page = 1, limit = 50 } = req.query;
+  const { search, status, sortBy = "newest", page = 1, limit = 50 } = req.query;
   const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
   const where: any = {};
-  if (status) where.status = status;
+  if (status && status !== "ALL") where.status = status;
   if (search) {
     where.email = { contains: search, mode: "insensitive" };
   }
+
+  let orderBy: any = { createdAt: "desc" };
+  if (sortBy === "oldest") orderBy = { createdAt: "asc" };
+  if (sortBy === "email") orderBy = { email: "asc" };
+  if (sortBy === "email_desc") orderBy = { email: "desc" };
 
   const [customers, total] = await Promise.all([
     prisma.customer.findMany({
@@ -29,7 +34,7 @@ export const getAllCustomers = catchAsync(async (req: any, res: any) => {
           select: { payments: true },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy,
       skip,
       take: parseInt(limit as string),
     }),

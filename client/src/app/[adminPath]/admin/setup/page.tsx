@@ -25,11 +25,12 @@ export default function AdminSetupPage() {
     const { data: session, isPending } = authClient.useSession();
 
     useEffect(() => {
+        const secretPath = process.env.NEXT_PUBLIC_ADMIN_URI_PATH || "admin";
         if (!isPending && !session) {
-            router.push("/login");
+            router.push(`/${secretPath}/admin/login`);
         }
         if (session?.user && !(session.user as any).needsPasswordChange) {
-            router.push("/dashboard");
+            router.push(`/${secretPath}/admin`);
         }
     }, [session, isPending, router]);
 
@@ -51,7 +52,7 @@ export default function AdminSetupPage() {
 
         try {
             const response = await api.post(
-                "/dashboard/auth/finalize-setup",
+                "/admin/auth/finalize-setup",
                 { newEmail, newPassword }
             );
 
@@ -62,8 +63,9 @@ export default function AdminSetupPage() {
             }
 
             setSuccess(true);
+            const secretPath = process.env.NEXT_PUBLIC_ADMIN_URI_PATH || "admin";
             setTimeout(() => {
-                router.push("/dashboard");
+                router.push(`/${secretPath}/admin`);
             }, 2000);
 
         } catch (err: any) {
@@ -80,7 +82,7 @@ export default function AdminSetupPage() {
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-emerald-100/30 via-slate-50 to-slate-50 dark:from-emerald-900/10 dark:via-slate-950 dark:to-slate-950">
             <div className="w-full max-w-lg">
                 <div className="flex flex-col items-center mb-8">
-                    <div className="h-16 w-16 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-4">
+                    <div className="h-16 w-16 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30 mb-4">
                         <ShieldCheck className="text-white h-8 w-8" />
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white text-center">Finalize Your Security</h1>
@@ -89,7 +91,7 @@ export default function AdminSetupPage() {
                     </p>
                 </div>
 
-                <Card className="border-none shadow-2xl dark:bg-slate-900/50 backdrop-blur-sm border-t-4 border-t-emerald-500">
+                <Card className="border-none shadow-2xl dark:bg-slate-900/50 backdrop-blur-sm border-t-4 border-t-orange-500">
                     <CardHeader>
                         <CardTitle>Account Setup</CardTitle>
                         <CardDescription>
@@ -98,7 +100,7 @@ export default function AdminSetupPage() {
                     </CardHeader>
                     {success ? (
                         <CardContent className="flex flex-col items-center py-12">
-                            <CheckCircle2 className="h-16 w-16 text-emerald-500 mb-4 animate-in zoom-in duration-300" />
+                            <CheckCircle2 className="h-16 w-16 text-orange-500 mb-4 animate-in zoom-in duration-300" />
                             <h2 className="text-xl font-semibold">Security Setup Complete!</h2>
                             <p className="text-slate-500 mt-2">Redirecting you to the dashboard...</p>
                         </CardContent>
@@ -114,7 +116,7 @@ export default function AdminSetupPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="new-email">New Admin Email</Label>
                                     <div className="relative group">
-                                        <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                                        <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-orange-500 transition-colors" />
                                         <Input
                                             id="new-email"
                                             type="email"
@@ -164,7 +166,7 @@ export default function AdminSetupPage() {
                             <CardFooter>
                                 <Button
                                     type="submit"
-                                    className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-lg"
+                                    className="w-full h-12 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-lg"
                                     disabled={loading}
                                 >
                                     {loading ? (

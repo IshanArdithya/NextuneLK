@@ -79,6 +79,7 @@ export interface InboundData {
   id: number;
   remark: string;
   protocol: string;
+  streamSettings: any;
   port: number;
   enable: boolean;
   up: number;
@@ -113,7 +114,10 @@ export default function AdminDashboard() {
     open: boolean;
     client: ClientData | null;
     inboundRemark: string;
-  }>({ open: false, client: null, inboundRemark: "" });
+    inboundProtocol: string;
+    inboundPort: number;
+    streamSettings: any;
+  }>({ open: false, client: null, inboundRemark: "", inboundProtocol: "", inboundPort: 0, streamSettings: null });
   const [paymentModal, setPaymentModal] = useState<{
     open: boolean;
     customerEmail: string;
@@ -133,9 +137,10 @@ export default function AdminDashboard() {
   const fetchInbounds = useCallback(async () => {
     try {
       setError(null);
-      const res = await api.get("/dashboard/inbounds");
+      const res = await api.get("/admin/inbounds");
       if (res.data.success) {
         setInbounds(res.data.obj);
+        
         // auto-open first inbound on initial load
         if (res.data.obj.length > 0 && openInbounds.size === 0) {
           setOpenInbounds(new Set([res.data.obj[0].id]));
@@ -255,14 +260,14 @@ export default function AdminDashboard() {
         transition={{ delay: 0.1 }}
         className="grid grid-cols-1 sm:grid-cols-3 gap-4"
       >
-        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
+        <Card className="bg-white dark:bg-zinc-950 border-border/50 shadow-sm transition-all hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-blue-500/15 flex items-center justify-center">
-                <Server className="h-4 w-4 text-blue-500" />
+              <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                <Server className="h-4 w-4 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
                   Total Inbounds
                 </p>
                 <p className="text-lg font-bold">{inbounds.length}</p>
@@ -271,14 +276,14 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20">
+        <Card className="bg-white dark:bg-zinc-950 border-border/50 shadow-sm transition-all hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-emerald-500/15 flex items-center justify-center">
-                <Users className="h-4 w-4 text-emerald-500" />
+              <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                <Users className="h-4 w-4 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
                   Total Clients
                 </p>
                 <p className="text-lg font-bold">{totalClients}</p>
@@ -287,25 +292,25 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-violet-500/10 to-violet-600/5 border-violet-500/20">
+        <Card className="bg-white dark:bg-zinc-950 border-border/50 shadow-sm transition-all hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-violet-500/15 flex items-center justify-center">
-                <Wifi className="h-4 w-4 text-violet-500" />
+              <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                <Wifi className="h-4 w-4 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
                   Online Now
                 </p>
-                <p className="text-lg font-bold flex items-center gap-2">
-                  {onlineClients}
-                  {onlineClients > 0 && (
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                    </span>
-                  )}
-                </p>
+                <div className="flex items-center gap-2">
+                    <p className="text-lg font-bold">{onlineClients}</p>
+                    {onlineClients > 0 && (
+                        <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                        </span>
+                    )}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -331,13 +336,12 @@ export default function AdminDashboard() {
                 open={openInbounds.has(inbound.id)}
                 onOpenChange={() => toggleInbound(inbound.id)}
               >
-                <Card className={`overflow-hidden py-0 gap-0 border transition-all duration-300 ${openInbounds.has(inbound.id) ? "border-violet-500/30 shadow-lg shadow-violet-500/5" : "hover:border-foreground/20 hover:shadow-md"}`}>
+                <Card className={`overflow-hidden py-0 gap-0 border transition-all duration-300 ${openInbounds.has(inbound.id) ? "border-orange-500/30 shadow-lg shadow-orange-500/5" : "hover:border-foreground/20 hover:shadow-md"}`}>
                   <CollapsibleTrigger asChild>
                     <button className={`w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 cursor-pointer group transition-colors ${openInbounds.has(inbound.id) ? "bg-muted/30 dark:bg-muted/10" : "hover:bg-muted/30 dark:hover:bg-muted/10"}`}>
                       <div className="flex items-center gap-4 min-w-0">
                         <div
-                          className={`h-3 w-3 rounded-full shrink-0 transition-all duration-300 ${inbound.enable
-                            ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                          className={`h-2 w-2 rounded-full shrink-0 transition-all duration-300 ${inbound.enable ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
                             : "bg-red-500"
                             }`}
                         />
@@ -348,7 +352,7 @@ export default function AdminDashboard() {
                             </h3>
                             <Badge
                               variant="secondary"
-                              className="text-[10px] px-1.5 py-0 uppercase font-mono bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20"
+                              className="text-[10px] px-1.5 py-0 uppercase font-mono bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20"
                             >
                               {inbound.protocol}
                             </Badge>
@@ -438,6 +442,9 @@ export default function AdminDashboard() {
                               open: true,
                               client,
                               inboundRemark: inbound.remark,
+                              inboundProtocol: inbound.protocol,
+                              inboundPort: inbound.port,
+                              streamSettings: inbound.streamSettings,
                             })
                           }
                           onPayments={(client) =>
@@ -495,8 +502,11 @@ export default function AdminDashboard() {
         open={qrModal.open}
         client={qrModal.client}
         inboundRemark={qrModal.inboundRemark}
+        inboundProtocol={qrModal.inboundProtocol}
+        inboundPort={qrModal.inboundPort}
+        streamSettings={qrModal.streamSettings}
         onClose={() =>
-          setQrModal({ open: false, client: null, inboundRemark: "" })
+          setQrModal({ open: false, client: null, inboundRemark: "", inboundProtocol: "", inboundPort: 0, streamSettings: null })
         }
       />
       <PaymentModal
@@ -528,3 +538,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

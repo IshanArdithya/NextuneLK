@@ -14,10 +14,9 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Table,
@@ -75,7 +74,7 @@ export default function PresetsPage() {
   const fetchPresets = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/dashboard/presets/all");
+      const res = await api.get("/admin/presets/all");
       if (res.data.success) {
         setPresets(res.data.obj);
       }
@@ -119,13 +118,13 @@ export default function PresetsPage() {
       };
 
       if (editingPreset) {
-        await api.put(`/dashboard/presets/${editingPreset.id}`, data);
+        await api.put(`/admin/presets/${editingPreset.id}`, data);
         toast({
           title: "Preset Updated",
           description: `'${formName}' has been updated.`,
         });
       } else {
-        await api.post("/dashboard/presets", data);
+        await api.post("/admin/presets", data);
         toast({
           title: "Preset Created",
           description: `'${formName}' has been created.`,
@@ -148,7 +147,7 @@ export default function PresetsPage() {
     try {
       setPresets(presets.map(p => p.id === preset.id ? { ...p, isActive: !p.isActive } : p));
 
-      await api.put(`/dashboard/presets/${preset.id}`, {
+      await api.put(`/admin/presets/${preset.id}`, {
         isActive: !preset.isActive,
       });
       toast({
@@ -167,7 +166,7 @@ export default function PresetsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this preset?")) return;
     try {
-      await api.delete(`/dashboard/presets/${id}`);
+      await api.delete(`/admin/presets/${id}`);
       toast({
         title: "Preset Deleted",
         description: "The preset has been removed.",
@@ -200,7 +199,7 @@ export default function PresetsPage() {
         </div>
         <Button
           onClick={() => handleOpenModal()}
-          className="bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/20 group text-xs h-9"
+          className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-500/20 group text-xs h-9"
         >
           <Plus className="mr-2 h-4 w-4 transition-transform group-hover:rotate-90" />
           Create New Plan
@@ -217,7 +216,7 @@ export default function PresetsPage() {
           <CardContent className="p-0">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
                 <p className="text-sm text-muted-foreground animate-pulse">Loading presets...</p>
               </div>
             ) : presets.length === 0 ? (
@@ -237,14 +236,14 @@ export default function PresetsPage() {
             ) : (
               <div className="overflow-x-auto px-4 py-4 sm:px-6">
                 <Table>
-                  <TableHeader className="bg-muted/30">
-                    <TableRow>
-                      <TableHead className="font-semibold h-12">Plan Name</TableHead>
-                      <TableHead className="font-semibold text-center h-12">Data Quota</TableHead>
-                      <TableHead className="font-semibold text-center h-12">Validity</TableHead>
-                      <TableHead className="font-semibold text-center h-12">Price</TableHead>
-                      <TableHead className="font-semibold text-center h-12">Status</TableHead>
-                      <TableHead className="text-right h-12"></TableHead>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent border-0">
+                      <TableHead>Plan Name</TableHead>
+                      <TableHead className="text-center">Data Quota</TableHead>
+                      <TableHead className="text-center">Validity</TableHead>
+                      <TableHead className="text-center">Price</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -252,15 +251,10 @@ export default function PresetsPage() {
                       {presets.map((preset) => (
                         <TableRow
                           key={preset.id}
-                          className={`group transition-colors border-border/40 ${!preset.isActive ? 'opacity-60 bg-muted/20' : 'hover:bg-muted/30'}`}
+                          className={`group transition-colors border-border/40 ${!preset.isActive ? 'opacity-60 bg-muted/20' : 'hover:bg-muted/20'}`}
                         >
                           <TableCell>
-                            <div className="flex items-center gap-3">
-                              <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${!preset.isActive ? 'bg-slate-200 dark:bg-slate-800' : 'bg-violet-500/10 text-violet-600'}`}>
-                                <Zap className="h-4 w-4" />
-                              </div>
-                              <div className="font-medium text-sm">{preset.name}</div>
-                            </div>
+                            <div className="font-semibold text-sm text-slate-900 dark:text-zinc-100">{preset.name}</div>
                           </TableCell>
                           <TableCell className="text-center font-medium text-sm">
                             <div className="flex items-center justify-center gap-2">
@@ -274,8 +268,8 @@ export default function PresetsPage() {
                               {preset.days} Days
                             </div>
                           </TableCell>
-                          <TableCell className="text-center font-bold text-foreground text-sm">
-                            {preset.amount.toLocaleString()} {preset.currency || "LKR"}
+                          <TableCell className="text-center font-bold text-slate-900 dark:text-zinc-100 text-sm">
+                            {preset.currency || "LKR"} {preset.amount.toLocaleString()}
                           </TableCell>
                           <TableCell className="text-center">
                             <Switch
@@ -287,22 +281,22 @@ export default function PresetsPage() {
                           <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-60 group-hover:opacity-100 transition-opacity">
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem onClick={() => handleOpenModal(preset)}>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem onClick={() => handleOpenModal(preset)} className="cursor-pointer">
                                   <Edit2 className="mr-2 h-4 w-4" />
                                   Edit Plan
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(preset.id)}
-                                  className="text-destructive focus:text-destructive"
+                                  className="text-destructive focus:text-destructive cursor-pointer"
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
+                                  Delete Plan
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -322,7 +316,7 @@ export default function PresetsPage() {
         <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              <Zap className="h-6 w-6 text-violet-500" />
+              <Zap className="h-6 w-6 text-orange-500" />
               {editingPreset ? "Edit Service Plan" : "Create Service Plan"}
             </DialogTitle>
             <DialogDescription>
@@ -403,7 +397,7 @@ export default function PresetsPage() {
               <Button
                 type="submit"
                 disabled={saving}
-                className="bg-violet-600 hover:bg-violet-700 text-white min-w-[120px]"
+                className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px]"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

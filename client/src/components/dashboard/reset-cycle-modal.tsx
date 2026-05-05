@@ -62,7 +62,7 @@ export default function ResetCycleModal({
   useEffect(() => {
     if (open) {
       api
-        .get("/dashboard/presets")
+        .get("/admin/presets")
         .then((res) => {
           if (res.data.success) {
             setPresets(res.data.obj);
@@ -123,7 +123,7 @@ export default function ResetCycleModal({
         };
       }
 
-      await api.post("/dashboard/client/reset-cycle", submitData);
+      await api.post("/admin/client/reset-cycle", submitData);
 
       toast({
         title: "Cycle Reset",
@@ -207,7 +207,7 @@ export default function ResetCycleModal({
                       key={preset.id}
                       htmlFor={`preset-${preset.id}`}
                       className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${selectedPresetId === preset.id
-                          ? "border-violet-500 bg-violet-500/5"
+                          ? "border-orange-500 bg-orange-500/5"
                           : "border-border hover:border-foreground/20"
                         }`}
                     >
@@ -226,7 +226,7 @@ export default function ResetCycleModal({
                           <Badge variant="outline" className="text-[10px]">
                             {preset.days}d
                           </Badge>
-                          <Badge className="text-[10px] bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                          <Badge className="text-[10px] bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30">
                             Rs. {preset.amount}
                           </Badge>
                         </div>

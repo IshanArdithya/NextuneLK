@@ -79,7 +79,7 @@ function CopyableId({ id }: { id: string }) {
           >
             <span>{truncated}</span>
             {copied ? (
-              <Check className="h-3 w-3 text-emerald-500" />
+              <Check className="h-3 w-3 text-orange-500" />
             ) : (
               <Copy className="h-3 w-3 opacity-50" />
             )}
@@ -95,7 +95,7 @@ function CopyableId({ id }: { id: string }) {
 
 function TrafficBar({ traffic }: { traffic: ClientData["traffic"] }) {
   const percent = Number(traffic.percentUsed) || 0;
-  let barColor = "from-emerald-400 to-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]";
+  let barColor = "from-orange-400 to-orange-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]";
   if (percent > 90) barColor = "from-red-400 to-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]";
   else if (percent > 75) barColor = "from-amber-400 to-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]";
 
@@ -129,7 +129,7 @@ function ExpiryBadge({ expiry }: { expiry: ClientData["expiry"] }) {
 
   if (expiry.type === "after_first_use") {
     return (
-      <Badge variant="secondary" className="text-[10px] gap-1 font-normal bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20">
+      <Badge variant="secondary" className="text-[10px] gap-1 font-normal bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20">
         <Hourglass className="h-3 w-3" />
         {expiry.durationDays}d after use
       </Badge>
@@ -156,6 +156,54 @@ function ExpiryBadge({ expiry }: { expiry: ClientData["expiry"] }) {
   );
 }
 
+function StatusDot({ client }: { client: ClientData }) {
+  const isEnded = client.expiry.isExpired || (client.traffic.totalLimit > 0 && client.traffic.totalUsed >= client.traffic.totalLimit);
+  const isEnabled = client.enable;
+  const isOnline = client.isOnline;
+
+  if (!isEnabled) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-700 shrink-0" />
+          </TooltipTrigger>
+          <TooltipContent><p className="text-[10px]">Manually Disabled</p></TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  if (isEnded) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)] shrink-0" />
+          </TooltipTrigger>
+          <TooltipContent><p className="text-[10px]">Service Ended (Expired/Limited)</p></TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="relative flex h-2 w-2 shrink-0">
+            {isOnline && (
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60" />
+            )}
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent><p className="text-[10px]">{isOnline ? "Online & Active" : "Active (Offline)"}</p></TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 export default function ClientTable({
   clients,
   inboundId,
@@ -170,7 +218,7 @@ export default function ClientTable({
 
   const handleToggleEnable = async (client: ClientData) => {
     try {
-      await api.put("/dashboard/client/update", {
+      await api.put("/admin/client/update", {
         inboundId: inboundId.toString(),
         clientId: client.id,
         xuiEmail: client.email,
@@ -204,7 +252,7 @@ export default function ClientTable({
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="w-[50px] text-[11px]">Status</TableHead>
+            <TableHead className="w-[40px] text-[11px]">Enable</TableHead>
             <TableHead className="text-[11px]">Email</TableHead>
             <TableHead className="text-[11px] hidden sm:table-cell">ID</TableHead>
             <TableHead className="text-[11px]">Traffic</TableHead>
@@ -216,34 +264,31 @@ export default function ClientTable({
           {clients.map((client, index) => (
             <TableRow key={client.id || `${client.email}-${index}`} className="group hover:bg-muted/30 transition-colors border-b-border/40">
               <TableCell>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center">
                   <Switch
                     checked={client.enable}
                     onCheckedChange={() => handleToggleEnable(client)}
                     className="scale-75 shadow-sm"
                   />
-                  {client.isOnline && (
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                    </span>
-                  )}
                 </div>
               </TableCell>
               <TableCell>
-                <div>
-                  <p className="text-sm font-medium">{client.email}</p>
-                  <div className="flex flex-col gap-0.5">
-                    {client.customerEmail && (
-                      <p className="text-[10px] text-violet-500/80 font-medium">
-                        {client.customerEmail}
-                      </p>
-                    )}
-                    {client.comment && (
-                      <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">
-                        {client.comment}
-                      </p>
-                    )}
+                <div className="flex items-center gap-3">
+                  <StatusDot client={client} />
+                  <div>
+                    <p className="text-sm font-medium">{client.email}</p>
+                    <div className="flex flex-col gap-0.5">
+                      {client.customerEmail && (
+                        <p className="text-[10px] text-orange-500/80 font-medium">
+                          {client.customerEmail}
+                        </p>
+                      )}
+                      {client.comment && (
+                        <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                          {client.comment}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </TableCell>

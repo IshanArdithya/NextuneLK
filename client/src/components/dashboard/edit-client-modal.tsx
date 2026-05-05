@@ -59,10 +59,13 @@ export default function EditClientModal({
   const [comment, setComment] = useState("");
   const [startAfterFirstUse, setStartAfterFirstUse] = useState(false);
   const [durationDays, setDurationDays] = useState("");
+  const [subId, setSubId] = useState("");
+  const [tgId, setTgId] = useState("");
   const [loading, setLoading] = useState(false);
   const [linking, setLinking] = useState(false);
   const [showUnlinkConfirm, setShowUnlinkConfirm] = useState(false);
   const [showCreateConfirm, setShowCreateConfirm] = useState(false);
+  const [reset, setReset] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -74,6 +77,9 @@ export default function EditClientModal({
       setLimitIp(client.limitIp?.toString() || "0");
       setFlow(client.flow || "none");
       setComment(client.comment || "");
+      setSubId(client.subId || "");
+      setTgId(client.tgId || "");
+      setReset(client.reset || 0);
       
       if (client.expiryTime < 0) {
         setStartAfterFirstUse(true);
@@ -111,9 +117,12 @@ export default function EditClientModal({
         startAfterFirstUseDays: startAfterFirstUse ? parseInt(durationDays) || 0 : 0,
         flow: flow === "none" ? "" : flow,
         comment,
+        subId,
+        tgId: parseInt(tgId) || 0,
+        reset,
       };
 
-      await api.put("/dashboard/client/update", submitData);
+      await api.put("/admin/client/update", submitData);
 
       toast({
         title: "Client Updated",
@@ -139,7 +148,7 @@ export default function EditClientModal({
     if (!client || !customerEmail) return;
     setLinking(true);
     try {
-      await api.post("/dashboard/client/link", {
+      await api.post("/admin/client/link", {
         xuiId: client.id,
         email: customerEmail,
       });
@@ -160,7 +169,7 @@ export default function EditClientModal({
     
     setLinking(true);
     try {
-      const checkRes = await api.get(`/dashboard/client/check-email?email=${encodeURIComponent(customerEmail)}`);
+      const checkRes = await api.get(`/admin/client/check-email?email=${encodeURIComponent(customerEmail)}`);
       if (!checkRes.data.obj.exists) {
         setShowCreateConfirm(true);
         setLinking(false);
@@ -180,7 +189,7 @@ export default function EditClientModal({
     
     setLinking(true);
     try {
-      await api.post("/dashboard/client/unlink", { xuiId: client.id });
+      await api.post("/admin/client/unlink", { xuiId: client.id });
       toast({ title: "Customer Unlinked", description: "Successfully unlinked from customer." });
       setIsLinked(false);
       setCustomerEmail("");
@@ -318,7 +327,8 @@ export default function EditClientModal({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="xtls-rprx-vision">XTLS Vision</SelectItem>
+                    <SelectItem value="xtls-rprx-vision">xtls-rprx-vision</SelectItem>
+                    <SelectItem value="xtls-rprx-vision-udp443">xtls-rprx-vision-udp443</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -374,7 +384,7 @@ export default function EditClientModal({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Link2 className="h-5 w-5 text-emerald-500" />
+              <Link2 className="h-5 w-5 text-orange-500" />
               New Customer
             </AlertDialogTitle>
             <AlertDialogDescription>
@@ -390,7 +400,7 @@ export default function EditClientModal({
                 executeLink();
               }}
               disabled={linking}
-              className="bg-emerald-600 text-white hover:bg-emerald-700"
+              className="bg-orange-600 text-white hover:bg-orange-700"
             >
               {linking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Account

@@ -39,7 +39,7 @@ export default function DeleteClientDialog({
 
     setLoading(true);
     try {
-      await api.post("/dashboard/client/delete", {
+      await api.post("/admin/client/delete", {
         inboundId: inboundId.toString(),
         clientId: client.id,
       });
