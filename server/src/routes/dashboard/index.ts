@@ -4,6 +4,7 @@ import paymentRoutes from "./payment.route.js";
 import presetRoutes from "./preset.route.js";
 import inboundRoutes from "./inbound.route.js";
 import authRoutes from "./auth.route.js";
+import customerRoutes from "./customer.route.js";
 
 const router = express.Router();
 
@@ -12,5 +13,6 @@ router.use("/inbounds", inboundRoutes);
 router.use("/client", clientRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/presets", presetRoutes);
+router.use("/customers", customerRoutes);
 
 export default router;

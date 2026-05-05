@@ -45,9 +45,9 @@ export const updatePayment = catchAsync(async (req: any, res: any) => {
 });
 
 export const createPayment = catchAsync(async (req: any, res: any) => {
-  const { clientEmail, inboundId } = req.body;
-  if (!clientEmail || !inboundId) {
-    throw new AppError("clientEmail and inboundId are required", 400);
+  const { customerEmail, inboundId } = req.body;
+  if (!customerEmail || !inboundId) {
+    throw new AppError("customerEmail and inboundId are required", 400);
   }
 
   const payload = { ...req.body };

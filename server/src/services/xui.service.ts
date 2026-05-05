@@ -1,4 +1,5 @@
 import { ExternalApi } from "../lib/xui-client.js";
+import prisma from "../config/prisma.js";
 
 const externalApi = new ExternalApi();
 
@@ -67,6 +68,10 @@ export const XuiService = {
     return externalApi.getOnlineUsers();
   },
 
+  getInbounds: async () => {
+    return externalApi.getInbounds();
+  },
+
   // processed data
   getEnrichedInbounds: async () => {
     const response = await externalApi.getInbounds();
@@ -85,6 +90,11 @@ export const XuiService = {
       // ignore
     }
 
+    // fetch DB metadata
+    const dbServices = await prisma.service.findMany({
+      include: { customer: true },
+    });
+
     const inbounds = response.data.obj.map((inbound: any) => {
       const clients = parseClients(inbound);
       const clientStats = inbound.clientStats || [];
@@ -95,6 +105,9 @@ export const XuiService = {
         const down = stats?.down || 0;
         const totalUsed = up + down;
         const isOnline = onlineUsers.includes(client.email);
+
+        // merge DB data
+        const svc = dbServices.find((s: any) => s.xuiId === client.id);
 
         let expiryInfo: any = { type: "unlimited", date: null, remaining: null };
         if (client.expiryTime < 0) {
@@ -118,6 +131,9 @@ export const XuiService = {
         return {
           id: client.id,
           email: client.email,
+          customerId: svc?.customerId || null,
+          customerEmail: svc?.customer?.email || null,
+          serviceId: svc?.id || null,
           enable: client.enable,
           flow: client.flow || "",
           limitIp: client.limitIp || 0,
@@ -141,6 +157,7 @@ export const XuiService = {
           statsEnabled: stats?.enable ?? true,
         };
       });
+
 
       return {
         id: inbound.id,

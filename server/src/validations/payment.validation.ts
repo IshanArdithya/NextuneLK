@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const createPaymentSchema = z.object({
     body: z.object({
-        clientEmail: z.string().email("Invalid email format"),
+        customerEmail: z.string().email("Invalid email format").optional().or(z.literal("")),
         inboundId: z.number().min(1, "Inbound ID is required"),
         amountPaid: z.number().min(0).optional(),
         status: z.enum(["PAID", "UNPAID"]).optional(),

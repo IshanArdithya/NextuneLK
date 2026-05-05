@@ -171,13 +171,11 @@ export default function ClientTable({
   const handleToggleEnable = async (client: ClientData) => {
     try {
       await api.put("/dashboard/client/update", {
-        inboundId,
+        inboundId: inboundId.toString(),
         clientId: client.id,
-        email: client.email,
+        xuiEmail: client.email,
         totalGB: client.totalGB / 1073741824,
-        expiryTime: client.expiryTime > 0 ? new Date(client.expiryTime).toISOString() : null,
-        startAfterFirstUse: client.expiryTime < 0,
-        startAfterFirstUseDays: client.expiryTime < 0 ? Math.abs(client.expiryTime) / (24 * 60 * 60 * 1000) : 0,
+        expiryTime: client.expiryTime > 0 ? new Date(client.expiryTime).getTime() : 0,
         enable: !client.enable,
         limitIp: client.limitIp,
         flow: client.flow,
@@ -235,11 +233,18 @@ export default function ClientTable({
               <TableCell>
                 <div>
                   <p className="text-sm font-medium">{client.email}</p>
-                  {client.comment && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[150px]">
-                      {client.comment}
-                    </p>
-                  )}
+                  <div className="flex flex-col gap-0.5">
+                    {client.customerEmail && (
+                      <p className="text-[10px] text-violet-500/80 font-medium">
+                        {client.customerEmail}
+                      </p>
+                    )}
+                    {client.comment && (
+                      <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                        {client.comment}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </TableCell>
               <TableCell className="hidden sm:table-cell">

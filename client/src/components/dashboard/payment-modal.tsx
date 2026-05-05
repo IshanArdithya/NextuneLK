@@ -41,7 +41,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface Payment {
   id: string;
-  clientEmail: string;
+  customerEmail: string;
   inboundId: number;
   quotaGB: number | null;
   amountPaid: number;
@@ -56,7 +56,7 @@ interface Payment {
 
 interface PaymentModalProps {
   open: boolean;
-  clientEmail: string;
+  customerEmail: string;
   inboundId: number | null;
   onClose: () => void;
 }
@@ -88,7 +88,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function PaymentModal({
   open,
-  clientEmail,
+  customerEmail,
   inboundId,
   onClose,
 }: PaymentModalProps) {
@@ -104,10 +104,10 @@ export default function PaymentModal({
   const [formNotes, setFormNotes] = useState("");
 
   const fetchPayments = async () => {
-    if (!clientEmail) return;
+    if (!customerEmail) return;
     setLoading(true);
     try {
-      const res = await api.get(`/dashboard/payments/${clientEmail}`);
+      const res = await api.get(`/dashboard/payments/${customerEmail}`);
       if (res.data.success) {
         setPayments(res.data.obj);
       }
@@ -123,12 +123,12 @@ export default function PaymentModal({
   };
 
   useEffect(() => {
-    if (open && clientEmail) {
+    if (open && customerEmail) {
       fetchPayments();
       setShowAddForm(false);
       setEditingId(null);
     }
-  }, [open, clientEmail]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, customerEmail]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMarkAsPaid = async (payment: Payment) => {
     try {
@@ -169,7 +169,7 @@ export default function PaymentModal({
   const handleAddPayment = async () => {
     try {
       await api.post(`/dashboard/payments`, {
-        clientEmail,
+        customerEmail,
         inboundId,
         amountPaid: parseFloat(formAmount) || 0,
         status: formStatus,
@@ -219,7 +219,7 @@ export default function PaymentModal({
             <CreditCard className="h-5 w-5" />
             Payments
             <Badge variant="secondary" className="text-xs font-normal">
-              {clientEmail}
+              {customerEmail}
             </Badge>
           </DialogTitle>
         </DialogHeader>

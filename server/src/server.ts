@@ -15,6 +15,7 @@ import { protectDashboard } from "./middleware/auth.middleware.js";
 import { globalErrorHandler } from "./middleware/error.middleware.js";
 import { stream } from "./utils/logger.js";
 import { generalLimiter, authLimiter } from "./middleware/rateLimiters.js";
+import { ClientService } from "./services/client.service.js";
 
 dotenv.config();
 
@@ -79,4 +80,16 @@ app.use(globalErrorHandler);
 
 app.listen(port, () => {
   console.log(`Server started at http://localhost:${port}`);
+
+  // start background sync
+  const SYNC_INTERVAL = parseInt(process.env.SYNC_INTERVAL_MS || "300000");
+  console.log(`[System] Background sync enabled (Interval: ${SYNC_INTERVAL}ms)`);
+
+  setInterval(async () => {
+    try {
+      await ClientService.syncPanelToDb();
+    } catch (error) {
+      console.error("[Background Sync Error]:", error);
+    }
+  }, SYNC_INTERVAL);
 });

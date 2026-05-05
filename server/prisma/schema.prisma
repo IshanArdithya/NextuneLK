@@ -23,25 +23,70 @@ model Preset {
   @@map("presets")
 }
 
-model Payment {
-  id          String   @id @default(uuid())
-  clientEmail String   @map("client_email")
-  inboundId   Int      @map("inbound_id")
-  quotaGB     Float?   @map("quota_gb")
-  amountPaid  Float    @default(0) @map("amount_paid")
-  currency    String   @default("LKR")
-  paymentDate DateTime? @map("payment_date")
-  status      PaymentStatus @default(UNPAID)
-  cycleStart  DateTime? @map("cycle_start")
-  cycleEnd    DateTime? @map("cycle_end")
-  isNewClient Boolean  @default(true) @map("is_new_client")
-  notes       String?
-  presetId    String?  @map("preset_id")
-  preset      Preset?  @relation(fields: [presetId], references: [id])
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+model Customer {
+  id        String         @id @default(uuid())
+  email     String         @unique                    // customer's unique email
+  notes     String?
+  status    CustomerStatus @default(ACTIVE)
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
 
-  @@index([clientEmail])
+  services  Service[]      // vpn tunnels linked to this customer
+  payments  Payment[]      // all payment history
+
+  @@index([status])
+  @@map("customers")
+}
+
+enum CustomerStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model Service {
+  id         String        @id @default(uuid())
+  xuiId      String        @unique @map("xui_id")        // uuid from xui panel
+  xuiEmail   String        @map("xui_email")              // name/remark in xui
+  inboundId  Int           @map("inbound_id")             // xui inbound
+  customerId String?       @map("customer_id")            // linked customer (nullable)
+  customer   Customer?     @relation(fields: [customerId], references: [id])
+  status     ServiceStatus @default(ACTIVE)
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([inboundId])
+  @@index([status])
+  @@map("services")
+}
+
+enum ServiceStatus {
+  ACTIVE
+  DISABLED
+}
+
+model Payment {
+  id           String        @id @default(uuid())
+  customerId   String?       @map("customer_id")
+  customer     Customer?     @relation(fields: [customerId], references: [id])
+  customerEmail String?      @map("customer_email")           // for history
+  inboundId    Int           @map("inbound_id")
+  quotaGB      Float?        @map("quota_gb")
+  amountPaid   Float         @default(0) @map("amount_paid")
+  currency     String        @default("LKR")
+  paymentDate  DateTime?     @map("payment_date")
+  status       PaymentStatus @default(UNPAID)
+  cycleStart   DateTime?     @map("cycle_start")
+  cycleEnd     DateTime?     @map("cycle_end")
+  isNewClient  Boolean       @default(true) @map("is_new_client")
+  notes        String?
+  presetId     String?       @map("preset_id")
+  preset       Preset?       @relation(fields: [presetId], references: [id])
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@index([customerEmail])
+  @@index([customerId])
   @@index([inboundId])
   @@index([status])
   @@index([presetId])
@@ -54,7 +99,7 @@ enum PaymentStatus {
   REFUNDED
 }
 
-// auth models - better auth
+// better auth
 
 model User {
   id            String    @id @default(uuid())
@@ -116,4 +161,3 @@ model Verification {
 
   @@map("verification")
 }
-

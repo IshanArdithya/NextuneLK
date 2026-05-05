@@ -8,7 +8,7 @@ export const PaymentService = {
   getAllPayments: async (filters: { status?: string; email?: string }, skip: number, take: number) => {
     const where: any = {};
     if (filters.status) where.status = filters.status;
-    if (filters.email) where.clientEmail = { contains: filters.email, mode: "insensitive" };
+    if (filters.email) where.customerEmail = { contains: filters.email, mode: "insensitive" };
 
     const [payments, total] = await Promise.all([
       prisma.payment.findMany({
@@ -26,7 +26,7 @@ export const PaymentService = {
 
   getPaymentsByEmail: async (email: string) => {
     return prisma.payment.findMany({
-      where: { clientEmail: email },
+      where: { customerEmail: email },
       include: { preset: true },
       orderBy: { createdAt: "desc" },
     });

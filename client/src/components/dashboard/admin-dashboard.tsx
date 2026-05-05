@@ -55,8 +55,11 @@ interface ExpiryInfo {
 }
 
 export interface ClientData {
-  id: string;
-  email: string;
+  id: string; // xuiId
+  serviceId: string | null;
+  email: string; // xuiEmail
+  customerId?: string;
+  customerEmail?: string;
   enable: boolean;
   flow: string;
   limitIp: number;
@@ -113,9 +116,9 @@ export default function AdminDashboard() {
   }>({ open: false, client: null, inboundRemark: "" });
   const [paymentModal, setPaymentModal] = useState<{
     open: boolean;
-    clientEmail: string;
+    customerEmail: string;
     inboundId: number | null;
-  }>({ open: false, clientEmail: "", inboundId: null });
+  }>({ open: false, customerEmail: "", inboundId: null });
   const [resetCycleModal, setResetCycleModal] = useState<{
     open: boolean;
     client: ClientData | null;
@@ -440,7 +443,7 @@ export default function AdminDashboard() {
                           onPayments={(client) =>
                             setPaymentModal({
                               open: true,
-                              clientEmail: client.email,
+                              customerEmail: client.customerEmail || "",
                               inboundId: inbound.id,
                             })
                           }
@@ -498,10 +501,10 @@ export default function AdminDashboard() {
       />
       <PaymentModal
         open={paymentModal.open}
-        clientEmail={paymentModal.clientEmail}
+        customerEmail={paymentModal.customerEmail}
         inboundId={paymentModal.inboundId}
         onClose={() =>
-          setPaymentModal({ open: false, clientEmail: "", inboundId: null })
+          setPaymentModal({ open: false, customerEmail: "", inboundId: null })
         }
       />
       <ResetCycleModal

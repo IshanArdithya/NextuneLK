@@ -2,7 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import {
   SidebarProvider,
   Sidebar,
@@ -19,15 +20,18 @@ import {
   SidebarTrigger,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
-import {
+import { Button } from "@/components/ui/button";
+import { 
+  LogOut,
   BarChart3,
   Server,
   CreditCard,
   Package,
   Zap,
   ExternalLink,
+  Users,
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 const navItems = [
   {
@@ -39,6 +43,11 @@ const navItems = [
     title: "Clients",
     href: "/dashboard/clients",
     icon: Server,
+  },
+  {
+    title: "Customers",
+    href: "/dashboard/customers",
+    icon: Users,
   },
   {
     title: "Transactions",
@@ -58,6 +67,21 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            router.push("/login");
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -130,7 +154,7 @@ export default function DashboardLayout({
         <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur-md px-4 sticky top-0 z-10">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm flex-1">
             <span className="font-medium text-muted-foreground">
               {navItems.find((item) =>
                 item.href === "/dashboard"
@@ -139,6 +163,15 @@ export default function DashboardLayout({
               )?.title || "Dashboard"}
             </span>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-destructive gap-2 h-8"
+            onClick={handleLogout}
+          >
+            <LogOut className="size-4" />
+            <span className="hidden sm:inline">Logout</span>
+          </Button>
         </header>
         <div className="flex-1 overflow-auto">
           <div className="p-4 sm:p-6 md:p-8 2xl:p-10 w-full min-h-[calc(100vh-3.5rem)]">

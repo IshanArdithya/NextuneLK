@@ -149,6 +149,25 @@ export class ExternalApi {
     }
   }
 
+  // helper to find a client's uuid/id by their email
+  async findClientIdByEmail(inboundId, email) {
+    try {
+      const response = await this.getInbound(inboundId);
+      if (!response.data.success || !response.data.obj.settings) {
+        return null;
+      }
+
+      const settings = JSON.parse(response.data.obj.settings);
+      const clients = settings.clients || [];
+      
+      const client = clients.find(c => c.email === email);
+      return client ? client.id : null;
+    } catch (error) {
+      console.error("Error finding client ID:", error);
+      return null;
+    }
+  }
+
   async getServerStatus(attempt = 1) {
     try {
       if (!this.isLoggedIn) {
