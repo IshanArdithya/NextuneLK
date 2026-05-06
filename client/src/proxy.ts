@@ -23,7 +23,8 @@ export function proxy(request: NextRequest) {
 
   // secret uri protection
   if (pathname.startsWith(`/${secretPath}/admin`)) {
-    const sessionToken = request.cookies.get("better-auth.session_token");
+    const sessionToken = request.cookies.get("better-auth.session_token") || 
+                         request.cookies.get("__Secure-better-auth.session_token");
 
     // login redirect
     if (pathname === `/${secretPath}/admin/login` || pathname === `/${secretPath}/login`) {
