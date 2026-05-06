@@ -41,12 +41,10 @@ export default function LoginPage() {
             const user = data?.user as any;
 
             const secretPath = adminPath || process.env.NEXT_PUBLIC_ADMIN_URI_PATH || "admin";
-
-            if (user?.needsPasswordChange) {
-                router.push(`/${secretPath}/admin/setup`);
-            } else {
-                router.push(`/${secretPath}/admin`);
-            }
+            const targetPath = user?.needsPasswordChange ? `/${secretPath}/admin/setup` : `/${secretPath}/admin`;
+            
+            console.log("Redirecting to:", targetPath);
+            router.push(targetPath);
 
         } catch (err: any) {
             console.error("Connection error:", err);

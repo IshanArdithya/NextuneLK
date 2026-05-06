@@ -36,6 +36,20 @@ export const auth = betterAuth({
                 secure: true,
                 path: "/",
             }
+        },
+        csrfToken: {
+            attributes: {
+                sameSite: "none",
+                secure: true,
+                path: "/",
+            }
+        },
+        state: {
+            attributes: {
+                sameSite: "none",
+                secure: true,
+                path: "/",
+            }
         }
     }
 });
