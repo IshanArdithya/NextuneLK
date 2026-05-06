@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: nextunelk-db
+    restart: unless-stopped
+    env_file: .env.nextunelk.prod
+    volumes:
+      - nextune_db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  server:
+    image: ghcr.io/ishanardithya/nextunelk/nextunelk-server:latest
+    container_name: nextunelk-server
+    restart: unless-stopped
+    network_mode: "host"
+    env_file: .env.nextunelk.prod
+    volumes:
+      - ~/logs/prod:/app/logs
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    depends_on:
+      - db
+
+  client:
+    image: ghcr.io/ishanardithya/nextunelk/nextunelk-client:latest
+    container_name: nextunelk-client
+    restart: unless-stopped
+    ports:
+      - "3006:3000"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+volumes:
+  nextune_db_data:
