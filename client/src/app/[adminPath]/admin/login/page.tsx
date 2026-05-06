@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const router = useRouter();
+    const params = useParams();
+    const adminPath = params?.adminPath as string;
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,12 +32,15 @@ export default function LoginPage() {
             });
 
             if (authError) {
+                console.error("Login error:", authError);
                 setError(authError.message || "Invalid credentials. Please try again.");
                 return;
             }
 
+            console.log("Login success:", data);
             const user = data?.user as any;
-            const secretPath = process.env.NEXT_PUBLIC_ADMIN_URI_PATH || "admin";
+
+            const secretPath = adminPath || process.env.NEXT_PUBLIC_ADMIN_URI_PATH || "admin";
 
             if (user?.needsPasswordChange) {
                 router.push(`/${secretPath}/admin/setup`);
@@ -44,6 +49,7 @@ export default function LoginPage() {
             }
 
         } catch (err: any) {
+            console.error("Connection error:", err);
             setError("A connection error occurred. Please check your internet.");
         } finally {
             setLoading(false);
