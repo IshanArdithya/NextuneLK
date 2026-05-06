@@ -28,28 +28,5 @@ export const auth = betterAuth({
     },
     advanced: {
         useSecureCookies: true,
-    },
-    cookies: {
-        sessionToken: {
-            attributes: {
-                sameSite: "none",
-                secure: true,
-                path: "/",
-            }
-        },
-        csrfToken: {
-            attributes: {
-                sameSite: "none",
-                secure: true,
-                path: "/",
-            }
-        },
-        state: {
-            attributes: {
-                sameSite: "none",
-                secure: true,
-                path: "/",
-            }
-        }
     }
 });
