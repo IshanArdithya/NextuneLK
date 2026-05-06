@@ -24,5 +24,8 @@ export const auth = betterAuth({
                 defaultValue: true,
             }
         }
+    },
+    advanced: {
+        useSecureCookies: true,
     }
 });
