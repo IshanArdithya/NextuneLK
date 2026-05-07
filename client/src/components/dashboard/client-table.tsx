@@ -49,6 +49,7 @@ import {
   Clock,
   Hourglass,
   Infinity,
+  Loader2,
 } from "lucide-react";
 import { ClientData } from "./admin-dashboard";
 import api from "@/lib/api";
@@ -423,9 +424,11 @@ export default function ClientTable({
             <AlertDialogTitle className="text-center">
               {pendingStatusClient?.enable ? "Disable Client?" : "Enable Client?"}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to {pendingStatusClient?.enable ? "disable" : "enable"} service for <strong>{pendingStatusClient?.email}</strong>? 
-              {pendingStatusClient?.enable ? " They will lose connection immediately." : " This will restore their connection."}
+            <AlertDialogDescription asChild>
+              <div className="pt-2">
+                Are you sure you want to {pendingStatusClient?.enable ? "disable" : "enable"} service for <strong>{pendingStatusClient?.email}</strong>? 
+                {pendingStatusClient?.enable ? " They will lose connection immediately." : " This will restore their connection."}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
