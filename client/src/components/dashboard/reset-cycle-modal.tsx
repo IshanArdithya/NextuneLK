@@ -20,6 +20,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, RotateCcw, AlertTriangle, Package } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { ClientData } from "./admin-dashboard";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
@@ -57,7 +67,25 @@ export default function ResetCycleModal({
   const [durationDays, setDurationDays] = useState("");
   const [paid, setPaid] = useState(false);
   const [customAmount, setCustomAmount] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [countdown, setCountdown] = useState(3);
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (confirmOpen) {
+      setCountdown(3);
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [confirmOpen]);
 
   useEffect(() => {
     if (open) {
@@ -87,8 +115,7 @@ export default function ResetCycleModal({
 
   const selectedPreset = presets.find((p) => p.id === selectedPresetId);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!client || !inboundId) return;
 
     setLoading(true);
@@ -176,7 +203,7 @@ export default function ResetCycleModal({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-5 pt-4 pb-0">
           {/* Preset Selection */}
           {presets.length > 0 && (
             <div className="space-y-3">
@@ -261,6 +288,7 @@ export default function ResetCycleModal({
                   <Switch
                     checked={startAfterFirstUse}
                     onCheckedChange={setStartAfterFirstUse}
+                    className="data-[state=checked]:bg-orange-500"
                   />
                 </div>
                 {startAfterFirstUse ? (
@@ -311,20 +339,62 @@ export default function ResetCycleModal({
                 Mark this invoice as already paid
               </p>
             </div>
-            <Switch checked={paid} onCheckedChange={setPaid} />
+            <Switch 
+              checked={paid} 
+              onCheckedChange={setPaid} 
+              className="data-[state=checked]:bg-orange-500"
+            />
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+          <DialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button 
+              type="button" 
+              onClick={() => setConfirmOpen(true)}
+              disabled={loading}
+              className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white"
+            >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Reset & Create Invoice
+              <span className="sm:hidden">Reset Cycle</span>
+              <span className="hidden sm:inline">Reset & Create Invoice</span>
             </Button>
           </DialogFooter>
-        </form>
+        </div>
       </DialogContent>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Traffic Cycle?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will reset the bandwidth usage and set a new expiry for <strong>{client?.email}</strong>. 
+              A new {paid ? "paid" : "unpaid"} invoice will be generated. This action is intentional and significant.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
+            <AlertDialogCancel disabled={loading} className="w-full sm:w-auto mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleSubmit();
+                setConfirmOpen(false);
+              }}
+              disabled={loading || countdown > 0}
+              className="bg-orange-600 hover:bg-orange-700 text-white w-full sm:w-auto min-w-[120px]"
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : countdown > 0 ? (
+                <span>Reset ({countdown}s)</span>
+              ) : (
+                <span>Confirm Reset</span>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

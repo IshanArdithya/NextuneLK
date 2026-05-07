@@ -32,7 +32,24 @@ export default function DeleteClientDialog({
   client,
 }: DeleteClientDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [countdown, setCountdown] = useState(5);
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (open) {
+      setCountdown(5);
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [open]);
 
   const handleDelete = async () => {
     if (!inboundId || !client) return;
@@ -74,18 +91,26 @@ export default function DeleteClientDialog({
             the VPN panel. This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+        <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
+          <AlertDialogCancel disabled={loading} className="w-full sm:w-auto mt-0">Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
               handleDelete();
             }}
-            disabled={loading}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            disabled={loading || countdown > 0}
+            className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto min-w-[100px]"
           >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Delete Client
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : countdown > 0 ? (
+              <span>Delete ({countdown}s)</span>
+            ) : (
+              <>
+                <span className="sm:hidden">Delete</span>
+                <span className="hidden sm:inline">Delete Client</span>
+              </>
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

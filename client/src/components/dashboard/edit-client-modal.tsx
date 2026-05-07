@@ -63,7 +63,25 @@ export default function EditClientModal({
   const [tgId, setTgId] = useState("");
   const [loading, setLoading] = useState(false);
   const [reset, setReset] = useState(0);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [countdown, setCountdown] = useState(3);
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (confirmOpen) {
+      setCountdown(3);
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [confirmOpen]);
 
   useEffect(() => {
     if (client) {
@@ -95,8 +113,47 @@ export default function EditClientModal({
     }
   }, [client]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const getChanges = () => {
+    if (!client) return [];
+    const changes: { label: string; old: string; new: string }[] = [];
+
+    if (xuiEmail !== (client.email || "")) {
+      changes.push({ label: "Client Name", old: client.email || "Empty", new: xuiEmail });
+    }
+
+    const oldGB = (client.totalGB / (1024 * 1024 * 1024)).toFixed(2);
+    if (parseFloat(totalGB).toFixed(2) !== oldGB) {
+      changes.push({ label: "Quota", old: `${oldGB} GB`, new: `${totalGB} GB` });
+    }
+
+    if (parseInt(limitIp) !== (client.limitIp || 0)) {
+      changes.push({ label: "IP Limit", old: (client.limitIp || 0).toString(), new: limitIp });
+    }
+
+    if (comment !== (client.comment || "")) {
+      changes.push({ label: "Comment", old: client.comment || "None", new: comment || "None" });
+    }
+
+    const currentFlow = flow === "none" ? "" : flow;
+    const oldFlow = client.flow || "";
+    if (currentFlow !== oldFlow) {
+      changes.push({ label: "Flow", old: oldFlow || "None", new: currentFlow || "None" });
+    }
+
+    return changes;
+  };
+
+  const handleSaveClick = (e: React.FormEvent) => {
     e.preventDefault();
+    const changes = getChanges();
+    if (changes.length === 0) {
+      toast({ title: "No Changes", description: "You haven't made any changes to this client." });
+      return;
+    }
+    setConfirmOpen(true);
+  };
+
+  const handleSubmit = async () => {
     if (!inboundId || !client) return;
 
     setLoading(true);
@@ -146,115 +203,165 @@ export default function EditClientModal({
           <DialogTitle>Edit Client</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-
+        <div className="space-y-4 pt-4 pb-0">
           <div className="space-y-2">
-            <Label htmlFor="edit-xuiEmail">Client Name (XUI Identifier)</Label>
+            <Label htmlFor="edit-xuiEmail" className="text-sm font-semibold">Client Name</Label>
             <Input
               id="edit-xuiEmail"
               value={xuiEmail}
               onChange={(e) => setXuiEmail(e.target.value)}
               placeholder="e.g. John Doe"
               required
+              className="h-10"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-totalGB">Total GB (0 = ∞)</Label>
+              <Label htmlFor="edit-totalGB" className="text-sm font-semibold">Total GB (0 = ∞)</Label>
               <Input
                 id="edit-totalGB"
                 type="number"
                 step="0.01"
                 value={totalGB}
                 onChange={(e) => setTotalGB(e.target.value)}
+                className="h-10"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-limitIp">IP Limit (0 = ∞)</Label>
+              <Label htmlFor="edit-limitIp" className="text-sm font-semibold">IP Limit (0 = ∞)</Label>
               <Input
                 id="edit-limitIp"
                 type="number"
                 value={limitIp}
                 onChange={(e) => setLimitIp(e.target.value)}
+                className="h-10"
               />
             </div>
           </div>
 
-            <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-medium">Start after first use</Label>
-                  <p className="text-[10px] text-muted-foreground">
-                    Activation starts only when the client first connects
-                  </p>
-                </div>
-                <Switch 
-                  checked={startAfterFirstUse} 
-                  onCheckedChange={setStartAfterFirstUse} 
-                />
+          <div className="space-y-4 rounded-xl border border-dashed p-4 bg-muted/20">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-bold">Start after first use</Label>
+                <p className="text-[10px] text-muted-foreground leading-tight">
+                  Activation starts only when the client first connects
+                </p>
               </div>
-
-              {startAfterFirstUse ? (
-                <div className="space-y-2 pt-2 border-t border-dashed">
-                  <Label htmlFor="edit-durationDays">Duration (Days)</Label>
-                  <Input
-                    id="edit-durationDays"
-                    type="number"
-                    value={durationDays}
-                    onChange={(e) => setDurationDays(e.target.value)}
-                    placeholder="e.g. 30"
-                  />
-                </div>
-              ) : (
-                <div className="space-y-2 pt-2 border-t border-dashed">
-                  <Label htmlFor="edit-expiryDate">Expiry Date</Label>
-                  <Input
-                    id="edit-expiryDate"
-                    type="datetime-local"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                  />
-                </div>
-              )}
+              <Switch 
+                checked={startAfterFirstUse} 
+                onCheckedChange={setStartAfterFirstUse}
+                className="data-[state=checked]:bg-orange-500"
+              />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-flow">Flow</Label>
-                <Select value={flow} onValueChange={setFlow}>
-                  <SelectTrigger id="edit-flow">
-                    <SelectValue placeholder="None" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="xtls-rprx-vision">xtls-rprx-vision</SelectItem>
-                    <SelectItem value="xtls-rprx-vision-udp443">xtls-rprx-vision-udp443</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-comment">Comment</Label>
+            {startAfterFirstUse ? (
+              <div className="space-y-2 pt-3 border-t border-dashed">
+                <Label htmlFor="edit-durationDays" className="text-xs font-semibold">Duration (Days)</Label>
                 <Input
-                  id="edit-comment"
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="Internal notes"
+                  id="edit-durationDays"
+                  type="number"
+                  value={durationDays}
+                  onChange={(e) => setDurationDays(e.target.value)}
+                  placeholder="e.g. 30"
+                  className="h-10"
                 />
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2 pt-3 border-t border-dashed">
+                <Label htmlFor="edit-expiryDate" className="text-xs font-semibold">Expiry Date</Label>
+                <Input
+                  id="edit-expiryDate"
+                  type="datetime-local"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+            )}
+          </div>
 
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2 min-w-0">
+              <Label htmlFor="edit-flow" className="text-sm font-semibold">Flow</Label>
+              <Select value={flow} onValueChange={setFlow}>
+                <SelectTrigger id="edit-flow" className="h-10 min-h-[40px] py-0 flex items-center w-full overflow-hidden">
+                  <SelectValue placeholder="None" className="truncate" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="xtls-rprx-vision">xtls-rprx-vision</SelectItem>
+                  <SelectItem value="xtls-rprx-vision-udp443">xtls-rprx-vision-udp443</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 min-w-0">
+              <Label htmlFor="edit-comment" className="text-sm font-semibold">Comment</Label>
+              <Input
+                id="edit-comment"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Internal notes"
+                className="h-10 min-h-[40px] w-full"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="grid grid-cols-2 gap-2 pt-4 sm:flex sm:flex-row sm:justify-end">
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto mt-0">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button onClick={handleSaveClick} disabled={loading} className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white">
               Save Changes
             </Button>
           </DialogFooter>
-        </form>
+        </div>
       </DialogContent>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="sm:max-w-[400px]">
+          <AlertDialogHeader className="flex flex-col items-center">
+            <AlertDialogTitle className="text-center">Confirm Changes?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <div className="bg-muted/50 rounded-xl border border-dashed p-3 space-y-2 max-h-[200px] overflow-y-auto">
+                {getChanges().map((change, i) => (
+                  <div key={i} className="text-[11px] flex flex-col gap-0.5 border-b border-dashed last:border-0 pb-2 last:pb-0">
+                    <span className="font-bold text-orange-600 uppercase tracking-tighter text-[9px]">{change.label}</span>
+                    <div className="flex items-center gap-2 text-foreground/80">
+                      <span className="line-through opacity-50">{change.old}</span>
+                      <span className="text-muted-foreground">→</span>
+                      <span className="font-semibold">{change.new}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-center text-muted-foreground">
+                Review your modifications above. These will be applied to the X-UI panel.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
+            <AlertDialogCancel disabled={loading} className="w-full sm:w-auto mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleSubmit();
+                setConfirmOpen(false);
+              }}
+              disabled={loading || countdown > 0}
+              className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto min-w-[120px]"
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : countdown > 0 ? (
+                <span>Confirm ({countdown}s)</span>
+              ) : (
+                <span>Confirm Changes</span>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
