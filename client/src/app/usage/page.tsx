@@ -9,7 +9,7 @@ export default function UsagePage() {
       <div className="flex-grow py-20">
         <UsageDashboard />
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </main>
   );
 }

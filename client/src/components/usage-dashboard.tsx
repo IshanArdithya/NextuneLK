@@ -544,9 +544,9 @@ export default function UsageDashboard() {
   return (
     <section
       id="usage"
-      className="px-4 bg-gradient-to-b from-background to-background/50"
+      className="bg-gradient-to-b from-background to-background/50"
     >
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* section header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
