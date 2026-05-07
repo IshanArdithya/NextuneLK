@@ -544,9 +544,9 @@ export default function UsageDashboard() {
   return (
     <section
       id="usage"
-      className="px-4 bg-gradient-to-b from-background to-background/50"
+      className="bg-gradient-to-b from-background to-background/50"
     >
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* section header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -554,7 +554,7 @@ export default function UsageDashboard() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold font-display mb-4">
             {usageContent.sectionTitle}
           </h2>
           <p className="text-lg text-foreground/60">
@@ -648,7 +648,7 @@ export default function UsageDashboard() {
               >
                 {errorModal.type === "not_found" ? (
                   <>
-                    <h3 className="text-xl font-bold mb-2">
+                    <h3 className="text-xl font-bold font-display mb-2">
                       {usageContent.errorMessages.notFoundTitle}
                     </h3>
                     <p className="text-foreground/60 mb-6">
@@ -673,7 +673,7 @@ export default function UsageDashboard() {
                   </>
                 ) : errorModal.type === "rate_limit" ? (
                   <>
-                    <h3 className="text-xl font-bold mb-2">
+                    <h3 className="text-xl font-bold font-display mb-2">
                       {usageContent.errorMessages.rateLimitTitle}
                     </h3>
                     <p className="text-foreground/60 mb-6">
@@ -698,7 +698,7 @@ export default function UsageDashboard() {
                   </>
                 ) : (
                   <>
-                    <h3 className="text-xl font-bold mb-2">
+                    <h3 className="text-xl font-bold font-display mb-2">
                       {usageContent.errorMessages.serverErrorTitle}
                     </h3>
                     <p className="text-foreground/60 mb-6">
@@ -841,7 +841,7 @@ export default function UsageDashboard() {
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     {isUnlimited ? (
                       <>
-                        <p className="text-5xl font-bold text-orange-500">
+                        <p className="text-5xl font-bold font-display text-orange-500">
                           {displayedUsed.toFixed(1)} GB
                         </p>
 
@@ -856,7 +856,7 @@ export default function UsageDashboard() {
                     ) : isValidData ? (
                       <>
                         <p
-                          className={`text-4xl font-bold ${isLimitExceeded ? "text-red-500" : "text-orange-500"
+                          className={`text-4xl font-bold font-display ${isLimitExceeded ? "text-red-500" : "text-orange-500"
                             }`}
                         >
                           {displayedUsed.toFixed(1)} GB
@@ -901,11 +901,11 @@ export default function UsageDashboard() {
                 className="flex flex-col space-y-6 md:row-span-2 md:order-2 order-2"
               >
                 <div className="p-6 rounded-2xl border border-border/50 bg-card shadow-lg hover:border-orange-500/30 transition-all">
-                  <p className="text-sm text-foreground/60 mb-2 font-semibold">
+                  <p className="text-sm text-foreground/60 mb-2 font-bold font-display uppercase tracking-wider">
                     Account Name
                   </p>
                   <div className="flex items-center justify-between">
-                    <p className="text-lg font-bold">
+                    <p className="text-lg font-bold font-display">
                       {displayData.username}
                     </p>
                     <div
@@ -922,7 +922,7 @@ export default function UsageDashboard() {
                 </div>
 
                 <div className="p-6 rounded-2xl border border-border/50 bg-card shadow-lg hover:border-orange-500/30 transition-all">
-                  <p className="text-sm text-foreground/60 mb-2 font-semibold">
+                  <p className="text-sm text-foreground/60 mb-2 font-bold font-display uppercase tracking-wider">
                     Plan Expires
                   </p>
                   <div className="flex items-center justify-between gap-4">
@@ -974,7 +974,7 @@ export default function UsageDashboard() {
                 </div>
 
                 <div className="p-6 rounded-2xl border border-border/50 bg-card shadow-lg hover:border-orange-500/30 transition-all">
-                  <p className="text-sm text-foreground/60 mb-4 font-semibold">
+                  <p className="text-sm text-foreground/60 mb-4 font-bold font-display uppercase tracking-wider">
                     Data Breakdown
                   </p>
 
@@ -1112,7 +1112,7 @@ export default function UsageDashboard() {
                 }}
                 transition={{ duration: 0.4 }}
               >
-                <p className="text-sm text-foreground/60 mb-4 font-semibold">
+                <p className="text-sm text-foreground/60 mb-4 font-bold font-display uppercase tracking-wider">
                   Connection Info
                 </p>
                 <div className="grid grid-cols-2 gap-4">

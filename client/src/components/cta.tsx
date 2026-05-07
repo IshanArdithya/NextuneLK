@@ -31,7 +31,7 @@ export default function CTA() {
               viewport={{ once: true, margin: "-100px" }}
               className="space-y-4 mb-8"
             >
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 max-w-2xl mx-auto">
+              <h2 className="text-4xl md:text-5xl font-bold font-display mb-6 max-w-2xl mx-auto">
                 Join NextuneLK and take control of your connection.
               </h2>
               <p className="text-lg text-foreground/60 mb-8 max-w-xl mx-auto">
@@ -72,7 +72,7 @@ export default function CTA() {
                     className="flex items-center gap-2"
                   >
                     <Icon size={20} className="text-orange-500" />
-                    <span className="text-sm font-semibold">{item.label}</span>
+                    <span className="text-sm font-semibold font-display">{item.label}</span>
                   </motion.div>
                 );
               })}

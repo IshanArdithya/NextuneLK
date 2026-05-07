@@ -42,6 +42,7 @@ import { useToast } from "@/components/ui/use-toast";
 interface Payment {
   id: string;
   customerEmail: string;
+  customerName?: string;
   inboundId: number;
   quotaGB: number | null;
   amountPaid: number;
@@ -56,7 +57,9 @@ interface Payment {
 
 interface PaymentModalProps {
   open: boolean;
-  customerEmail: string;
+  customerId?: string;
+  customerName?: string;
+  customerEmail?: string;
   inboundId: number | null;
   onClose: () => void;
 }
@@ -88,6 +91,8 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function PaymentModal({
   open,
+  customerId,
+  customerName,
   customerEmail,
   inboundId,
   onClose,
@@ -104,10 +109,11 @@ export default function PaymentModal({
   const [formNotes, setFormNotes] = useState("");
 
   const fetchPayments = async () => {
-    if (!customerEmail) return;
+    const identifier = customerId || customerEmail;
+    if (!identifier) return;
     setLoading(true);
     try {
-      const res = await api.get(`/admin/payments/${customerEmail}`);
+      const res = await api.get(`/admin/payments/${identifier}`);
       if (res.data.success) {
         setPayments(res.data.obj);
       }
@@ -123,12 +129,12 @@ export default function PaymentModal({
   };
 
   useEffect(() => {
-    if (open && customerEmail) {
+    if (open && (customerId || customerEmail)) {
       fetchPayments();
       setShowAddForm(false);
       setEditingId(null);
     }
-  }, [open, customerEmail]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, customerId, customerEmail]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMarkAsPaid = async (payment: Payment) => {
     try {
@@ -169,6 +175,7 @@ export default function PaymentModal({
   const handleAddPayment = async () => {
     try {
       await api.post(`/admin/payments`, {
+        customerId,
         customerEmail,
         inboundId,
         amountPaid: parseFloat(formAmount) || 0,
@@ -219,7 +226,7 @@ export default function PaymentModal({
             <CreditCard className="h-5 w-5" />
             Payments
             <Badge variant="secondary" className="text-xs font-normal">
-              {customerEmail}
+              {customerName || customerEmail || "Unnamed Customer"}
             </Badge>
           </DialogTitle>
         </DialogHeader>

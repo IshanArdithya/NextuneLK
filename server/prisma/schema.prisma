@@ -25,7 +25,8 @@ model Preset {
 
 model Customer {
   id        String         @id @default(uuid())
-  email     String         @unique                    // customer's unique email
+  email     String?        @unique                    // customer's unique email (optional)
+  name      String?                                   // display name
   notes     String?
   status    CustomerStatus @default(ACTIVE)
   createdAt DateTime       @default(now()) @map("created_at")
@@ -45,7 +46,7 @@ enum CustomerStatus {
 
 model Service {
   id         String        @id @default(uuid())
-  xuiId      String        @unique @map("xui_id")        // uuid from xui panel
+  xuiId      String        @map("xui_id")        // uuid or password from xui panel
   xuiEmail   String        @map("xui_email")              // name/remark in xui
   inboundId  Int           @map("inbound_id")             // xui inbound
   customerId String?       @map("customer_id")            // linked customer (nullable)
@@ -54,6 +55,7 @@ model Service {
   createdAt  DateTime      @default(now()) @map("created_at")
   updatedAt  DateTime      @updatedAt @map("updated_at")
 
+  @@unique([inboundId, xuiId])
   @@index([customerId])
   @@index([inboundId])
   @@index([status])
@@ -70,6 +72,7 @@ model Payment {
   customerId   String?       @map("customer_id")
   customer     Customer?     @relation(fields: [customerId], references: [id])
   customerEmail String?      @map("customer_email")           // for history
+  customerName String?       @map("customer_name")            // snapshot for history
   inboundId    Int           @map("inbound_id")
   quotaGB      Float?        @map("quota_gb")
   amountPaid   Float         @default(0) @map("amount_paid")

@@ -18,6 +18,7 @@ import {
   ExternalLink,
   Trash2,
   ArrowUpDown,
+  User,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 interface LinkedService {
   id: string;
   xuiId: string;
@@ -64,12 +76,20 @@ interface LinkedService {
 
 interface Customer {
   id: string;
-  email: string;
+  email: string | null;
+  name: string | null;
   status: string;
   createdAt: string;
   totalPayments: number;
   totalPaid: number;
+  unpaidCount?: number;
   linkedServices: LinkedService[];
+}
+
+interface DeletionStats {
+  activeServices: number;
+  unpaidPayments: number;
+  totalOwed: number;
 }
 
 export default function CustomersPage() {
@@ -80,6 +100,12 @@ export default function CustomersPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState("newest");
   const [error, setError] = useState<string | null>(null);
+
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [selectedForDelete, setSelectedForDelete] = useState<Customer | null>(null);
+  const [deletionStats, setDeletionStats] = useState<DeletionStats | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const { toast } = useToast();
 
   const fetchCustomers = useCallback(async () => {
@@ -108,11 +134,26 @@ export default function CustomersPage() {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this customer? All their payment history will be lost.")) return;
+  const initiateDelete = async (customer: Customer) => {
+    setSelectedForDelete(customer);
     try {
-      await api.delete(`/admin/customers/${id}`);
+      const res = await api.get(`/admin/customers/${customer.id}/deletion-stats`);
+      if (res.data.success) {
+        setDeletionStats(res.data.obj);
+        setShowDeleteAlert(true);
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to fetch deletion stats", variant: "destructive" });
+    }
+  };
+
+  const executeDelete = async () => {
+    if (!selectedForDelete) return;
+    setIsDeleting(true);
+    try {
+      await api.delete(`/admin/customers/${selectedForDelete.id}`);
       toast({ title: "Success", description: "Customer deleted successfully" });
+      setShowDeleteAlert(false);
       fetchCustomers();
     } catch (err: any) {
       toast({
@@ -120,6 +161,8 @@ export default function CustomersPage() {
         description: err.response?.data?.message || "Failed to delete customer",
         variant: "destructive",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -158,7 +201,7 @@ export default function CustomersPage() {
             <div className="relative w-full lg:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
-                placeholder="Search customers..."
+                placeholder="Search name or email..."
                 className="pl-9 h-9 bg-background/50 border-border/40 focus:border-orange-500/50 focus:ring-orange-500/10 transition-all text-sm"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -192,8 +235,8 @@ export default function CustomersPage() {
                   <SelectContent>
                     <SelectItem value="newest">Newest First</SelectItem>
                     <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="name">Name (A-Z)</SelectItem>
                     <SelectItem value="email">Email (A-Z)</SelectItem>
-                    <SelectItem value="email_desc">Email (Z-A)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -248,18 +291,11 @@ export default function CustomersPage() {
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
-                              <Mail className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                              <User className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                             </div>
                             <div className="min-w-0">
-                              <p className="font-medium text-sm truncate">{customer.email}</p>
-                              <Badge
-                                variant={customer.status === "ACTIVE" ? "outline" : "secondary"}
-                                className={`text-[10px] px-1.5 py-0 mt-0.5 ${customer.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                  : ""
-                                  }`}
-                              >
-                                {customer.status}
-                              </Badge>
+                              <p className="font-medium text-sm truncate">{customer.name || "Unnamed"}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{customer.email || "No email"}</p>
                             </div>
                           </div>
                         </TableCell>
@@ -288,9 +324,16 @@ export default function CustomersPage() {
                         </TableCell>
                         <TableCell>
                           <div className="space-y-0.5">
-                            <p className="text-sm font-bold text-slate-900 dark:text-zinc-100">
-                              LKR {customer.totalPaid.toLocaleString()}
-                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-bold text-slate-900 dark:text-zinc-100">
+                                LKR {customer.totalPaid.toLocaleString()}
+                              </p>
+                              {customer.unpaidCount ? (
+                                <Badge variant="destructive" className="text-[9px] px-1 h-3.5 animate-pulse">
+                                  {customer.unpaidCount} unpaid
+                                </Badge>
+                              ) : null}
+                            </div>
                             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
                               {customer.totalPayments} transactions
                             </p>
@@ -318,7 +361,7 @@ export default function CustomersPage() {
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
-                                onClick={() => handleDelete(customer.id)}
+                                onClick={() => initiateDelete(customer)}
                                 className="text-destructive focus:text-destructive cursor-pointer"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete Customer
@@ -335,6 +378,59 @@ export default function CustomersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Deletion Alert Dialog */}
+      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+        <AlertDialogContent className="sm:max-w-[450px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Safety Verification
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4 pt-2">
+              <div className="text-foreground font-medium">
+                You are about to delete <strong>{selectedForDelete?.name || selectedForDelete?.email}</strong>.
+              </div>
+
+              {(deletionStats?.activeServices || 0) > 0 || (deletionStats?.unpaidPayments || 0) > 0 ? (
+                <div className="bg-destructive/10 p-3 rounded-lg border border-destructive/20 space-y-2">
+                  <p className="text-xs font-bold text-destructive uppercase tracking-wider">Critical Warnings:</p>
+                  <ul className="text-sm space-y-1 text-destructive/90 list-disc pl-4">
+                    {deletionStats!.activeServices > 0 && (
+                      <li>Has <strong>{deletionStats!.activeServices} active VPN service(s)</strong>. They will become orphaned.</li>
+                    )}
+                    {deletionStats!.unpaidPayments > 0 && (
+                      <li>Has <strong>{deletionStats!.unpaidPayments} unpaid payment(s)</strong> totaling <strong>LKR {deletionStats!.totalOwed.toLocaleString()}</strong>.</li>
+                    )}
+                  </ul>
+                </div>
+              ) : (
+                <p className="text-sm">
+                  This action cannot be undone. All payment history for this customer will be permanently removed from the database.
+                </p>
+              )}
+
+              <p className="text-[11px] text-muted-foreground italic">
+                Tip: Consider "Unlinking" services or "Marking as Paid" before deletion for cleaner records.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => {
+                e.preventDefault();
+                executeDelete();
+              }}
+              disabled={isDeleting}
+            >
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirm Deletion
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -22,8 +22,9 @@ export const ClientService = {
 
         stats.forEach((s: any) => {
           const settingClient = settingsClients.find((sc: any) => sc.email === s.email);
+          const clientId = settingClient?.id || settingClient?.password || s.id.toString();
           panelClients.push({
-            xuiId: settingClient?.id?.toString() || s.id.toString(),
+            xuiId: clientId.toString(),
             xuiEmail: s.email,
             inboundId: s.inboundId,
           });
@@ -34,15 +35,29 @@ export const ClientService = {
       const dbServices = await prisma.service.findMany();
 
       for (const svc of dbServices) {
-        const stillInPanel = panelClients.find((pc: any) => pc.xuiId === svc.xuiId);
-        if (!stillInPanel) {
-          await prisma.service.delete({ where: { id: svc.id } });
-          console.log(`[Sync] Removed stale Service record for XUI ${svc.xuiEmail} (${svc.xuiId})`);
-        } else if (stillInPanel.xuiEmail !== svc.xuiEmail) {
+        const exactMatch = panelClients.find((pc: any) => pc.xuiId === svc.xuiId);
+        
+        if (!exactMatch) {
+          // try to heal by email + inbound
+          const potentialHeal = panelClients.find((pc: any) => pc.xuiEmail === svc.xuiEmail && pc.inboundId === svc.inboundId);
+          
+          if (potentialHeal) {
+            await prisma.service.update({
+              where: { id: svc.id },
+              data: { xuiId: potentialHeal.xuiId }
+            });
+            console.log(`[Sync] Healed Service ID for ${svc.xuiEmail}: ${svc.xuiId} -> ${potentialHeal.xuiId}`);
+            // update in-memory to prevent recreation
+            svc.xuiId = potentialHeal.xuiId;
+          } else {
+            await prisma.service.delete({ where: { id: svc.id } });
+            console.log(`[Sync] Removed stale Service record for XUI ${svc.xuiEmail} (${svc.xuiId})`);
+          }
+        } else if (exactMatch.xuiEmail !== svc.xuiEmail) {
           // heal name if changed in xui
           await prisma.service.update({
             where: { id: svc.id },
-            data: { xuiEmail: stillInPanel.xuiEmail },
+            data: { xuiEmail: exactMatch.xuiEmail },
           });
         }
       }
@@ -85,6 +100,7 @@ export const ClientService = {
     paymentStatus: string;
     paymentNotes: string;
     presetId?: string;
+    customerName?: string; // name for new customer
   }) => {
     const xuiUUID = randomUUID();
     const subId = randomUUID().replace(/-/g, "").substring(0, 16);
@@ -132,23 +148,27 @@ export const ClientService = {
     // create service record
     let customerId: string | null = null;
 
-    if (data.email && data.linkAction !== "skip") {
-      const existingCustomer = await prisma.customer.findUnique({
-        where: { email: data.email },
-        include: { services: true },
+    if (data.linkAction === "link" && (data.email || data.customerName)) {
+      // find by email or name
+      const existingCustomer = await prisma.customer.findFirst({
+        where: {
+          OR: [
+            ...(data.email ? [{ email: data.email }] : []),
+            ...(data.customerName ? [{ name: data.customerName }] : []),
+          ],
+        },
       });
-
-      if (existingCustomer) {
-        // customer exists;link to this new service
-        customerId = existingCustomer.id;
-      } else if (data.linkAction === "create" || !data.linkAction) {
-        // create new customer
-        const newCustomer = await prisma.customer.create({
-          data: { email: data.email },
-        });
-        customerId = newCustomer.id;
-        console.log(`[ClientService] Created new Customer: ${data.email}`);
-      }
+      if (existingCustomer) customerId = existingCustomer.id;
+    } else if (data.linkAction === "create") {
+      // create new customer with name and optional email
+      const newCustomer = await prisma.customer.create({
+        data: { 
+          email: data.email || null,
+          name: data.customerName || data.xuiEmail
+        } as any,
+      });
+      customerId = newCustomer.id;
+      console.log(`[ClientService] Created new Customer: ${data.customerName || data.email}`);
     }
 
     const service = await prisma.service.create({
@@ -167,7 +187,7 @@ export const ClientService = {
       const isPaid = data.paymentStatus === "PAID" || data.paymentStatus === "Paid";
 
       await PaymentService.createPayment({
-        customerEmail: data.email,
+        customerEmail: data.email || null,
         customerId,
         inboundId: parseInt(data.inboundId.toString()),
         quotaGB: data.totalGB || null,
@@ -187,13 +207,18 @@ export const ClientService = {
 
   // check customer: lookup for link dialog in frontend
   checkCustomerEmail: async (email: string) => {
-    const customer = await prisma.customer.findUnique({
-      where: { email },
+    const customer = await prisma.customer.findFirst({
+      where: { 
+        OR: [
+          { email },
+          { name: email }
+        ]
+      } as any,
       include: {
         services: { where: { status: "ACTIVE" }, select: { id: true, xuiEmail: true, inboundId: true } },
         _count: { select: { payments: true } },
-      },
-    });
+      } as any,
+    }) as any;
 
     if (!customer) {
       return { exists: false };
@@ -204,6 +229,7 @@ export const ClientService = {
       customer: {
         id: customer.id,
         email: customer.email,
+        name: customer.name,
         status: customer.status,
         activeServices: customer.services,
         totalPayments: customer._count.payments,
@@ -212,14 +238,25 @@ export const ClientService = {
   },
 
   // link/ unlink customer to/from a service
-  linkCustomer: async (serviceXuiId: string, email: string) => {
-    const service = await prisma.service.findUnique({ where: { xuiId: serviceXuiId } });
+  linkCustomer: async (serviceXuiId: string, email: string, inboundId?: number) => {
+    const service = await prisma.service.findFirst({ 
+      where: { 
+        xuiId: serviceXuiId,
+        ...(inboundId ? { inboundId } : {})
+      } 
+    });
     if (!service) throw new AppError("Service not found", 404);
 
     // find or create customer
-    let customer = await prisma.customer.findUnique({ where: { email } });
+    const isEmail = email.includes("@");
+    let customer = await prisma.customer.findFirst({
+      where: isEmail ? { email } : { name: email }
+    });
+
     if (!customer) {
-      customer = await prisma.customer.create({ data: { email } });
+      customer = await prisma.customer.create({
+        data: isEmail ? { email } : { name: email }
+      } as any);
     }
 
     await prisma.service.update({
@@ -230,8 +267,13 @@ export const ClientService = {
     return { serviceId: service.id, customerId: customer.id };
   },
 
-  unlinkCustomer: async (serviceXuiId: string) => {
-    const service = await prisma.service.findUnique({ where: { xuiId: serviceXuiId } });
+  unlinkCustomer: async (serviceXuiId: string, inboundId?: number) => {
+    const service = await prisma.service.findFirst({ 
+      where: { 
+        xuiId: serviceXuiId,
+        ...(inboundId ? { inboundId } : {})
+      } 
+    });
     if (!service) throw new AppError("Service not found", 404);
 
     await prisma.service.update({
@@ -283,7 +325,7 @@ export const ClientService = {
 
     // update the service record's xuiEmail
     try {
-      await prisma.service.update({
+      await prisma.service.updateMany({
         where: { xuiId: data.clientId },
         data: { xuiEmail: data.xuiEmail },
       });
@@ -314,7 +356,7 @@ export const ClientService = {
 
     // remove the service record (customer record stays for history)
     try {
-      await prisma.service.delete({ where: { xuiId: clientId } });
+      await prisma.service.deleteMany({ where: { xuiId: clientId } });
       console.log(`[ClientService] Deleted Service record for XUI ${clientId}`);
     } catch {
       console.log(`[ClientService] No Service record found for XUI ${clientId}, ignoring.`);
@@ -361,10 +403,10 @@ export const ClientService = {
     }
 
     // find the service and its linked customer
-    const service = await prisma.service.findUnique({
+    const service = (await prisma.service.findFirst({
       where: { xuiId: data.clientId },
       include: { customer: true },
-    });
+    })) as any;
 
     if (!service?.customer) {
       throw new AppError("This client is not linked to a customer account. Cannot create payment.", 400);

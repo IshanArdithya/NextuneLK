@@ -6,7 +6,7 @@ import { createPaymentSchema, updatePaymentSchema } from "../../validations/paym
 const router = express.Router();
 
 router.get("/all", PaymentController.getAllPayments);
-router.get("/:email", PaymentController.getPayments);
+router.get("/:identifier", PaymentController.getPayments);
 router.post("/", validate(createPaymentSchema), PaymentController.createPayment);
 router.put("/:id", validate(updatePaymentSchema), PaymentController.updatePayment);
 router.delete("/:id", PaymentController.deletePayment);

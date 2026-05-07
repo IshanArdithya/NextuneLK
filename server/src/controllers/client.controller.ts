@@ -70,21 +70,21 @@ export const checkCustomerEmail = catchAsync(async (req: any, res: any) => {
 });
 
 export const linkCustomer = catchAsync(async (req: any, res: any) => {
-  const { xuiId, email } = req.body;
-  if (!xuiId || !email) {
-    throw new AppError("xuiId and email are required", 400);
+  const { xuiId, email, inboundId } = req.body;
+  if (!xuiId || !email || !inboundId) {
+    throw new AppError("xuiId, email, and inboundId are required", 400);
   }
 
-  const result = await ClientService.linkCustomer(xuiId, email);
+  const result = await ClientService.linkCustomer(xuiId, email, inboundId);
   return res.json({ success: true, msg: "Customer linked successfully", obj: result });
 });
 
 export const unlinkCustomer = catchAsync(async (req: any, res: any) => {
-  const { xuiId } = req.body;
-  if (!xuiId) {
-    throw new AppError("xuiId is required", 400);
+  const { xuiId, inboundId } = req.body;
+  if (!xuiId || !inboundId) {
+    throw new AppError("xuiId and inboundId are required", 400);
   }
 
-  const result = await ClientService.unlinkCustomer(xuiId);
+  const result = await ClientService.unlinkCustomer(xuiId, inboundId);
   return res.json({ success: true, msg: "Customer unlinked successfully", obj: result });
 });

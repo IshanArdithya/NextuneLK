@@ -50,7 +50,7 @@ export default function Navigation() {
 
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-border/50">
-      <div className="max-w-7xl mx-auto w-full px-6">
+      <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* logo */}
           <ComingSoonWrapper>
@@ -60,7 +60,7 @@ export default function Navigation() {
 
                 </span>
               </div>
-              <span className="font-bold text-lg">
+              <span className="font-bold text-lg font-display">
                 {headerContent.logoText}
               </span>
             </Link>

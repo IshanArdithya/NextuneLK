@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { auth } from "../lib/auth.js";
+import logger from "../utils/logger.js";
 
 export const protectDashboard = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -8,6 +9,7 @@ export const protectDashboard = async (req: Request, res: Response, next: NextFu
         });
 
         if (!session) {
+            logger.warn(`Unauthorized access attempt to ${req.originalUrl} - No session found`);
             return res.status(401).json({ 
                 success: false, 
                 msg: "Unauthorized: Please log in to access the dashboard." 

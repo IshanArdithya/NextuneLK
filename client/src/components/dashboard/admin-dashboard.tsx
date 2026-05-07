@@ -30,6 +30,7 @@ import QRCodeModal from "./qr-code-modal";
 import PaymentModal from "./payment-modal";
 import ResetCycleModal from "./reset-cycle-modal";
 import DeleteClientDialog from "./delete-client-dialog";
+import LinkCustomerModal from "./link-customer-modal";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
@@ -55,10 +56,13 @@ interface ExpiryInfo {
 }
 
 export interface ClientData {
-  id: string; // xuiId
+  id: string;
+  xuiId: string;
   serviceId: string | null;
+  inboundId: number;
   email: string; // xuiEmail
   customerId?: string;
+  customerName?: string;
   customerEmail?: string;
   enable: boolean;
   flow: string;
@@ -120,9 +124,11 @@ export default function AdminDashboard() {
   }>({ open: false, client: null, inboundRemark: "", inboundProtocol: "", inboundPort: 0, streamSettings: null });
   const [paymentModal, setPaymentModal] = useState<{
     open: boolean;
+    customerId: string;
+    customerName: string;
     customerEmail: string;
     inboundId: number | null;
-  }>({ open: false, customerEmail: "", inboundId: null });
+  }>({ open: false, customerId: "", customerName: "", customerEmail: "", inboundId: null });
   const [resetCycleModal, setResetCycleModal] = useState<{
     open: boolean;
     client: ClientData | null;
@@ -133,6 +139,10 @@ export default function AdminDashboard() {
     client: ClientData | null;
     inboundId: number | null;
   }>({ open: false, client: null, inboundId: null });
+  const [linkCustomerModal, setLinkCustomerModal] = useState<{
+    open: boolean;
+    client: ClientData | null;
+  }>({ open: false, client: null });
 
   const fetchInbounds = useCallback(async () => {
     try {
@@ -450,6 +460,8 @@ export default function AdminDashboard() {
                           onPayments={(client) =>
                             setPaymentModal({
                               open: true,
+                              customerId: client.customerId || "",
+                              customerName: client.customerName || "",
                               customerEmail: client.customerEmail || "",
                               inboundId: inbound.id,
                             })
@@ -466,6 +478,12 @@ export default function AdminDashboard() {
                               open: true,
                               client,
                               inboundId: inbound.id,
+                            })
+                          }
+                          onLink={(client: ClientData) =>
+                            setLinkCustomerModal({
+                              open: true,
+                              client,
                             })
                           }
                         />
@@ -511,10 +529,12 @@ export default function AdminDashboard() {
       />
       <PaymentModal
         open={paymentModal.open}
+        customerId={paymentModal.customerId}
+        customerName={paymentModal.customerName}
         customerEmail={paymentModal.customerEmail}
         inboundId={paymentModal.inboundId}
         onClose={() =>
-          setPaymentModal({ open: false, customerEmail: "", inboundId: null })
+          setPaymentModal({ open: false, customerId: "", customerName: "", customerEmail: "", inboundId: null })
         }
       />
       <ResetCycleModal
@@ -533,6 +553,12 @@ export default function AdminDashboard() {
         onClose={() =>
           setDeleteDialog({ open: false, client: null, inboundId: null })
         }
+        onSuccess={fetchInbounds}
+      />
+      <LinkCustomerModal
+        open={linkCustomerModal.open}
+        client={linkCustomerModal.client}
+        onClose={() => setLinkCustomerModal({ open: false, client: null })}
         onSuccess={fetchInbounds}
       />
     </div>

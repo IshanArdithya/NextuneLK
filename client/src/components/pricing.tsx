@@ -38,7 +38,7 @@ export default function Pricing() {
             viewport={{ once: true, margin: "-100px" }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold font-display mb-4">
               {pricingContent.title}
             </h2>
             <p className="text-lg text-foreground/60">
@@ -65,13 +65,13 @@ export default function Pricing() {
                 }`}
               >
                 {plan.highlighted && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold font-display">
                     MOST POPULAR
                   </div>
                 )}
 
                 <div className="mb-6">
-                  <h3 className="text-2xl font-bold mb-1">{plan.name}</h3>
+                  <h3 className="text-2xl font-bold font-display mb-1">{plan.name}</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-500">
                     {plan.subtitle}
                   </p>
@@ -79,7 +79,7 @@ export default function Pricing() {
 
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold text-gray-900 dark:text-gray-200">
+                    <span className="text-4xl font-bold font-display text-gray-900 dark:text-gray-200">
                       LKR {plan.price}
                     </span>
                     <span className="text-gray-600 dark:text-gray-400">
