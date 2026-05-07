@@ -11,6 +11,16 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CustomerSearch } from "./customer-search";
 import { Loader2, Link as LinkIcon, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -31,7 +41,25 @@ export default function LinkCustomerModal({
   const [selectedCustomer, setSelectedCustomer] = useState<{id?: string, name?: string | null, email?: string | null} | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
+  const [countdown, setCountdown] = useState(3);
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (unlinkConfirmOpen) {
+      setCountdown(3);
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [unlinkConfirmOpen]);
 
   const handleLink = async () => {
     if (!client || (!selectedCustomer && !isNew)) return;
@@ -133,36 +161,75 @@ export default function LinkCustomerModal({
               placeholder="Start typing name or email..."
             />
             {(client?.customerEmail || client?.customerName) && (
-              <p className="text-[10px] text-amber-600 font-medium bg-amber-500/10 p-1.5 rounded border border-amber-500/20">
-                Note: This client is currently linked to {client.customerName || client.customerEmail}. Linking a new customer will replace it.
-              </p>
+              <div className="flex items-center justify-between gap-2 bg-amber-500/5 p-2 rounded-lg border border-amber-500/10">
+                <p className="text-[10px] text-amber-600 font-medium leading-tight flex-1">
+                  Currently linked to <span className="font-bold underline">{client.customerName || client.customerEmail}</span>
+                </p>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="h-7 px-2 text-[10px] text-destructive hover:text-destructive hover:bg-destructive/10 font-bold uppercase tracking-tight"
+                  onClick={() => setUnlinkConfirmOpen(true)}
+                  disabled={loading}
+                >
+                  Unlink
+                </Button>
+              </div>
             )}
           </div>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          {(client?.customerEmail || client?.customerName) && (
-            <Button 
-              variant="ghost" 
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 text-xs px-2 h-8"
-              onClick={handleUnlink}
-              disabled={loading}
-            >
-              Unlink Current
-            </Button>
-          )}
-          <div className="flex-1" />
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose} size="sm">
-              Cancel
-            </Button>
-            <Button onClick={handleLink} disabled={loading || (!selectedCustomer && !isNew)} size="sm">
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirm Link
-            </Button>
-          </div>
+        <DialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={onClose} size="sm" className="w-full sm:w-auto">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleLink} 
+            disabled={loading || (!selectedCustomer && !isNew)} 
+            size="sm"
+            className="w-full sm:w-auto"
+          >
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <span className="sm:hidden">Link</span>
+            <span className="hidden sm:inline">Confirm Link</span>
+          </Button>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={unlinkConfirmOpen} onOpenChange={setUnlinkConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unlink Customer?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the association between <strong>{client?.email}</strong> and <strong>{client?.customerName || client?.customerEmail}</strong>.
+              The client service will remain active but will no longer be linked to this customer record.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
+            <AlertDialogCancel disabled={loading} className="w-full sm:w-auto mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleUnlink();
+                setUnlinkConfirmOpen(false);
+              }}
+              disabled={loading || countdown > 0}
+              className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto min-w-[100px]"
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : countdown > 0 ? (
+                <span>Unlink ({countdown}s)</span>
+              ) : (
+                <>
+                  <span className="sm:hidden">Unlink</span>
+                  <span className="hidden sm:inline">Unlink Now</span>
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

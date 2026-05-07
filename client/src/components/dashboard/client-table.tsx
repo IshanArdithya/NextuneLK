@@ -21,6 +21,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -218,8 +228,29 @@ export default function ClientTable({
   onLink,
 }: ClientTableProps) {
   const { toast } = useToast();
+  const [statusConfirmOpen, setStatusConfirmOpen] = React.useState(false);
+  const [pendingStatusClient, setPendingStatusClient] = React.useState<ClientData | null>(null);
+  const [loading, setLoading] = React.useState(false);
+  const [countdown, setCountdown] = React.useState(3);
+
+  React.useEffect(() => {
+    if (statusConfirmOpen) {
+      setCountdown(3);
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [statusConfirmOpen]);
 
   const handleToggleEnable = async (client: ClientData) => {
+    setLoading(true);
     try {
       await api.put("/admin/client/update", {
         inboundId: inboundId.toString(),
@@ -247,6 +278,8 @@ export default function ClientTable({
         description: "Failed to toggle client status",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -255,39 +288,42 @@ export default function ClientTable({
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="w-[40px] text-[11px]">Enable</TableHead>
-            <TableHead className="text-[11px]">Email</TableHead>
-            <TableHead className="text-[11px] hidden sm:table-cell">ID</TableHead>
-            <TableHead className="text-[11px]">Traffic</TableHead>
-            <TableHead className="text-[11px]">Duration</TableHead>
-            <TableHead className="text-[11px] text-right">Actions</TableHead>
+            <TableHead className="w-[40px] px-2 text-[10px] uppercase font-bold">Status</TableHead>
+            <TableHead className="text-[10px] uppercase font-bold px-2">Client</TableHead>
+            <TableHead className="text-[10px] uppercase font-bold hidden sm:table-cell">ID</TableHead>
+            <TableHead className="text-[10px] uppercase font-bold px-2 sm:px-4">Usage</TableHead>
+            <TableHead className="text-[10px] uppercase font-bold hidden sm:table-cell">Duration</TableHead>
+            <TableHead className="text-[10px] uppercase font-bold text-right px-2">Act</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {clients.map((client, index) => (
             <TableRow key={client.id || `${client.email}-${index}`} className="group hover:bg-muted/30 transition-colors border-b-border/40">
-              <TableCell>
+              <TableCell className="px-2">
                 <div className="flex items-center justify-center">
                   <Switch
                     checked={client.enable}
-                    onCheckedChange={() => handleToggleEnable(client)}
-                    className="scale-75 shadow-sm"
+                    onCheckedChange={() => {
+                      setPendingStatusClient(client);
+                      setStatusConfirmOpen(true);
+                    }}
+                    className="scale-75 shadow-sm data-[state=checked]:bg-emerald-500"
                   />
                 </div>
               </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-3">
+              <TableCell className="px-2 max-w-[120px] sm:max-w-none">
+                <div className="flex items-center gap-2">
                   <StatusDot client={client} />
-                  <div>
-                    <p className="text-sm font-medium">{client.email}</p>
-                    <div className="flex flex-col gap-0.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold truncate sm:text-sm">{client.email}</p>
+                    <div className="flex flex-col gap-0">
                       {(client.customerEmail || client.customerName) && (
-                        <p className="text-[10px] text-orange-500/80 font-medium">
+                        <p className="text-[9px] text-orange-500/90 font-medium truncate">
                           {client.customerName || client.customerEmail}
                         </p>
                       )}
                       {client.comment && (
-                        <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                        <p className="text-[9px] text-muted-foreground truncate hidden sm:block">
                           {client.comment}
                         </p>
                       )}
@@ -295,16 +331,27 @@ export default function ClientTable({
                   </div>
                 </div>
               </TableCell>
-              <TableCell className="hidden sm:table-cell">
+              <TableCell className="hidden sm:table-cell px-4">
                 <CopyableId id={client.id} />
               </TableCell>
-              <TableCell>
-                <TrafficBar traffic={client.traffic} />
+              <TableCell className="px-2 sm:px-4">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5 sm:hidden">
+                     <span className="text-[10px] font-bold text-foreground/80">{client.traffic.totalUsedFormatted}</span>
+                     <span className="text-[9px] text-muted-foreground">/ {client.traffic.totalLimitFormatted}</span>
+                  </div>
+                  <div className="hidden sm:block">
+                    <TrafficBar traffic={client.traffic} />
+                  </div>
+                  <div className="sm:hidden mt-0.5 scale-90 origin-left">
+                    <ExpiryBadge expiry={client.expiry} />
+                  </div>
+                </div>
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden sm:table-cell px-4">
                 <ExpiryBadge expiry={client.expiry} />
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right px-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -369,6 +416,40 @@ export default function ClientTable({
           ))}
         </TableBody>
       </Table>
+
+      <AlertDialog open={statusConfirmOpen} onOpenChange={setStatusConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader className="flex flex-col items-center">
+            <AlertDialogTitle className="text-center">
+              {pendingStatusClient?.enable ? "Disable Client?" : "Enable Client?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to {pendingStatusClient?.enable ? "disable" : "enable"} service for <strong>{pendingStatusClient?.email}</strong>? 
+              {pendingStatusClient?.enable ? " They will lose connection immediately." : " This will restore their connection."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
+            <AlertDialogCancel disabled={loading} className="w-full sm:w-auto mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (pendingStatusClient) handleToggleEnable(pendingStatusClient);
+                setStatusConfirmOpen(false);
+              }}
+              disabled={loading || countdown > 0}
+              className={`w-full sm:w-auto min-w-[120px] ${pendingStatusClient?.enable ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"} text-white`}
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : countdown > 0 ? (
+                <span>{pendingStatusClient?.enable ? "Disable" : "Enable"} ({countdown}s)</span>
+              ) : (
+                <span>{pendingStatusClient?.enable ? "Disable Now" : "Enable Now"}</span>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

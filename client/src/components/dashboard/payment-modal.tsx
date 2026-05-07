@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -20,6 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Table,
   TableBody,
@@ -99,9 +110,47 @@ export default function PaymentModal({
 }: PaymentModalProps) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [markPaidConfirmOpen, setMarkPaidConfirmOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingPaidPayment, setPendingPaidPayment] = useState<Payment | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [paidCountdown, setPaidCountdown] = useState(2);
+  const [deleteCountdown, setDeleteCountdown] = useState(3);
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (markPaidConfirmOpen) {
+      setPaidCountdown(2);
+      const timer = setInterval(() => {
+        setPaidCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [markPaidConfirmOpen]);
+
+  React.useEffect(() => {
+    if (deleteConfirmOpen) {
+      setDeleteCountdown(3);
+      const timer = setInterval(() => {
+        setDeleteCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [deleteConfirmOpen]);
 
   // Form state
   const [formAmount, setFormAmount] = useState("");
@@ -131,8 +180,8 @@ export default function PaymentModal({
   useEffect(() => {
     if (open && (customerId || customerEmail)) {
       fetchPayments();
-      setShowAddForm(false);
-      setEditingId(null);
+      setFormOpen(false);
+      setEditingPayment(null);
     }
   }, [open, customerId, customerEmail]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -153,47 +202,37 @@ export default function PaymentModal({
     }
   };
 
-  const handleUpdatePayment = async (id: string) => {
+  const handleSavePayment = async () => {
+    setLoading(true);
     try {
-      await api.put(`/admin/payments/${id}`, {
-        amountPaid: parseFloat(formAmount) || 0,
-        status: formStatus,
-        notes: formNotes,
-      });
-      toast({ title: "Success", description: "Payment updated" });
-      setEditingId(null);
-      fetchPayments();
-    } catch {
-      toast({
-        title: "Error",
-        description: "Failed to update payment",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleAddPayment = async () => {
-    try {
-      await api.post(`/admin/payments`, {
+      const payload = {
         customerId,
         customerEmail,
         inboundId,
         amountPaid: parseFloat(formAmount) || 0,
         status: formStatus,
         notes: formNotes,
-      });
-      toast({ title: "Success", description: "Payment record created" });
-      setShowAddForm(false);
-      setFormAmount("");
-      setFormStatus("UNPAID");
-      setFormNotes("");
+      };
+
+      if (editingPayment) {
+        await api.put(`/admin/payments/${editingPayment.id}`, payload);
+        toast({ title: "Success", description: "Payment record updated" });
+      } else {
+        await api.post(`/admin/payments`, payload);
+        toast({ title: "Success", description: "Payment record created" });
+      }
+
+      setFormOpen(false);
+      setEditingPayment(null);
       fetchPayments();
     } catch {
       toast({
         title: "Error",
-        description: "Failed to create payment",
+        description: "Failed to save payment",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -212,15 +251,24 @@ export default function PaymentModal({
   };
 
   const startEdit = (payment: Payment) => {
-    setEditingId(payment.id);
+    setEditingPayment(payment);
     setFormAmount(payment.amountPaid.toString());
     setFormStatus(payment.status);
     setFormNotes(payment.notes || "");
+    setFormOpen(true);
+  };
+
+  const startAdd = () => {
+    setEditingPayment(null);
+    setFormAmount("");
+    setFormStatus("UNPAID");
+    setFormNotes("");
+    setFormOpen(true);
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
+      <DialogContent className="p-4 sm:p-6 sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
@@ -237,235 +285,279 @@ export default function PaymentModal({
           </div>
         ) : (
           <div className="space-y-4">
-            {payments.length === 0 && !showAddForm ? (
-              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+            {payments.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground bg-muted/20 rounded-xl border border-dashed">
                 <CreditCard className="h-8 w-8 mb-2 opacity-40" />
                 <p className="text-sm">No payment records found</p>
+                <Button variant="link" size="sm" onClick={startAdd} className="text-orange-500">
+                  Add your first record
+                </Button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="border rounded-xl overflow-hidden bg-card">
                 <Table>
                   <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-[11px]">Date</TableHead>
-                      <TableHead className="text-[11px]">Amount</TableHead>
-                      <TableHead className="text-[11px]">Status</TableHead>
-                      <TableHead className="text-[11px]">Notes</TableHead>
-                      <TableHead className="text-[11px] text-right">
-                        Actions
-                      </TableHead>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="text-[10px] uppercase font-bold px-4">Transaction Details</TableHead>
+                      <TableHead className="text-[10px] uppercase font-bold hidden sm:table-cell">Amount</TableHead>
+                      <TableHead className="text-[10px] uppercase font-bold hidden sm:table-cell">Status</TableHead>
+                      <TableHead className="text-[10px] uppercase font-bold hidden sm:table-cell">Notes</TableHead>
+                      <TableHead className="text-[10px] uppercase font-bold text-right px-4">Act</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {payments.map((payment) =>
-                      editingId === payment.id ? (
-                        <TableRow key={payment.id}>
-                          <TableCell colSpan={5}>
-                            <div className="space-y-2 py-1">
-                              <div className="grid grid-cols-3 gap-2">
-                                <div>
-                                  <Label className="text-[10px]">Amount</Label>
-                                  <Input
-                                    type="number"
-                                    value={formAmount}
-                                    onChange={(e) =>
-                                      setFormAmount(e.target.value)
-                                    }
-                                    className="h-8 text-xs"
-                                  />
-                                </div>
-                                <div>
-                                  <Label className="text-[10px]">Status</Label>
-                                  <Select
-                                    value={formStatus}
-                                    onValueChange={setFormStatus}
-                                  >
-                                    <SelectTrigger className="h-8 text-xs">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="UNPAID">
-                                        Unpaid
-                                      </SelectItem>
-                                      <SelectItem value="PAID">Paid</SelectItem>
-                                      <SelectItem value="REFUNDED">
-                                        Refunded
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div>
-                                  <Label className="text-[10px]">Notes</Label>
-                                  <Input
-                                    value={formNotes}
-                                    onChange={(e) =>
-                                      setFormNotes(e.target.value)
-                                    }
-                                    className="h-8 text-xs"
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex gap-2 justify-end">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setEditingId(null)}
-                                  className="h-7 text-xs"
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  onClick={() =>
-                                    handleUpdatePayment(payment.id)
-                                  }
-                                  className="h-7 text-xs"
-                                >
-                                  Save
-                                </Button>
-                              </div>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        <TableRow key={payment.id}>
-                          <TableCell className="text-xs">
-                            {payment.createdAt
-                              ? new Date(payment.createdAt).toLocaleDateString(
-                                  "en-US",
-                                  {
+                    {payments.map((payment) => (
+                      <TableRow key={payment.id} className="group hover:bg-muted/30 transition-colors border-b last:border-0">
+                        <TableCell className="px-4 py-3">
+                          <div className="flex flex-col gap-1 min-w-0">
+                            <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground font-medium uppercase tracking-tighter">
+                              <span>
+                                {payment.createdAt
+                                  ? new Date(payment.createdAt).toLocaleDateString("en-US", {
                                     month: "short",
                                     day: "numeric",
-                                    year: "numeric",
-                                  }
-                                )
-                              : "—"}
-                          </TableCell>
-                          <TableCell className="text-xs font-medium">
-                            {payment.amountPaid > 0
-                              ? `LKR ${payment.amountPaid.toLocaleString()}`
-                              : "—"}
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadge status={payment.status} />
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground max-w-[120px] truncate">
-                            {payment.notes || "—"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              {payment.status === "UNPAID" && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  onClick={() => handleMarkAsPaid(payment)}
-                                  title="Mark as Paid"
-                                >
-                                  <Check className="h-3.5 w-3.5 text-orange-500" />
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => startEdit(payment)}
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() =>
-                                  handleDeletePayment(payment.id)
-                                }
-                              >
-                                <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                              </Button>
+                                  })
+                                  : "—"}
+                              </span>
+                              <span>•</span>
+                              <span>
+                                {payment.createdAt
+                                  ? new Date(payment.createdAt).toLocaleTimeString("en-US", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  })
+                                  : ""}
+                              </span>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    )}
+
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold tracking-tight text-foreground">
+                                {payment.amountPaid > 0 ? `LKR ${payment.amountPaid.toLocaleString()}` : "—"}
+                              </span>
+                              <div className="sm:hidden scale-[0.85] origin-left">
+                                <StatusBadge status={payment.status} />
+                              </div>
+                            </div>
+
+                            {payment.notes && (
+                              <p className="text-[9px] italic text-muted-foreground truncate max-w-[150px] sm:hidden leading-none">
+                                {payment.notes}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs font-medium hidden sm:table-cell px-4">
+                          {payment.amountPaid > 0 ? `LKR ${payment.amountPaid.toLocaleString()}` : "—"}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell px-4">
+                          <StatusBadge status={payment.status} />
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground max-w-[120px] truncate hidden sm:table-cell px-4">
+                          {payment.notes || "—"}
+                        </TableCell>
+                        <TableCell className="text-right px-4">
+                          <div className="flex items-center justify-end gap-1">
+                            {payment.status === "UNPAID" && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-orange-500/10"
+                                onClick={() => {
+                                  setPendingPaidPayment(payment);
+                                  setMarkPaidConfirmOpen(true);
+                                }}
+                              >
+                                <Check className="h-4 w-4 text-orange-500" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => startEdit(payment)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-destructive/10"
+                              onClick={() => {
+                                setPendingDeleteId(payment.id);
+                                setDeleteConfirmOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
             )}
 
-            {/* Add Payment Form */}
-            {showAddForm && (
-              <div className="border rounded-lg p-4 space-y-3">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  New Payment Record
-                </h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs">Amount (LKR)</Label>
-                    <Input
-                      type="number"
-                      value={formAmount}
-                      onChange={(e) => setFormAmount(e.target.value)}
-                      placeholder="0"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Status</Label>
-                    <Select value={formStatus} onValueChange={setFormStatus}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="UNPAID">Unpaid</SelectItem>
-                        <SelectItem value="PAID">Paid</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Notes</Label>
-                  <Textarea
-                    value={formNotes}
-                    onChange={(e) => setFormNotes(e.target.value)}
-                    placeholder="Optional notes..."
-                    rows={2}
-                    className="mt-1"
-                  />
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowAddForm(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button size="sm" onClick={handleAddPayment}>
-                    Create Record
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {!showAddForm && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setFormAmount("");
-                  setFormStatus("UNPAID");
-                  setFormNotes("");
-                  setShowAddForm(true);
-                }}
-                className="w-full"
-              >
-                <Plus className="mr-1 h-3 w-3" /> Add Payment Record
-              </Button>
-            )}
+            <Button
+              onClick={startAdd}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold h-10 shadow-lg shadow-orange-500/20"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Payment Record
+            </Button>
           </div>
         )}
       </DialogContent>
+      <AlertDialog open={markPaidConfirmOpen} onOpenChange={setMarkPaidConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark as Paid?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-2">
+              <div className="bg-muted/50 p-3 rounded-lg border border-dashed text-xs space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground uppercase tracking-wider font-bold text-[9px]">Client</span>
+                  <span className="font-semibold text-foreground">{customerName || customerEmail}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground uppercase tracking-wider font-bold text-[9px]">Amount</span>
+                  <span className="font-bold text-orange-600">LKR {pendingPaidPayment?.amountPaid.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between border-t border-dashed pt-2 mt-2">
+                  <span className="text-muted-foreground uppercase tracking-wider font-bold text-[9px]">Created</span>
+                  <span className="text-foreground">
+                    {pendingPaidPayment?.createdAt ? (
+                      <>
+                        {new Date(pendingPaidPayment.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        {" • "}
+                        {new Date(pendingPaidPayment.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                      </>
+                    ) : "—"}
+                  </span>
+                </div>
+              </div>
+              <p className="text-sm text-center pt-2">
+                This will update the transaction status. You can still edit this record later if needed.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
+            <AlertDialogCancel disabled={loading} className="w-full sm:w-auto mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (pendingPaidPayment) handleMarkAsPaid(pendingPaidPayment);
+                setMarkPaidConfirmOpen(false);
+              }}
+              disabled={loading || paidCountdown > 0}
+              className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto min-w-[100px]"
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : paidCountdown > 0 ? (
+                <span>Confirm ({paidCountdown}s)</span>
+              ) : (
+                <span>Confirm</span>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Payment Record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this payment record? This action cannot be undone and will remove the record from history forever.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
+            <AlertDialogCancel disabled={loading} className="w-full sm:w-auto mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (pendingDeleteId) handleDeletePayment(pendingDeleteId);
+                setDeleteConfirmOpen(false);
+              }}
+              disabled={loading || deleteCountdown > 0}
+              className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto min-w-[100px]"
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : deleteCountdown > 0 ? (
+                <span>Delete ({deleteCountdown}s)</span>
+              ) : (
+                <span>Delete Record</span>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* NEW: Payment Add/Edit Dialog */}
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="p-5 sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {editingPayment ? <Pencil className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+              {editingPayment ? "Edit Payment" : "New Payment"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Amount (LKR)</Label>
+              <Input
+                type="number"
+                value={formAmount}
+                onChange={(e) => setFormAmount(e.target.value)}
+                placeholder="0"
+                className="h-10 text-base"
+                autoFocus
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Status</Label>
+              <Select value={formStatus} onValueChange={setFormStatus}>
+                <SelectTrigger className="h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="UNPAID">Unpaid</SelectItem>
+                  <SelectItem value="PAID">Paid</SelectItem>
+                  <SelectItem value="REFUNDED">Refunded</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Notes</Label>
+              <Textarea
+                value={formNotes}
+                onChange={(e) => setFormNotes(e.target.value)}
+                placeholder="Optional notes..."
+                rows={3}
+                className="resize-none"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
+            <Button variant="outline" onClick={() => setFormOpen(false)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSavePayment}
+              disabled={loading || !formAmount}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {editingPayment ? "Update Record" : "Create Record"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
