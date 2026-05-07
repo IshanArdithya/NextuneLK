@@ -6,7 +6,8 @@ const consoleFormat = printf(({ level, message, timestamp, stack }) => {
     return `${timestamp} ${level}: ${stack || message}`;
 });
 
-// industry standard winston logger
+// winston logger
+console.log(`[Logger Init] NODE_ENV: "${process.env.NODE_ENV}"`);
 const logger = winston.createLogger({
     level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
     format: combine(
@@ -29,7 +30,7 @@ const logger = winston.createLogger({
 });
 
 // dev log to console
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV !== 'production') {
     logger.add(new winston.transports.Console({
         format: combine(
             colorize(),

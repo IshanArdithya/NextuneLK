@@ -101,13 +101,15 @@ export const XuiService = {
 
       const enrichedClients = clients.map((client: any) => {
         const stats = findClientStats(clientStats, client.email);
+        const clientId = client.id || client.password || stats?.id?.toString();
+        
         const up = stats?.up || 0;
         const down = stats?.down || 0;
         const totalUsed = up + down;
         const isOnline = onlineUsers.includes(client.email);
 
         // merge DB data
-        const svc = dbServices.find((s: any) => s.xuiId === client.id);
+        const svc = dbServices.find((s: any) => s.xuiId === clientId && s.inboundId === inbound.id);
 
         let expiryInfo: any = { type: "unlimited", date: null, remaining: null };
         if (client.expiryTime < 0) {
@@ -129,9 +131,12 @@ export const XuiService = {
         }
 
         return {
-          id: client.id,
+          id: clientId,
+          xuiId: clientId,
+          inboundId: inbound.id,
           email: client.email,
           customerId: svc?.customerId || null,
+          customerName: svc?.customer?.name || null,
           customerEmail: svc?.customer?.email || null,
           serviceId: svc?.id || null,
           enable: client.enable,

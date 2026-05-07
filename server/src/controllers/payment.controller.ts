@@ -22,7 +22,19 @@ export const getAllPayments = catchAsync(async (req: any, res: any) => {
 });
 
 export const getPayments = catchAsync(async (req: any, res: any) => {
-  const payments = await PaymentService.getPaymentsByEmail(req.params.email);
+  const { identifier } = req.params;
+  // try finding by ID first, then by email
+  let payments = [];
+  if (identifier.length > 30) { // likely a UUID
+    payments = await PaymentService.getPaymentsByCustomerId(identifier);
+  } else {
+    payments = await PaymentService.getPaymentsByEmail(identifier);
+  }
+  return res.json({ success: true, obj: payments });
+});
+
+export const getPaymentsByCustomer = catchAsync(async (req: any, res: any) => {
+  const payments = await PaymentService.getPaymentsByCustomerId(req.params.customerId);
   return res.json({ success: true, obj: payments });
 });
 
@@ -45,9 +57,13 @@ export const updatePayment = catchAsync(async (req: any, res: any) => {
 });
 
 export const createPayment = catchAsync(async (req: any, res: any) => {
-  const { customerEmail, inboundId } = req.body;
-  if (!customerEmail || !inboundId) {
-    throw new AppError("customerEmail and inboundId are required", 400);
+  const { customerEmail, customerId, inboundId } = req.body;
+  
+  if (!inboundId) {
+    throw new AppError("inboundId is required", 400);
+  }
+  if (!customerEmail && !customerId) {
+    throw new AppError("Either customerEmail or customerId is required", 400);
   }
 
   const payload = { ...req.body };

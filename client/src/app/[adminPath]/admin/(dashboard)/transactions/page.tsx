@@ -54,12 +54,13 @@ import { format } from "date-fns";
 
 interface Transaction {
   id: string;
-  clientEmail: string;
+  customerEmail: string | null;
   inboundId: number;
   amountPaid: number;
   status: string;
   createdAt: string;
   notes: string | null;
+  isNewClient: boolean;
 }
 
 export default function TransactionsPage() {
@@ -318,16 +319,18 @@ export default function TransactionsPage() {
                               #{t.id.slice(-8)}
                             </span>
                             <span className="font-semibold text-slate-900 dark:text-zinc-100">
-                              Manual Payment
+                              {t.notes || (t.isNewClient ? "New Activation" : "Service Renewal")}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2.5">
                             <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center text-[10px] font-bold text-orange-600 border border-orange-500/10 shrink-0">
-                              {t.clientEmail[0].toUpperCase()}
+                              {(t.customerEmail?.[0] || "U").toUpperCase()}
                             </div>
-                            <span className="font-medium truncate max-w-[150px]">{t.clientEmail}</span>
+                            <span className="font-medium truncate max-w-[150px]">
+                              {t.customerEmail || "Unknown Client"}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell className="text-center">

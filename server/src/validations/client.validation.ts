@@ -4,7 +4,7 @@ export const addClientSchema = z.object({
     body: z.object({
         inboundId: z.string().min(1, "Inbound ID is required"),
         xuiEmail: z.string().min(1, "Client name is required"),
-        email: z.string().email("Invalid email format").optional().or(z.literal("")),
+        email: z.string().min(1, "Invalid format").optional().or(z.literal("")),
         linkAction: z.enum(["create", "link", "skip"]).optional(),
         totalGB: z.number().min(0).optional(),
         limitIp: z.number().min(0).optional(),
@@ -48,7 +48,8 @@ export const deleteClientSchema = z.object({
 export const linkCustomerSchema = z.object({
     body: z.object({
         xuiId: z.string().min(1, "XUI ID is required"),
-        email: z.string().email("Invalid email format"),
+        inboundId: z.number().optional(),
+        email: z.string().min(1, "Customer identity is required"),
     })
 });
 

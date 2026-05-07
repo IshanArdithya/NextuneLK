@@ -35,6 +35,7 @@ import {
   Trash2,
   Copy,
   Check,
+  Link as LinkIcon,
   Clock,
   Hourglass,
   Infinity,
@@ -54,6 +55,7 @@ interface ClientTableProps {
   onPayments: (client: ClientData) => void;
   onResetCycle: (client: ClientData) => void;
   onDelete: (client: ClientData) => void;
+  onLink: (client: ClientData) => void;
 }
 
 function CopyableId({ id }: { id: string }) {
@@ -213,6 +215,7 @@ export default function ClientTable({
   onPayments,
   onResetCycle,
   onDelete,
+  onLink,
 }: ClientTableProps) {
   const { toast } = useToast();
 
@@ -278,9 +281,9 @@ export default function ClientTable({
                   <div>
                     <p className="text-sm font-medium">{client.email}</p>
                     <div className="flex flex-col gap-0.5">
-                      {client.customerEmail && (
+                      {(client.customerEmail || client.customerName) && (
                         <p className="text-[10px] text-orange-500/80 font-medium">
-                          {client.customerEmail}
+                          {client.customerName || client.customerEmail}
                         </p>
                       )}
                       {client.comment && (
@@ -321,15 +324,36 @@ export default function ClientTable({
                       <Pencil className="mr-2 h-4 w-4" />
                       Edit Client
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onLink?.(client)}>
+                      <LinkIcon className="mr-2 h-4 w-4" />
+                      Link to Customer
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onPayments(client)}>
                       <CreditCard className="mr-2 h-4 w-4" />
                       Payments
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onResetCycle(client)}>
-                      <RotateCcw className="mr-2 h-4 w-4" />
-                      Reset Cycle (New Client)
-                    </DropdownMenuItem>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="w-full">
+                            <DropdownMenuItem 
+                              onClick={() => onResetCycle(client)}
+                              disabled={!client.customerId}
+                              className={!client.customerId ? "opacity-50 cursor-not-allowed" : ""}
+                            >
+                              <RotateCcw className="mr-2 h-4 w-4" />
+                              Reset Cycle
+                            </DropdownMenuItem>
+                          </div>
+                        </TooltipTrigger>
+                        {!client.customerId && (
+                          <TooltipContent side="left">
+                            <p>Link a customer to enable cycle reset</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => onDelete(client)}

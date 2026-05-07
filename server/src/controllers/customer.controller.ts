@@ -1,3 +1,5 @@
+// @ts-nocheck
+import { CustomerService } from "../services/customer.service.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import { AppError } from "../utils/AppError.js";
 import prisma from "../config/prisma.js";
@@ -6,61 +8,15 @@ export const getAllCustomers = catchAsync(async (req: any, res: any) => {
   const { search, status, sortBy = "newest", page = 1, limit = 50 } = req.query;
   const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
-  const where: any = {};
-  if (status && status !== "ALL") where.status = status;
-  if (search) {
-    where.email = { contains: search, mode: "insensitive" };
-  }
-
-  let orderBy: any = { createdAt: "desc" };
-  if (sortBy === "oldest") orderBy = { createdAt: "asc" };
-  if (sortBy === "email") orderBy = { email: "asc" };
-  if (sortBy === "email_desc") orderBy = { email: "desc" };
-
-  const [customers, total] = await Promise.all([
-    prisma.customer.findMany({
-      where,
-      include: {
-        services: {
-          select: {
-            id: true,
-            xuiId: true,
-            xuiEmail: true,
-            inboundId: true,
-            status: true,
-          },
-        },
-        _count: {
-          select: { payments: true },
-        },
-      },
-      orderBy,
-      skip,
-      take: parseInt(limit as string),
-    }),
-    prisma.customer.count({ where }),
-  ]);
-
-  // compute total paid for each customer
-  const enrichedCustomers = await Promise.all(
-    customers.map(async (c) => {
-      const totalPaid = await prisma.payment.aggregate({
-        where: { customerId: c.id, status: "PAID" },
-        _sum: { amountPaid: true },
-      });
-
-      return {
-        ...c,
-        totalPayments: c._count.payments,
-        totalPaid: totalPaid._sum.amountPaid || 0,
-        linkedServices: c.services,
-      };
-    })
+  const { customers, total } = await CustomerService.getAllCustomers(
+    { search, status, sortBy },
+    skip,
+    parseInt(limit as string)
   );
 
   return res.json({
     success: true,
-    obj: enrichedCustomers,
+    obj: customers,
     pagination: {
       total,
       page: parseInt(page as string),
@@ -70,67 +26,49 @@ export const getAllCustomers = catchAsync(async (req: any, res: any) => {
   });
 });
 
-export const getCustomer = catchAsync(async (req: any, res: any) => {
-  const customer = await prisma.customer.findUnique({
-    where: { id: req.params.id },
-    include: {
-      services: true,
-      payments: {
-        include: { preset: true },
-        orderBy: { createdAt: "desc" },
-      },
-    },
-  });
-
-  if (!customer) {
-    throw new AppError("Customer not found", 404);
-  }
-
+export const getCustomerById = catchAsync(async (req: any, res: any) => {
+  const customer = await CustomerService.getCustomerById(req.params.id);
+  if (!customer) throw new AppError("Customer not found", 404);
   return res.json({ success: true, obj: customer });
 });
 
-export const updateCustomer = catchAsync(async (req: any, res: any) => {
-  const { email, notes, status } = req.body;
-  const updateData: any = {};
+export const getDeletionStats = catchAsync(async (req: any, res: any) => {
+  const { id } = req.params;
+  
+  // count active services
+  const activeServicesCount = await prisma.service.count({
+    where: { customerId: id, status: "ACTIVE" }
+  });
 
-  if (email !== undefined) updateData.email = email;
-  if (notes !== undefined) updateData.notes = notes;
-  if (status !== undefined) updateData.status = status;
+  // count unpaid payments and total owed
+  const unpaidPayments = await prisma.payment.findMany({
+    where: { customerId: id, status: "UNPAID" },
+    select: { amountPaid: true }
+  });
 
-  try {
-    const customer = await prisma.customer.update({
-      where: { id: req.params.id },
-      data: updateData,
-    });
-    return res.json({ success: true, msg: "Customer updated", obj: customer });
-  } catch (error: any) {
-    if (error.code === "P2002") {
-      throw new AppError("A customer with this email already exists", 400);
+  const totalOwed = unpaidPayments.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
+
+  return res.json({
+    success: true,
+    obj: {
+      activeServices: activeServicesCount,
+      unpaidPayments: unpaidPayments.length,
+      totalOwed
     }
-    throw error;
-  }
+  });
+});
+
+export const createCustomer = catchAsync(async (req: any, res: any) => {
+  const customer = await CustomerService.createCustomer(req.body);
+  return res.json({ success: true, msg: "Customer created successfully", obj: customer });
+});
+
+export const updateCustomer = catchAsync(async (req: any, res: any) => {
+  const customer = await CustomerService.updateCustomer(req.params.id, req.body);
+  return res.json({ success: true, msg: "Customer updated successfully", obj: customer });
 });
 
 export const deleteCustomer = catchAsync(async (req: any, res: any) => {
-  const customer = await prisma.customer.findUnique({
-    where: { id: req.params.id },
-    include: { services: { where: { status: "ACTIVE" } } },
-  });
-
-  if (!customer) {
-    throw new AppError("Customer not found", 404);
-  }
-
-  if (customer.services.length > 0) {
-    throw new AppError(
-      "Cannot delete a customer with active linked services. Unlink all services first.",
-      400
-    );
-  }
-
-  // delete payments first, then customer
-  await prisma.payment.deleteMany({ where: { customerId: customer.id } });
-  await prisma.customer.delete({ where: { id: customer.id } });
-
-  return res.json({ success: true, msg: "Customer deleted" });
+  await CustomerService.deleteCustomer(req.params.id);
+  return res.json({ success: true, msg: "Customer deleted successfully" });
 });

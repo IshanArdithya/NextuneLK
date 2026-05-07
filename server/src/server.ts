@@ -1,5 +1,5 @@
+import "dotenv/config";
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import hpp from "hpp";
@@ -16,8 +16,6 @@ import { globalErrorHandler } from "./middleware/error.middleware.js";
 import { stream } from "./utils/logger.js";
 import { generalLimiter, authLimiter } from "./middleware/rateLimiters.js";
 import { ClientService } from "./services/client.service.js";
-
-dotenv.config();
 
 const app = express();
 
