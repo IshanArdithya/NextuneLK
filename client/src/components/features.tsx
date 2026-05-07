@@ -19,7 +19,7 @@ export default function Features() {
           viewport={{ once: true, margin: "-100px" }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold font-display mb-4">
             {featuresContent.title}
           </h2>
           <p className="text-lg text-foreground/60 max-w-2xl mx-auto">
@@ -46,7 +46,7 @@ export default function Features() {
                 <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-600/20 flex items-center justify-center mb-4 group-hover:from-orange-500/40 group-hover:to-orange-600/40 transition-all">
                   <Icon className="text-orange-500" size={24} />
                 </div>
-                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                <h3 className="text-xl font-bold font-display mb-2">{feature.title}</h3>
                 <p className="text-foreground/60 leading-relaxed">
                   {feature.description}
                 </p>

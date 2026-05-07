@@ -23,7 +23,7 @@ export default function Testimonials() {
           viewport={{ once: true, margin: "-100px" }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold font-display mb-4">
             {testimonialsContent.title}
           </h2>
           <p className="text-lg text-foreground/60">
@@ -60,7 +60,7 @@ export default function Testimonials() {
               <div className="flex items-center gap-3">
                 <div className="text-3xl">{testimonial.avatar}</div>
                 <div>
-                  <p className="font-bold">{testimonial.name}</p>
+                  <p className="font-bold font-display">{testimonial.name}</p>
                   <p className="text-xs text-foreground/60">
                     {testimonial.role}
                   </p>

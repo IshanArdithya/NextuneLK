@@ -32,7 +32,7 @@ export default function Hero() {
           className="space-y-8 text-center md:text-left"
         >
           <motion.div variants={itemVariants} className="space-y-4">
-            <h1 className="text-5xl md:text-6xl font-bold leading-tight text-balance">
+            <h1 className="text-5xl md:text-6xl font-bold font-display leading-tight text-balance">
               {heroContent.title}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">
                 {heroContent.highlight}
@@ -77,7 +77,7 @@ export default function Hero() {
           >
             {heroStats.map((stat, index) => (
               <div key={index}>
-                <p className="text-sm font-semibold text-orange-500">
+                <p className="text-sm font-semibold font-display text-orange-500">
                   {stat.value}
                 </p>
                 <p className="text-xs text-foreground/60">{stat.label}</p>
