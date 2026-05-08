@@ -19,6 +19,7 @@ import {
   SidebarInset,
   SidebarTrigger,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { 
@@ -60,6 +61,38 @@ const getNavItems = (secretPath: string) => [
     icon: Package,
   },
 ];
+
+const SidebarNav = ({ navItems }: { navItems: any[] }) => {
+  const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
+  const secretPath = process.env.NEXT_PUBLIC_ADMIN_URI_PATH || "admin";
+
+  return (
+    <SidebarMenu>
+      {navItems.map((item) => {
+        const isActive =
+          item.href === `/${secretPath}/admin`
+            ? pathname === `/${secretPath}/admin`
+            : pathname.startsWith(item.href);
+        return (
+          <SidebarMenuItem key={item.href}>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive}
+              tooltip={item.title}
+              onClick={() => setOpenMobile(false)}
+            >
+              <Link href={item.href}>
+                <item.icon />
+                <span>{item.title}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      })}
+    </SidebarMenu>
+  );
+};
 
 export default function DashboardLayout({
   children,
@@ -113,28 +146,7 @@ export default function DashboardLayout({
           <SidebarGroup>
             <SidebarGroupLabel>Management</SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
-                {navItems.map((item) => {
-                  const isActive =
-                    item.href === `/${secretPath}/admin`
-                      ? pathname === `/${secretPath}/admin`
-                      : pathname.startsWith(item.href);
-                  return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={item.title}
-                      >
-                        <Link href={item.href}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
+              <SidebarNav navItems={navItems} />
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>

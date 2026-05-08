@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Link2, Unlink, Link as LinkIcon } from "lucide-react";
+import { Loader2, Link2, Unlink, Link as LinkIcon, RefreshCw } from "lucide-react";
 
 interface EditClientModalProps {
   open: boolean;
@@ -93,7 +93,7 @@ export default function EditClientModal({
       setSubId(client.subId || "");
       setTgId(client.tgId || "");
       setReset(client.reset || 0);
-      
+
       if (client.expiryTime < 0) {
         setStartAfterFirstUse(true);
         setDurationDays(Math.abs(Math.floor(client.expiryTime / (24 * 60 * 60 * 1000))).toString());
@@ -204,43 +204,43 @@ export default function EditClientModal({
         </DialogHeader>
 
         <div className="space-y-4 pt-4 pb-0">
-          <div className="space-y-2">
-            <Label htmlFor="edit-xuiEmail" className="text-sm font-semibold">Client Name</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-xuiEmail" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Client Name</Label>
             <Input
               id="edit-xuiEmail"
               value={xuiEmail}
               onChange={(e) => setXuiEmail(e.target.value)}
               placeholder="e.g. John Doe"
               required
-              className="h-10"
+              className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-totalGB" className="text-sm font-semibold">Total GB (0 = ∞)</Label>
+            <div className="space-y-1.5 min-w-0">
+              <Label htmlFor="edit-totalGB" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Total GB (0 = ∞)</Label>
               <Input
                 id="edit-totalGB"
                 type="number"
                 step="0.01"
                 value={totalGB}
                 onChange={(e) => setTotalGB(e.target.value)}
-                className="h-10"
+                className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-limitIp" className="text-sm font-semibold">IP Limit (0 = ∞)</Label>
+            <div className="space-y-1.5 min-w-0">
+              <Label htmlFor="edit-limitIp" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">IP Limit (0 = ∞)</Label>
               <Input
                 id="edit-limitIp"
                 type="number"
                 value={limitIp}
                 onChange={(e) => setLimitIp(e.target.value)}
-                className="h-10"
+                className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10"
               />
             </div>
           </div>
 
-          <div className="space-y-4 rounded-xl border border-dashed p-4 bg-muted/20">
+          <div className="space-y-4 rounded-xl border border-dashed p-4 bg-muted/30 border-border/60">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label className="text-sm font-bold">Start after first use</Label>
@@ -248,44 +248,44 @@ export default function EditClientModal({
                   Activation starts only when the client first connects
                 </p>
               </div>
-              <Switch 
-                checked={startAfterFirstUse} 
+              <Switch
+                checked={startAfterFirstUse}
                 onCheckedChange={setStartAfterFirstUse}
                 className="data-[state=checked]:bg-orange-500"
               />
             </div>
 
             {startAfterFirstUse ? (
-              <div className="space-y-2 pt-3 border-t border-dashed">
-                <Label htmlFor="edit-durationDays" className="text-xs font-semibold">Duration (Days)</Label>
+              <div className="space-y-1.5 pt-3 border-t border-dashed border-border/40">
+                <Label htmlFor="edit-durationDays" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Duration (Days)</Label>
                 <Input
                   id="edit-durationDays"
                   type="number"
                   value={durationDays}
                   onChange={(e) => setDurationDays(e.target.value)}
                   placeholder="e.g. 30"
-                  className="h-10"
+                  className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10"
                 />
               </div>
             ) : (
-              <div className="space-y-2 pt-3 border-t border-dashed">
-                <Label htmlFor="edit-expiryDate" className="text-xs font-semibold">Expiry Date</Label>
+              <div className="space-y-1.5 pt-3 border-t border-dashed border-border/40">
+                <Label htmlFor="edit-expiryDate" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Expiry Date</Label>
                 <Input
                   id="edit-expiryDate"
                   type="datetime-local"
                   value={expiryDate}
                   onChange={(e) => setExpiryDate(e.target.value)}
-                  className="h-10"
+                  className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10"
                 />
               </div>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2 min-w-0">
-              <Label htmlFor="edit-flow" className="text-sm font-semibold">Flow</Label>
+            <div className="space-y-1.5 min-w-0">
+              <Label htmlFor="edit-flow" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Flow</Label>
               <Select value={flow} onValueChange={setFlow}>
-                <SelectTrigger id="edit-flow" className="h-10 min-h-[40px] py-0 flex items-center w-full overflow-hidden">
+                <SelectTrigger id="edit-flow" className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10 w-full overflow-hidden">
                   <SelectValue placeholder="None" className="truncate" />
                 </SelectTrigger>
                 <SelectContent>
@@ -295,23 +295,23 @@ export default function EditClientModal({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2 min-w-0">
-              <Label htmlFor="edit-comment" className="text-sm font-semibold">Comment</Label>
+            <div className="space-y-1.5 min-w-0">
+              <Label htmlFor="edit-comment" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Comment</Label>
               <Input
                 id="edit-comment"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Internal notes"
-                className="h-10 min-h-[40px] w-full"
+                className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10 w-full"
               />
             </div>
           </div>
 
           <DialogFooter className="grid grid-cols-2 gap-2 pt-4 sm:flex sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto mt-0">
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto h-9">
               Cancel
             </Button>
-            <Button onClick={handleSaveClick} disabled={loading} className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white">
+            <Button onClick={handleSaveClick} disabled={loading} className="w-full sm:w-auto h-9 bg-orange-500 hover:bg-orange-600 text-white">
               Save Changes
             </Button>
           </DialogFooter>
@@ -321,27 +321,35 @@ export default function EditClientModal({
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent className="sm:max-w-[400px]">
           <AlertDialogHeader className="flex flex-col items-center">
-            <AlertDialogTitle className="text-center">Confirm Changes?</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3 pt-2">
-              <div className="bg-muted/50 rounded-xl border border-dashed p-3 space-y-2 max-h-[200px] overflow-y-auto">
-                {getChanges().map((change, i) => (
-                  <div key={i} className="text-[11px] flex flex-col gap-0.5 border-b border-dashed last:border-0 pb-2 last:pb-0">
-                    <span className="font-bold text-orange-600 uppercase tracking-tighter text-[9px]">{change.label}</span>
-                    <div className="flex items-center gap-2 text-foreground/80">
-                      <span className="line-through opacity-50">{change.old}</span>
-                      <span className="text-muted-foreground">→</span>
-                      <span className="font-semibold">{change.new}</span>
+            <AlertDialogTitle className="flex items-center gap-2 text-orange-600">
+              <RefreshCw className="h-5 w-5" />
+              Confirm Changes?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="pt-2 text-center space-y-2 w-full">
+                <p>
+                  Review your modifications below.
+                </p>
+                <div className="bg-muted/50 rounded-lg border border-dashed p-3 space-y-2 w-full max-h-[250px] overflow-y-auto">
+                  {getChanges().map((change, i) => (
+                    <div key={i} className="text-[13px] flex flex-col gap-0.5 border-b border-dashed border-border/40 last:border-0 pb-2 last:pb-0 text-left">
+                      <span className="font-bold text-orange-600 uppercase tracking-tighter text-[10px]">{change.label}</span>
+                      <div className="flex items-center gap-2 text-foreground/80">
+                        <span className="line-through opacity-50">{change.old}</span>
+                        <span className="text-muted-foreground">→</span>
+                        <span className="font-semibold text-foreground">{change.new}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  These changes will be applied to the X-UI panel immediately.
+                </p>
               </div>
-              <p className="text-xs text-center text-muted-foreground">
-                Review your modifications above. These will be applied to the X-UI panel.
-              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
-            <AlertDialogCancel disabled={loading} className="w-full sm:w-auto mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={loading} className="rounded-md">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -349,14 +357,14 @@ export default function EditClientModal({
                 setConfirmOpen(false);
               }}
               disabled={loading || countdown > 0}
-              className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto min-w-[120px]"
+              className="bg-orange-500 hover:bg-orange-600 text-white min-w-[140px] transition-all rounded-md"
             >
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : countdown > 0 ? (
-                <span>Confirm ({countdown}s)</span>
+                `Confirm (${countdown}s)`
               ) : (
-                <span>Confirm Changes</span>
+                "Confirm Changes"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

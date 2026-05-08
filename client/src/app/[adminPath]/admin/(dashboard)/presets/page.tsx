@@ -12,6 +12,8 @@ import {
   Clock,
   Database,
   MoreVertical,
+  Banknote,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,6 +44,16 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Preset {
   id: string;
@@ -60,6 +72,10 @@ export default function PresetsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<Preset | null>(null);
+  const [deleteCountdown, setDeleteCountdown] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   const [formName, setFormName] = useState("");
@@ -70,6 +86,16 @@ export default function PresetsPage() {
   useEffect(() => {
     fetchPresets();
   }, []);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (deleteConfirmOpen && deleteCountdown > 0) {
+      timer = setInterval(() => {
+        setDeleteCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [deleteConfirmOpen, deleteCountdown]);
 
   const fetchPresets = async () => {
     try {
@@ -163,14 +189,22 @@ export default function PresetsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this preset?")) return;
+  const initiateDelete = (preset: Preset) => {
+    setPendingDelete(preset);
+    setDeleteCountdown(3);
+    setDeleteConfirmOpen(true);
+  };
+
+  const executeDelete = async () => {
+    if (!pendingDelete) return;
+    setIsDeleting(true);
     try {
-      await api.delete(`/admin/presets/${id}`);
+      await api.delete(`/admin/presets/${pendingDelete.id}`);
       toast({
         title: "Preset Deleted",
         description: "The preset has been removed.",
       });
+      setDeleteConfirmOpen(false);
       fetchPresets();
     } catch (err) {
       toast({
@@ -178,6 +212,8 @@ export default function PresetsPage() {
         description: "Failed to delete preset",
         variant: "destructive",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -238,10 +274,10 @@ export default function PresetsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-0">
-                      <TableHead>Plan Name</TableHead>
-                      <TableHead className="text-center">Data Quota</TableHead>
-                      <TableHead className="text-center">Validity</TableHead>
-                      <TableHead className="text-center">Price</TableHead>
+                      <TableHead className="w-[80%] sm:w-auto">Plan Details</TableHead>
+                      <TableHead className="hidden sm:table-cell text-center">Data Quota</TableHead>
+                      <TableHead className="hidden md:table-cell text-center">Validity</TableHead>
+                      <TableHead className="hidden sm:table-cell text-center">Price</TableHead>
                       <TableHead className="text-center">Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -253,22 +289,50 @@ export default function PresetsPage() {
                           key={preset.id}
                           className={`group transition-colors border-border/40 ${!preset.isActive ? 'opacity-60 bg-muted/20' : 'hover:bg-muted/20'}`}
                         >
-                          <TableCell>
-                            <div className="font-semibold text-sm text-slate-900 dark:text-zinc-100">{preset.name}</div>
+                          <TableCell className="py-4">
+                            <div className="flex flex-col gap-3">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-sm text-slate-900 dark:text-zinc-100">
+                                  {preset.name}
+                                </span>
+                              </div>
+
+                              {/* Mobile-only Receipt Stack */}
+                              <div className="flex flex-col gap-2.5 sm:hidden border-l-2 border-orange-500/10 pl-3 ml-1">
+                                <div className="flex items-center gap-1.5">
+                                  <Database className="h-3 w-3 text-muted-foreground/60" />
+                                  <span className="text-[11px] font-semibold text-foreground/80">
+                                    {preset.quotaGB === 0 ? "Unlimited" : `${preset.quotaGB} GB`}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <Clock className="h-3 w-3 text-muted-foreground/60" />
+                                  <span className="text-[11px] font-semibold text-foreground/80">
+                                    {preset.days} Days
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 pt-1 border-t border-dashed border-border/40">
+                                  <Banknote className="h-3.5 w-3.5 text-orange-600/70" />
+                                  <span className="text-sm font-black text-slate-900 dark:text-zinc-100">
+                                    {preset.currency || "LKR"} {preset.amount.toLocaleString()}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
                           </TableCell>
-                          <TableCell className="text-center font-medium text-sm">
+                          <TableCell className="hidden sm:table-cell text-center font-medium text-sm">
                             <div className="flex items-center justify-center gap-2">
                               <Database className="h-3 w-3 text-muted-foreground" />
                               {preset.quotaGB === 0 ? "Unlimited" : `${preset.quotaGB} GB`}
                             </div>
                           </TableCell>
-                          <TableCell className="text-center text-muted-foreground text-sm">
+                          <TableCell className="hidden md:table-cell text-center text-muted-foreground text-sm">
                             <div className="flex items-center justify-center gap-2">
                               <Clock className="h-3 w-3" />
                               {preset.days} Days
                             </div>
                           </TableCell>
-                          <TableCell className="text-center font-bold text-slate-900 dark:text-zinc-100 text-sm">
+                          <TableCell className="hidden sm:table-cell text-center font-bold text-slate-900 dark:text-zinc-100 text-sm">
                             {preset.currency || "LKR"} {preset.amount.toLocaleString()}
                           </TableCell>
                           <TableCell className="text-center">
@@ -292,7 +356,7 @@ export default function PresetsPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  onClick={() => handleDelete(preset.id)}
+                                  onClick={() => initiateDelete(preset)}
                                   className="text-destructive focus:text-destructive cursor-pointer"
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
@@ -313,91 +377,101 @@ export default function PresetsPage() {
       </motion.div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              <Zap className="h-6 w-6 text-orange-500" />
-              {editingPreset ? "Edit Service Plan" : "Create Service Plan"}
-            </DialogTitle>
-            <DialogDescription>
-              Configure the details of your service offering.
-            </DialogDescription>
+        <DialogContent className="sm:max-w-[425px] overflow-hidden rounded-2xl border border-border/50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl shadow-2xl">
+          <DialogHeader className="space-y-3 pb-4">
+            <div className="mx-auto bg-orange-500/10 p-3 rounded-2xl w-fit">
+              <Zap className="h-6 w-6 text-orange-600" />
+            </div>
+            <div className="space-y-1 text-center">
+              <DialogTitle className="text-xl font-bold tracking-tight">
+                {editingPreset ? "Edit Service Plan" : "Create Service Plan"}
+              </DialogTitle>
+              <DialogDescription>
+                Configure the details of your service offering.
+              </DialogDescription>
+            </div>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-6 py-4">
+          <form onSubmit={handleSubmit} className="space-y-5 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-semibold">Plan Display Name</Label>
-              <div className="relative">
-                <Input
-                  id="name"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder="e.g. Standard 30GB"
-                  className="pl-3 h-11"
-                  required
-                />
-              </div>
+              <Label htmlFor="name" className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold ml-1">
+                Plan Display Name
+              </Label>
+              <Input
+                id="name"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                placeholder="e.g. Standard 30GB"
+                className="h-9 rounded-md bg-muted/40 border-border/40 text-xs shadow-none"
+                required
+              />
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="quota" className="text-sm font-semibold">Quota (GB)</Label>
+                <Label htmlFor="quota" className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold ml-1">
+                  Quota (GB)
+                </Label>
                 <div className="relative">
-                  <Database className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+                  <Database className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
                   <Input
                     id="quota"
                     type="number"
                     value={formQuotaGB}
                     onChange={(e) => setFormQuotaGB(e.target.value)}
                     placeholder="30"
-                    className="pl-10 h-11"
+                    className="pl-9 h-9 rounded-md bg-muted/40 border-border/40 text-xs shadow-none"
                     required
                   />
-                  <div className="absolute right-3 top-3.5 text-[10px] text-muted-foreground uppercase font-bold">GB</div>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground uppercase font-bold">GB</div>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="days" className="text-sm font-semibold">Validity (Days)</Label>
+                <Label htmlFor="days" className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold ml-1">
+                  Validity (Days)
+                </Label>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
                   <Input
                     id="days"
                     type="number"
                     value={formDays}
                     onChange={(e) => setFormDays(e.target.value)}
                     placeholder="30"
-                    className="pl-10 h-11"
+                    className="pl-9 h-9 rounded-md bg-muted/40 border-border/40 text-xs shadow-none"
                     required
                   />
-                  <div className="absolute right-3 top-3.5 text-[10px] text-muted-foreground uppercase font-bold">Days</div>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground uppercase font-bold">Days</div>
                 </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount" className="text-sm font-semibold">Price (LKR)</Label>
+              <Label htmlFor="amount" className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold ml-1">
+                Price (LKR)
+              </Label>
               <div className="relative">
-                <span className="absolute left-3 top-3.5 text-muted-foreground font-bold text-xs">LKR</span>
+                <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
                 <Input
                   id="amount"
                   type="number"
                   value={formAmount}
                   onChange={(e) => setFormAmount(e.target.value)}
                   placeholder="1500"
-                  className="pl-12 h-11 text-lg font-bold"
+                  className="pl-9 h-9 rounded-md bg-muted/40 border-border/40 text-xs shadow-none font-bold"
                   required
                 />
               </div>
             </div>
 
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>
+            <DialogFooter className="grid grid-cols-2 gap-2 pt-4 border-t border-border/40 bg-muted/5 sm:flex sm:flex-row sm:justify-end">
+              <Button type="button" variant="ghost" className="rounded-md text-xs font-semibold" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={saving}
-                className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px]"
+                className="bg-orange-600 hover:bg-orange-700 text-white rounded-md shadow-sm text-xs font-bold"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -409,6 +483,69 @@ export default function PresetsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Alert */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent className="sm:max-w-[400px]">
+          <AlertDialogHeader className="flex flex-col items-center">
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Delete Service Plan?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="pt-2 text-center space-y-2">
+                <p>
+                  Are you sure you want to delete plan <strong>&quot;{pendingDelete?.name}&quot;</strong>?
+                </p>
+                <div className="bg-muted/50 p-3 rounded-lg text-[13px] border border-dashed text-left w-full">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Plan Name:</span>
+                    <span className="font-semibold truncate ml-2 text-foreground">{pendingDelete?.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Quota:</span>
+                    <span className="font-semibold text-foreground">
+                      {pendingDelete?.quotaGB === 0 ? "Unlimited" : `${pendingDelete?.quotaGB} GB`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Validity:</span>
+                    <span className="font-semibold text-foreground">{pendingDelete?.days} Days</span>
+                  </div>
+                  <div className="flex justify-between pt-1.5 border-t border-dashed border-border/40 mt-1.5">
+                    <span className="text-muted-foreground">Price:</span>
+                    <span className="font-black text-orange-600 text-[14px]">
+                      {pendingDelete?.currency || "LKR"} {pendingDelete?.amount.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs text-destructive/80 font-medium pt-1">
+                  This action cannot be undone.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90 min-w-[140px] transition-all"
+              disabled={deleteCountdown > 0 || isDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                executeDelete();
+              }}
+            >
+              {isDeleting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : deleteCountdown > 0 ? (
+                `Confirm (${deleteCountdown}s)`
+              ) : (
+                "Confirm Deletion"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

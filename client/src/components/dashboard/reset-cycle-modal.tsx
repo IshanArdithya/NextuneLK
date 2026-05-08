@@ -267,24 +267,29 @@ export default function ResetCycleModal({
 
           {(useCustom || presets.length === 0) && (
             <div className="space-y-4">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">
                 Custom Settings
               </h4>
-              <div>
-                <Label htmlFor="reset-totalGB">New Quota (GB)</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="reset-totalGB" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">New Quota (GB)</Label>
                 <Input
                   id="reset-totalGB"
                   type="number"
                   value={totalGB}
                   onChange={(e) => setTotalGB(e.target.value)}
                   placeholder="0 = Unlimited"
-                  className="mt-1"
+                  className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10"
                 />
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label>Start after first use</Label>
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-bold">Start after first use</Label>
+                    <p className="text-[10px] text-muted-foreground leading-tight">
+                      Activation starts only when the client first connects
+                    </p>
+                  </div>
                   <Switch
                     checked={startAfterFirstUse}
                     onCheckedChange={setStartAfterFirstUse}
@@ -292,51 +297,51 @@ export default function ResetCycleModal({
                   />
                 </div>
                 {startAfterFirstUse ? (
-                  <div>
-                    <Label htmlFor="reset-durationDays">Duration (Days)</Label>
+                  <div className="space-y-1.5 pt-3 border-t border-dashed border-border/40">
+                    <Label htmlFor="reset-durationDays" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Duration (Days)</Label>
                     <Input
                       id="reset-durationDays"
                       type="number"
                       value={durationDays}
                       onChange={(e) => setDurationDays(e.target.value)}
                       placeholder="e.g. 30"
-                      className="mt-1"
+                      className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10"
                     />
                   </div>
                 ) : (
-                  <div>
-                    <Label htmlFor="reset-expiryDate">New Expiry Date</Label>
+                  <div className="space-y-1.5 pt-3 border-t border-dashed border-border/40">
+                    <Label htmlFor="reset-expiryDate" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">New Expiry Date</Label>
                     <Input
                       id="reset-expiryDate"
                       type="datetime-local"
                       value={expiryDate}
                       onChange={(e) => setExpiryDate(e.target.value)}
-                      className="mt-1"
+                      className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10"
                     />
                   </div>
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="reset-amount">Amount (LKR)</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="reset-amount" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Amount (LKR)</Label>
                 <Input
                   id="reset-amount"
                   type="number"
                   value={customAmount}
                   onChange={(e) => setCustomAmount(e.target.value)}
                   placeholder="0"
-                  className="mt-1"
+                  className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10"
                 />
               </div>
             </div>
           )}
 
           {/* Paid Toggle */}
-          <div className="rounded-lg border p-3 flex items-center justify-between">
+          <div className="rounded-xl border border-dashed p-3 flex items-center justify-between bg-muted/30 border-border/60">
             <div>
-              <Label className="text-sm font-medium">Paid</Label>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                Mark this invoice as already paid
+              <Label className="text-sm font-bold">Mark as Paid</Label>
+              <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
+                Create a paid invoice immediately
               </p>
             </div>
             <Switch 
@@ -347,34 +352,62 @@ export default function ResetCycleModal({
           </div>
 
           <DialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto">
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto h-9">
               Cancel
             </Button>
             <Button 
               type="button" 
               onClick={() => setConfirmOpen(true)}
               disabled={loading}
-              className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white"
+              className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white h-9"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              <span className="sm:hidden">Reset Cycle</span>
-              <span className="hidden sm:inline">Reset & Create Invoice</span>
+              Reset & Create Invoice
             </Button>
           </DialogFooter>
         </div>
       </DialogContent>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Reset Traffic Cycle?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will reset the bandwidth usage and set a new expiry for <strong>{client?.email}</strong>. 
-              A new {paid ? "paid" : "unpaid"} invoice will be generated. This action is intentional and significant.
+        <AlertDialogContent className="sm:max-w-[400px]">
+          <AlertDialogHeader className="flex flex-col items-center">
+            <AlertDialogTitle className="flex items-center gap-2 text-orange-600">
+              <RotateCcw className="h-5 w-5" />
+              Reset Cycle?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="pt-2 text-center space-y-2 w-full">
+                <p>
+                  Confirm traffic reset for <strong>{client?.email}</strong>.
+                </p>
+                <div className="bg-muted/50 p-3 rounded-lg text-[13px] border border-dashed border-border/40 text-left w-full">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">New Quota:</span>
+                    <span className="font-semibold text-foreground">
+                      {!useCustom && selectedPreset ? `${selectedPreset.quotaGB} GB` : (totalGB ? `${totalGB} GB` : "Unlimited")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Price:</span>
+                    <span className="font-bold text-orange-600">
+                      LKR {!useCustom && selectedPreset ? selectedPreset.amount : (customAmount || "0")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between pt-1.5 border-t border-dashed border-border/40 mt-1.5">
+                    <span className="text-muted-foreground">Status:</span>
+                    <span className={`font-black text-[11px] uppercase ${paid ? "text-emerald-600" : "text-orange-600"}`}>
+                      {paid ? "Paid (Manual)" : "Unpaid (Invoice)"}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  This will reset bandwidth usage and set a new expiry date.
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
-            <AlertDialogCancel disabled={loading} className="w-full sm:w-auto mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={loading} className="rounded-md">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -382,14 +415,14 @@ export default function ResetCycleModal({
                 setConfirmOpen(false);
               }}
               disabled={loading || countdown > 0}
-              className="bg-orange-600 hover:bg-orange-700 text-white w-full sm:w-auto min-w-[120px]"
+              className="bg-orange-500 hover:bg-orange-600 text-white min-w-[140px] transition-all rounded-md"
             >
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : countdown > 0 ? (
-                <span>Reset ({countdown}s)</span>
+                `Confirm (${countdown}s)`
               ) : (
-                <span>Confirm Reset</span>
+                "Confirm Reset"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

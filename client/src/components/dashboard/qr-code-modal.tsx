@@ -49,25 +49,19 @@ function CopyableLink({
       : "border-orange-500/30 bg-orange-500/5";
 
   return (
-    <div className={`rounded-xl border p-4 space-y-3 ${colors}`}>
+    <div className={`rounded-xl border p-4 space-y-3 ${colors} border-border/40`}>
       <div className="flex items-center justify-between">
-        <Badge
-          variant="outline"
-          className={`text-[10px] ${variant === "purple"
-            ? "border-orange-500/40 text-orange-600 dark:text-orange-400"
-            : "border-orange-500/40 text-orange-600 dark:text-orange-400"
-            }`}
-        >
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">
           {label}
-        </Badge>
+        </span>
         <Button
           variant="ghost"
           size="sm"
           onClick={handleCopy}
-          className="h-7 text-xs gap-1"
+          className="h-7 text-[10px] gap-1 font-bold uppercase tracking-tight hover:bg-orange-500/10 text-orange-600"
         >
           {copied ? (
-            <Check className="h-3 w-3 text-orange-500" />
+            <Check className="h-3 w-3" />
           ) : (
             <Copy className="h-3 w-3" />
           )}
@@ -81,26 +75,26 @@ function CopyableLink({
         onClick={handleCopy}
         title="Click to copy link"
       >
-        <div className="relative bg-white p-3 rounded-lg shadow-sm transition-transform group-hover:scale-[1.02] group-active:scale-95">
+        <div className="relative bg-white p-3 rounded-lg shadow-sm border border-border/10 transition-transform group-hover:scale-[1.02] group-active:scale-95">
           <QRCodeSVG
             value={link}
-            size={200}
-            level="L"
+            size={180}
+            level="M"
             bgColor="white"
             fgColor="black"
           />
-          <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-            <p className="text-xs font-medium text-gray-700">
-              Click to copy
+          <div className="absolute inset-0 flex items-center justify-center bg-white/90 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">
+              Copy URL
             </p>
           </div>
         </div>
       </div>
 
       {/* Link preview */}
-      <div className="flex items-center gap-2 bg-muted/50 rounded-md px-2 py-1.5">
+      <div className="flex items-center gap-2 bg-muted/40 border border-border/40 rounded-lg px-2 py-1.5">
         <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-        <p className="text-[10px] text-muted-foreground break-all font-mono">
+        <p className="text-[10px] text-muted-foreground break-all font-mono leading-tight">
           {link}
         </p>
       </div>
