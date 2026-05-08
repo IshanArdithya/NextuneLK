@@ -104,6 +104,7 @@ export default function CustomersPage() {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [selectedForDelete, setSelectedForDelete] = useState<Customer | null>(null);
   const [deletionStats, setDeletionStats] = useState<DeletionStats | null>(null);
+  const [deleteCountdown, setDeleteCountdown] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { toast } = useToast();
@@ -134,12 +135,24 @@ export default function CustomersPage() {
     fetchCustomers();
   }, [fetchCustomers]);
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showDeleteAlert && deleteCountdown > 0) {
+      timer = setInterval(() => {
+        setDeleteCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [showDeleteAlert, deleteCountdown]);
+
   const initiateDelete = async (customer: Customer) => {
     setSelectedForDelete(customer);
     try {
       const res = await api.get(`/admin/customers/${customer.id}/deletion-stats`);
       if (res.data.success) {
         setDeletionStats(res.data.obj);
+        const hasActiveServices = res.data.obj.activeServices > 0;
+        setDeleteCountdown(hasActiveServices ? 5 : 3);
         setShowDeleteAlert(true);
       }
     } catch {
@@ -198,21 +211,24 @@ export default function CustomersPage() {
         <CardContent className="p-0">
           {/* Unified Toolbar - Always Visible */}
           <div className="p-4 sm:px-6 border-b border-border/40 flex flex-col lg:flex-row gap-4 items-center justify-between bg-muted/5">
-            <div className="relative w-full lg:max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search name or email..."
-                className="pl-9 h-9 bg-background/50 border-border/40 focus:border-orange-500/50 focus:ring-orange-500/10 transition-all text-sm"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+            <div className="flex flex-col gap-1.5 w-full lg:max-w-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1 lg:hidden">Search</span>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search name or email..."
+                  className="pl-9 h-9 bg-background/50 border-border/40 focus:border-orange-500/50 focus:ring-orange-500/10 transition-all text-sm"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Status</span>
+            <div className="grid grid-cols-2 lg:flex lg:flex-row items-center gap-3 w-full lg:w-auto">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1 sm:ml-0">Status</span>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-9 w-[120px] bg-background/50 border-border/40 text-xs">
+                  <SelectTrigger className="h-9 w-full sm:w-[120px] bg-background/50 border-border/40 text-xs">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -223,10 +239,10 @@ export default function CustomersPage() {
                 </Select>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sort By</span>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1 sm:ml-0">Sort By</span>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="h-9 w-[130px] bg-background/50 border-border/40 text-xs">
+                  <SelectTrigger className="h-9 w-full sm:w-[130px] bg-background/50 border-border/40 text-xs">
                     <div className="flex items-center gap-2">
                       <ArrowUpDown className="h-3 w-3" />
                       <SelectValue placeholder="Sort By" />
@@ -277,10 +293,10 @@ export default function CustomersPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-0">
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Services</TableHead>
-                    <TableHead>Payments</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead className="w-[60%] sm:w-auto">Customer</TableHead>
+                    <TableHead className="hidden md:table-cell">Services</TableHead>
+                    <TableHead className="hidden sm:table-cell">Payments</TableHead>
+                    <TableHead className="hidden lg:table-cell">Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -288,18 +304,55 @@ export default function CustomersPage() {
                   <AnimatePresence initial={false}>
                     {customers.map((customer) => (
                       <TableRow key={customer.id} className="group hover:bg-muted/20 transition-colors border-border/40">
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
-                              <User className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                        <TableCell className="py-4">
+                          <div className="flex flex-col gap-3">
+                            {/* Primary Info */}
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
+                                <User className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-sm truncate">{customer.name || "Unnamed"}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{customer.email || "No email"}</p>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <p className="font-medium text-sm truncate">{customer.name || "Unnamed"}</p>
-                              <p className="text-[10px] text-muted-foreground truncate">{customer.email || "No email"}</p>
+
+                            {/* mobile secondary info stack */}
+                            <div className="flex flex-col gap-2 pl-12 sm:hidden border-l-2 border-orange-500/10 ml-4.5">
+                              {/* Services Stack */}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Server className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                                <div className="flex flex-wrap gap-1">
+                                  {customer.linkedServices.length > 0 ? (
+                                    customer.linkedServices.map((svc) => (
+                                      <Badge key={svc.id} variant="secondary" className="text-[9px] h-4 px-1 bg-muted/50 border-none font-mono">
+                                        {svc.xuiEmail}
+                                      </Badge>
+                                    ))
+                                  ) : (
+                                    <span className="text-[9px] text-muted-foreground italic">No services</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Payments Stack */}
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="h-2.5 w-2.5 text-orange-500/60 shrink-0" />
+                                <p className="text-[11px] font-bold text-slate-900 dark:text-zinc-100">
+                                  LKR {customer.totalPaid.toLocaleString()}
+                                </p>
+                                {customer.unpaidCount ? (
+                                  <Badge variant="destructive" className="text-[8px] px-1 h-3 flex items-center">
+                                    {customer.unpaidCount} unpaid
+                                  </Badge>
+                                ) : null}
+                              </div>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
+
+                        {/* Desktop-only Columns */}
+                        <TableCell className="hidden md:table-cell">
                           <div className="flex flex-wrap gap-1.5 max-w-[200px]">
                             {customer.linkedServices.length > 0 ? (
                               customer.linkedServices.map((svc) => (
@@ -322,7 +375,8 @@ export default function CustomersPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
+
+                        <TableCell className="hidden sm:table-cell">
                           <div className="space-y-0.5">
                             <div className="flex items-center gap-1.5">
                               <p className="text-sm font-bold text-slate-900 dark:text-zinc-100">
@@ -339,7 +393,8 @@ export default function CustomersPage() {
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell>
+
+                        <TableCell className="hidden lg:table-cell">
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Calendar className="h-3 w-3" />
                             {format(new Date(customer.createdAt), "MMM d, yyyy")}
@@ -381,52 +436,71 @@ export default function CustomersPage() {
 
       {/* Deletion Alert Dialog */}
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
-        <AlertDialogContent className="sm:max-w-[450px]">
-          <AlertDialogHeader>
+        <AlertDialogContent className="sm:max-w-[400px]">
+          <AlertDialogHeader className="flex flex-col items-center">
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-5 w-5" />
-              Safety Verification
+              <Trash2 className="h-5 w-5" />
+              Delete Customer?
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4 pt-2">
-              <div className="text-foreground font-medium">
-                You are about to delete <strong>{selectedForDelete?.name || selectedForDelete?.email}</strong>.
-              </div>
-
-              {(deletionStats?.activeServices || 0) > 0 || (deletionStats?.unpaidPayments || 0) > 0 ? (
-                <div className="bg-destructive/10 p-3 rounded-lg border border-destructive/20 space-y-2">
-                  <p className="text-xs font-bold text-destructive uppercase tracking-wider">Critical Warnings:</p>
-                  <ul className="text-sm space-y-1 text-destructive/90 list-disc pl-4">
-                    {deletionStats!.activeServices > 0 && (
-                      <li>Has <strong>{deletionStats!.activeServices} active VPN service(s)</strong>. They will become orphaned.</li>
-                    )}
-                    {deletionStats!.unpaidPayments > 0 && (
-                      <li>Has <strong>{deletionStats!.unpaidPayments} unpaid payment(s)</strong> totaling <strong>LKR {deletionStats!.totalOwed.toLocaleString()}</strong>.</li>
-                    )}
-                  </ul>
-                </div>
-              ) : (
-                <p className="text-sm">
-                  This action cannot be undone. All payment history for this customer will be permanently removed from the database.
+            <AlertDialogDescription asChild>
+              <div className="pt-2 text-center space-y-2">
+                <p>
+                  Are you sure you want to delete <strong>{selectedForDelete?.name || selectedForDelete?.email}</strong>?
                 </p>
-              )}
+                <div className="bg-muted/50 p-3 rounded-lg text-[13px] border border-dashed text-left w-full">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="font-semibold truncate ml-2 text-foreground">{selectedForDelete?.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Active Services:</span>
+                    <span className={`font-bold ${deletionStats?.activeServices ? "text-destructive" : "text-foreground"}`}>
+                      {deletionStats?.activeServices || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Unpaid Payments:</span>
+                    <span className={`font-bold ${deletionStats?.unpaidPayments ? "text-destructive" : "text-foreground"}`}>
+                      {deletionStats?.unpaidPayments || 0}
+                    </span>
+                  </div>
+                  {(deletionStats?.totalOwed || 0) > 0 && (
+                    <div className="flex justify-between pt-1.5 border-t border-dashed border-border/40 mt-1.5">
+                      <span className="text-muted-foreground">Total Owed:</span>
+                      <span className="font-black text-orange-600 text-[14px]">LKR {deletionStats?.totalOwed.toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
 
-              <p className="text-[11px] text-muted-foreground italic">
-                Tip: Consider "Unlinking" services or "Marking as Paid" before deletion for cleaner records.
-              </p>
+                {(deletionStats?.activeServices || 0) > 0 && (
+                  <p className="text-[10px] text-destructive font-bold bg-destructive/10 py-1 px-3 rounded-md uppercase tracking-tight">
+                    Warning: Customer has active VPN services!
+                  </p>
+                )}
+
+                <p className="text-xs text-destructive/80 font-medium pt-1">
+                  This action cannot be undone.
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-white hover:bg-destructive/90 min-w-[140px] transition-all"
+              disabled={deleteCountdown > 0 || isDeleting}
               onClick={(e) => {
                 e.preventDefault();
                 executeDelete();
               }}
-              disabled={isDeleting}
             >
-              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirm Deletion
+              {isDeleting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : deleteCountdown > 0 ? (
+                `Confirm (${deleteCountdown}s)`
+              ) : (
+                "Confirm Deletion"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 
 interface DeleteClientDialogProps {
   open: boolean;
@@ -83,33 +83,55 @@ export default function DeleteClientDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will permanently delete <strong>{client?.email}</strong> from
-            the VPN panel. This action cannot be undone.
+      <AlertDialogContent className="sm:max-w-[400px]">
+        <AlertDialogHeader className="flex flex-col items-center">
+          <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+            <Trash2 className="h-5 w-5" />
+            Delete Client?
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="pt-2 text-center space-y-2">
+              <p>
+                Are you sure you want to delete client <strong>{client?.email}</strong>?
+              </p>
+              <div className="bg-muted/50 p-3 rounded-lg text-[13px] border border-dashed text-left w-full">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Email:</span>
+                  <span className="font-semibold truncate ml-2 text-foreground">{client?.email}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Inbound ID:</span>
+                  <span className="font-semibold text-foreground">#{inboundId}</span>
+                </div>
+                <div className="flex justify-between pt-1.5 border-t border-dashed border-border/40 mt-1.5">
+                  <span className="text-muted-foreground">Usage:</span>
+                  <span className="font-bold text-orange-600">
+                    {client?.traffic?.totalUsedFormatted || "0 B"}
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-destructive/80 font-medium pt-1">
+                This will permanently remove the VPN access. This action cannot be undone.
+              </p>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
-          <AlertDialogCancel disabled={loading} className="w-full sm:w-auto mt-0">Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading} className="rounded-md">Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
               handleDelete();
             }}
             disabled={loading || countdown > 0}
-            className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto min-w-[100px]"
+            className="bg-destructive text-white hover:bg-destructive/90 min-w-[140px] transition-all rounded-md"
           >
             {loading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : countdown > 0 ? (
-              <span>Delete ({countdown}s)</span>
+              `Confirm (${countdown}s)`
             ) : (
-              <>
-                <span className="sm:hidden">Delete</span>
-                <span className="hidden sm:inline">Delete Client</span>
-              </>
+              "Confirm Deletion"
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

@@ -188,8 +188,8 @@ export default function AddClientModal({
 
         <div className="space-y-4 pt-4 pb-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Customer Link</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Customer Link</Label>
               <CustomerSearch 
                 onSelect={(customer, isNew, name) => {
                   if (isNew) {
@@ -203,13 +203,13 @@ export default function AddClientModal({
                 placeholder="Search or create customer..."
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold flex items-center gap-1.5">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1 flex items-center gap-1.5">
                 <Package className="h-3 w-3 text-orange-500" />
                 Select Plan (Preset)
               </Label>
               <Select value={selectedPresetId} onValueChange={setSelectedPresetId}>
-                <SelectTrigger className="h-10">
+                <SelectTrigger className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10">
                   <SelectValue placeholder="Manual Entry (No Plan)" />
                 </SelectTrigger>
                 <SelectContent>
@@ -224,21 +224,21 @@ export default function AddClientModal({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="xuiEmail" className="text-sm font-semibold">Client Name</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="xuiEmail" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Client Name</Label>
             <Input
               id="xuiEmail"
               value={xuiEmail}
               onChange={(e) => setXuiEmail(e.target.value)}
               placeholder="e.g. John Doe"
               required
-              className="h-10"
+              className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2 min-w-0">
-              <Label htmlFor="totalGB" className="text-xs font-semibold">Total GB (0 = ∞)</Label>
+            <div className="space-y-1.5 min-w-0">
+              <Label htmlFor="totalGB" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Total GB (0 = ∞)</Label>
               <Input
                 id="totalGB"
                 type="number"
@@ -246,23 +246,23 @@ export default function AddClientModal({
                 value={totalGB}
                 onChange={(e) => setTotalGB(e.target.value)}
                 placeholder="e.g. 100"
-                className="h-10 w-full"
+                className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10 w-full"
               />
             </div>
-            <div className="space-y-2 min-w-0">
-              <Label htmlFor="limitIp" className="text-xs font-semibold">IP Limit (0 = ∞)</Label>
+            <div className="space-y-1.5 min-w-0">
+              <Label htmlFor="limitIp" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">IP Limit (0 = ∞)</Label>
               <Input
                 id="limitIp"
                 type="number"
                 value={limitIp}
                 onChange={(e) => setLimitIp(e.target.value)}
                 placeholder="e.g. 2"
-                className="h-10 w-full"
+                className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10 w-full"
               />
             </div>
           </div>
 
-          <div className="space-y-4 rounded-xl border border-dashed p-4 bg-muted/20">
+          <div className="space-y-4 rounded-xl border border-dashed p-4 bg-muted/30 border-border/60">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label className="text-sm font-bold">Start after first use</Label>
@@ -278,36 +278,36 @@ export default function AddClientModal({
             </div>
 
             {startAfterFirstUse ? (
-              <div className="space-y-2 pt-3 border-t border-dashed">
-                <Label htmlFor="durationDays" className="text-xs font-semibold">Duration (Days)</Label>
+              <div className="space-y-1.5 pt-3 border-t border-dashed border-border/40">
+                <Label htmlFor="durationDays" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Duration (Days)</Label>
                 <Input
                   id="durationDays"
                   type="number"
                   value={durationDays}
                   onChange={(e) => setDurationDays(e.target.value)}
                   placeholder="e.g. 30"
-                  className="h-10"
+                  className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10"
                 />
               </div>
             ) : (
-              <div className="space-y-2 pt-3 border-t border-dashed">
-                <Label htmlFor="expiryDate" className="text-xs font-semibold">Expiry Date</Label>
+              <div className="space-y-1.5 pt-3 border-t border-dashed border-border/40">
+                <Label htmlFor="expiryDate" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Expiry Date</Label>
                 <Input
                   id="expiryDate"
                   type="datetime-local"
                   value={expiryDate}
                   onChange={(e) => setExpiryDate(e.target.value)}
-                  className="h-10"
+                  className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10"
                 />
               </div>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2 min-w-0">
-              <Label htmlFor="flow" className="text-xs font-semibold">Flow</Label>
+            <div className="space-y-1.5 min-w-0">
+              <Label htmlFor="flow" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Flow</Label>
               <Select value={flow} onValueChange={setFlow}>
-                <SelectTrigger id="flow" className="h-10 min-h-[40px] py-0 flex items-center w-full overflow-hidden">
+                <SelectTrigger id="flow" className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10 w-full overflow-hidden">
                   <SelectValue placeholder="None" className="truncate" />
                 </SelectTrigger>
                 <SelectContent>
@@ -321,34 +321,34 @@ export default function AddClientModal({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2 min-w-0">
-              <Label htmlFor="comment" className="text-xs font-semibold">Comment</Label>
+            <div className="space-y-1.5 min-w-0">
+              <Label htmlFor="comment" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Comment</Label>
               <Input
                 id="comment"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Internal notes"
-                className="h-10 w-full"
+                className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10 w-full"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2 min-w-0">
-              <Label htmlFor="amountPaid" className="text-xs font-semibold">Amount Paid (LKR)</Label>
+            <div className="space-y-1.5 min-w-0">
+              <Label htmlFor="amountPaid" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Amount Paid (LKR)</Label>
               <Input
                 id="amountPaid"
                 type="number"
                 value={amountPaid}
                 onChange={(e) => setAmountPaid(e.target.value)}
                 placeholder="0"
-                className="h-10 w-full"
+                className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10 w-full"
               />
             </div>
-            <div className="space-y-2 min-w-0">
-              <Label className="text-xs font-semibold">Payment Status</Label>
+            <div className="space-y-1.5 min-w-0">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Payment Status</Label>
               <Select value={paymentStatus} onValueChange={setPaymentStatus}>
-                <SelectTrigger className="h-10 min-h-[40px] py-0 flex items-center w-full">
+                <SelectTrigger className="h-9 bg-muted/40 border-border/40 focus:ring-orange-500/10 w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -360,10 +360,10 @@ export default function AddClientModal({
           </div>
 
           <DialogFooter className="grid grid-cols-2 gap-2 pt-4 sm:flex sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" onClick={handleClose} disabled={loading} className="w-full sm:w-auto mt-0">
+            <Button type="button" variant="outline" onClick={handleClose} disabled={loading} className="w-full sm:w-auto h-9">
               Cancel
             </Button>
-            <Button onClick={handleAddClick} disabled={loading} className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white">
+            <Button onClick={handleAddClick} disabled={loading} className="w-full sm:w-auto h-9 bg-orange-500 hover:bg-orange-600 text-white">
               Add Client
             </Button>
           </DialogFooter>
@@ -373,62 +373,49 @@ export default function AddClientModal({
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent className="sm:max-w-[400px]">
           <AlertDialogHeader className="flex flex-col items-center">
-            <AlertDialogTitle className="flex items-center gap-2 text-center justify-center">
-              <Plus className="h-5 w-5 text-orange-500" />
+            <AlertDialogTitle className="flex items-center gap-2 text-orange-600">
+              <Plus className="h-5 w-5" />
               Confirm New Client?
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3 pt-2">
-              <div className="bg-muted/50 rounded-xl border border-dashed p-3 space-y-2 max-h-[300px] overflow-y-auto">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                  <div className="flex flex-col text-[11px]">
-                    <span className="text-muted-foreground uppercase font-bold tracking-tighter text-[9px]">Name</span>
-                    <span className="font-semibold truncate">{xuiEmail}</span>
+            <AlertDialogDescription asChild>
+              <div className="pt-2 text-center space-y-2">
+                <p>
+                  Please review the client details before creation.
+                </p>
+                <div className="bg-muted/50 p-3 rounded-lg text-[13px] border border-dashed text-left w-full">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Name:</span>
+                    <span className="font-semibold truncate ml-2 text-foreground">{xuiEmail}</span>
                   </div>
-                  <div className="flex flex-col text-[11px]">
-                    <span className="text-muted-foreground uppercase font-bold tracking-tighter text-[9px]">Customer</span>
-                    <span className="font-semibold truncate">{selectedCustomer?.name || selectedCustomer?.email || "No Link"}</span>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Customer:</span>
+                    <span className="font-semibold truncate ml-2 text-foreground">{selectedCustomer?.name || selectedCustomer?.email || "No Link"}</span>
                   </div>
-                  <div className="flex flex-col text-[11px]">
-                    <span className="text-muted-foreground uppercase font-bold tracking-tighter text-[9px]">Quota</span>
-                    <span className="font-semibold">{totalGB ? `${totalGB} GB` : "Unlimited"}</span>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Quota:</span>
+                    <span className="font-semibold text-foreground">{totalGB ? `${totalGB} GB` : "Unlimited"}</span>
                   </div>
-                  <div className="flex flex-col text-[11px]">
-                    <span className="text-muted-foreground uppercase font-bold tracking-tighter text-[9px]">IP Limit</span>
-                    <span className="font-semibold">{limitIp || "Unlimited"}</span>
-                  </div>
-                  <div className="flex flex-col text-[11px]">
-                    <span className="text-muted-foreground uppercase font-bold tracking-tighter text-[9px]">Expiry</span>
-                    <span className="font-semibold">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Expiry:</span>
+                    <span className="font-semibold text-foreground text-right">
                       {startAfterFirstUse ? `${durationDays} Days (After use)` : (expiryDate ? new Date(expiryDate).toLocaleDateString() : "Unlimited")}
                     </span>
                   </div>
-                  <div className="flex flex-col text-[11px]">
-                    <span className="text-muted-foreground uppercase font-bold tracking-tighter text-[9px]">Flow</span>
-                    <span className="font-semibold">{flow || "None"}</span>
+                  <div className="flex justify-between pt-1.5 border-t border-dashed border-border/40 mt-1.5">
+                    <span className="text-muted-foreground">Payment:</span>
+                    <span className={`font-black text-[14px] ${paymentStatus === "PAID" ? "text-emerald-600" : "text-orange-600"}`}>
+                      LKR {amountPaid || "0"} ({paymentStatus})
+                    </span>
                   </div>
                 </div>
-
-                <div className="text-[11px] border-t border-dashed pt-2 mt-1 flex flex-col">
-                  <span className="text-muted-foreground uppercase font-bold tracking-tighter text-[9px]">Comment</span>
-                  <p className="font-medium text-foreground/70 italic leading-tight">
-                    {comment || "No internal notes"}
-                  </p>
-                </div>
-
-                <div className="text-[11px] border-t border-dashed pt-2 mt-1 flex flex-col">
-                  <span className="text-muted-foreground uppercase font-bold tracking-tighter text-[9px]">Payment Status</span>
-                  <span className={`font-bold ${paymentStatus === "PAID" ? "text-emerald-600" : "text-orange-600"}`}>
-                    LKR {amountPaid || "0"} ({paymentStatus})
-                  </span>
-                </div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  This will create the client in the VPN panel immediately.
+                </p>
               </div>
-              <p className="text-[10px] text-center text-muted-foreground pt-1">
-                Please review all details before creating this VLESS client.
-              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
-            <AlertDialogCancel disabled={loading} className="w-full sm:w-auto mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={loading} className="rounded-md">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -436,14 +423,14 @@ export default function AddClientModal({
                 setConfirmOpen(false);
               }}
               disabled={loading || countdown > 0}
-              className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto min-w-[120px]"
+              className="bg-orange-500 hover:bg-orange-600 text-white min-w-[140px] transition-all rounded-md"
             >
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : countdown > 0 ? (
-                <span>Add ({countdown}s)</span>
+                `Add (${countdown}s)`
               ) : (
-                <span>Confirm Creation</span>
+                "Confirm Creation"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

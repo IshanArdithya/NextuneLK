@@ -22,7 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CustomerSearch } from "./customer-search";
-import { Loader2, Link as LinkIcon, User } from "lucide-react";
+import { Loader2, Link as LinkIcon, User, Unlink } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface LinkCustomerModalProps {
@@ -38,7 +38,7 @@ export default function LinkCustomerModal({
   onClose,
   onSuccess,
 }: LinkCustomerModalProps) {
-  const [selectedCustomer, setSelectedCustomer] = useState<{id?: string, name?: string | null, email?: string | null} | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<{ id?: string, name?: string | null, email?: string | null } | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [loading, setLoading] = useState(false);
   const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
@@ -63,16 +63,16 @@ export default function LinkCustomerModal({
 
   const handleLink = async () => {
     if (!client || (!selectedCustomer && !isNew)) return;
-    
+
     setLoading(true);
     try {
       // If new, we need to create the customer first OR use a specific link-create endpoint
       // But standard linkCustomer API expects an email.
       // Let's use the email from the search or existing record.
-      
+
       // Support both existing name-only customers and new customers
       const identity = selectedCustomer?.email || selectedCustomer?.name;
-      
+
       if (!identity) {
         toast({ title: "Error", description: "No customer selected", variant: "destructive" });
         setLoading(false);
@@ -84,7 +84,7 @@ export default function LinkCustomerModal({
         inboundId: client.inboundId, // Pass the inboundId for precise lookup
         email: identity
       };
-      
+
       await api.post(`/admin/client/link`, payload);
 
       toast({
@@ -141,14 +141,14 @@ export default function LinkCustomerModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="bg-muted/30 p-3 rounded-lg border border-dashed text-xs space-y-1">
-            <p className="font-semibold text-muted-foreground uppercase tracking-wider text-[9px]">Client Info</p>
-            <p className="font-medium">{client?.email}</p>
+          <div className="bg-muted/30 p-3 rounded-lg border border-dashed border-border/60 text-[13px] space-y-1">
+            <p className="font-bold text-slate-400 uppercase tracking-wider text-[9px]">Client Info</p>
+            <p className="font-semibold text-foreground">{client?.email}</p>
           </div>
 
-          <div className="space-y-2">
-            <Label>Search Customer</Label>
-            <CustomerSearch 
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-1">Search Customer</Label>
+            <CustomerSearch
               onSelect={(customer, isNewCust, name) => {
                 if (isNewCust) {
                   setSelectedCustomer({ name });
@@ -162,11 +162,11 @@ export default function LinkCustomerModal({
             />
             {(client?.customerEmail || client?.customerName) && (
               <div className="flex items-center justify-between gap-2 bg-amber-500/5 p-2 rounded-lg border border-amber-500/10">
-                <p className="text-[10px] text-amber-600 font-medium leading-tight flex-1">
+                <p className="text-[10px] text-amber-600 font-medium leading-tight flex-1 ml-1">
                   Currently linked to <span className="font-bold underline">{client.customerName || client.customerEmail}</span>
                 </p>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="sm"
                   className="h-7 px-2 text-[10px] text-destructive hover:text-destructive hover:bg-destructive/10 font-bold uppercase tracking-tight"
                   onClick={() => setUnlinkConfirmOpen(true)}
@@ -180,33 +180,50 @@ export default function LinkCustomerModal({
         </div>
 
         <DialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={onClose} size="sm" className="w-full sm:w-auto">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto h-9">
             Cancel
           </Button>
-          <Button 
-            onClick={handleLink} 
-            disabled={loading || (!selectedCustomer && !isNew)} 
-            size="sm"
-            className="w-full sm:w-auto"
+          <Button
+            onClick={handleLink}
+            disabled={loading || (!selectedCustomer && !isNew)}
+            className="w-full sm:w-auto h-9 bg-orange-500 hover:bg-orange-600 text-white"
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            <span className="sm:hidden">Link</span>
-            <span className="hidden sm:inline">Confirm Link</span>
+            Confirm Link
           </Button>
         </DialogFooter>
       </DialogContent>
 
       <AlertDialog open={unlinkConfirmOpen} onOpenChange={setUnlinkConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unlink Customer?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will remove the association between <strong>{client?.email}</strong> and <strong>{client?.customerName || client?.customerEmail}</strong>.
-              The client service will remain active but will no longer be linked to this customer record.
+        <AlertDialogContent className="sm:max-w-[400px]">
+          <AlertDialogHeader className="flex flex-col items-center">
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive text-center">
+              <Unlink className="h-5 w-5" />
+              Unlink Customer?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="pt-2 text-center space-y-2 w-full">
+                <p>
+                  Are you sure you want to unlink this client?
+                </p>
+                <div className="bg-muted/50 p-3 rounded-lg text-[13px] border border-dashed border-border/40 text-left w-full">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Client:</span>
+                    <span className="font-semibold text-foreground truncate ml-2">{client?.email}</span>
+                  </div>
+                  <div className="flex justify-between pt-1.5 border-t border-dashed border-border/40 mt-1.5">
+                    <span className="text-muted-foreground">Current Customer:</span>
+                    <span className="font-medium text-foreground truncate ml-2">{client?.customerName || client?.customerEmail}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-destructive/80 font-medium pt-1">
+                  The client service will remain active but will no longer be linked.
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-row sm:justify-end">
-            <AlertDialogCancel disabled={loading} className="w-full sm:w-auto mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={loading} className="rounded-md">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -214,17 +231,14 @@ export default function LinkCustomerModal({
                 setUnlinkConfirmOpen(false);
               }}
               disabled={loading || countdown > 0}
-              className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto min-w-[100px]"
+              className="bg-destructive text-white hover:bg-destructive/90 min-w-[140px] transition-all rounded-md"
             >
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : countdown > 0 ? (
-                <span>Unlink ({countdown}s)</span>
+                `Unlink (${countdown}s)`
               ) : (
-                <>
-                  <span className="sm:hidden">Unlink</span>
-                  <span className="hidden sm:inline">Unlink Now</span>
-                </>
+                "Confirm Unlink"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
