@@ -19,6 +19,7 @@ import {
   Trash2,
   ArrowUpDown,
   User,
+  Eye,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { CustomerDrawer } from "@/components/dashboard/customer-drawer";
 
 interface LinkedService {
   id: string;
@@ -106,6 +108,14 @@ export default function CustomersPage() {
   const [deletionStats, setDeletionStats] = useState<DeletionStats | null>(null);
   const [deleteCountdown, setDeleteCountdown] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
+  const openDrawer = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setDrawerOpen(true);
+  };
 
   const { toast } = useToast();
 
@@ -167,6 +177,7 @@ export default function CustomersPage() {
       await api.delete(`/admin/customers/${selectedForDelete.id}`);
       toast({ title: "Success", description: "Customer deleted successfully" });
       setShowDeleteAlert(false);
+      setDrawerOpen(false);
       fetchCustomers();
     } catch (err: any) {
       toast({
@@ -408,11 +419,11 @@ export default function CustomersPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem className="cursor-pointer">
-                                <ExternalLink className="mr-2 h-4 w-4" /> View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="cursor-pointer">
-                                <CreditCard className="mr-2 h-4 w-4" /> Payment History
+                              <DropdownMenuItem
+                                className="cursor-pointer font-medium"
+                                onClick={() => openDrawer(customer)}
+                              >
+                                <Eye className="mr-2 h-4 w-4" /> View Details
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
@@ -433,6 +444,15 @@ export default function CustomersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Customer Detail Drawer */}
+      <CustomerDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        customer={selectedCustomer}
+        onUpdate={fetchCustomers}
+        onDelete={initiateDelete}
+      />
 
       {/* Deletion Alert Dialog */}
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
