@@ -35,6 +35,7 @@ import {
   ArrowUpDown,
   Calendar as CalendarIcon,
   Mail,
+  User,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -51,6 +52,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -81,12 +88,20 @@ import { Label } from "@/components/ui/label";
 
 interface Transaction {
   id: string;
+  customerId: string | null;
+  customerName: string | null;
   customerEmail: string | null;
+  customer?: {
+    name: string | null;
+    email: string | null;
+    status: string;
+  } | null;
   inboundId: number;
   amountPaid: number;
   currency?: string;
   status: string;
   createdAt: string;
+  paymentDate: string | null;
   notes: string | null;
   isNewClient: boolean;
 }
@@ -435,7 +450,7 @@ export default function TransactionsPage() {
                   <TableRow className="hover:bg-transparent border-0">
                     <TableHead className="w-[80%] sm:w-auto">Transaction</TableHead>
                     <TableHead className="hidden md:table-cell">Client Email</TableHead>
-                    <TableHead className="hidden lg:table-cell text-center">Date & Time</TableHead>
+                    <TableHead className="hidden lg:table-cell text-center">Timeline</TableHead>
                     <TableHead className="hidden sm:table-cell text-center">Amount</TableHead>
                     <TableHead className="hidden sm:table-cell text-center">Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -458,42 +473,56 @@ export default function TransactionsPage() {
                             </div>
 
                             {/* mobile secondary info stack */}
-                            <div className="flex flex-col gap-2.5 sm:hidden border-l-2 border-orange-500/10 pl-3 ml-1">
+                            <div className="flex flex-col gap-2 sm:hidden border-l-2 border-orange-500/10 pl-3 ml-1 mt-1">
+                              <div className="flex items-center gap-2">
+                                <User className="h-3 w-3 text-orange-500/60" />
+                                <span className="text-[11px] font-bold truncate max-w-[180px] text-slate-900 dark:text-zinc-100 flex items-center gap-1.5">
+                                  {t.customer?.name || t.customerName || "Unnamed Client"}
+                                  {t.customer?.status === "ARCHIVED" && (
+                                    <Badge variant="outline" className="text-[8px] h-3.5 px-1 border-border/40 uppercase opacity-60">Archived</Badge>
+                                  )}
+                                </span>
+                              </div>
                               <div className="flex items-center gap-2">
                                 <Mail className="h-3 w-3 text-muted-foreground/60" />
-                                <span className="text-[11px] font-medium truncate max-w-[200px] text-foreground/80">
-                                  {t.customerEmail || "Unknown Client"}
+                                <span className="text-[10px] font-medium truncate max-w-[180px] text-muted-foreground">
+                                  {t.customer?.email || t.customerEmail || "No Email"}
                                 </span>
                               </div>
+                            </div>
 
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-1.5">
-                                  <CalendarIcon className="h-3 w-3 text-muted-foreground/60" />
-                                  <span className="text-[11px] font-semibold text-foreground/80">
-                                    {format(new Date(t.createdAt), "MMM d")}
-                                    <span className="text-[9px] text-muted-foreground font-medium ml-1">
-                                      {format(new Date(t.createdAt), "hh:mm a")}
-                                    </span>
+                            <div className="flex items-center gap-3 sm:hidden">
+                              <div className="flex items-center gap-1.5">
+                                <CalendarIcon className="h-3 w-3 text-muted-foreground/60" />
+                                <span className="text-[11px] font-semibold text-foreground/80">
+                                  {format(new Date(t.createdAt), "MMM d")}
+                                  <span className="text-[9px] text-muted-foreground font-medium ml-1">
+                                    {format(new Date(t.createdAt), "hh:mm a")}
                                   </span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Badge
-                                    className={`text-[9px] px-1.5 py-0 font-bold ${t.status === "PAID" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                      : "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                                      }`}
-                                    variant="outline"
-                                  >
-                                    {t.status}
-                                  </Badge>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2 pt-1 border-t border-dashed border-border/40">
-                                <Banknote className="h-3.5 w-3.5 text-orange-600/70" />
-                                <span className="text-sm font-black text-slate-900 dark:text-zinc-100">
-                                  LKR {t.amountPaid.toLocaleString()}
                                 </span>
                               </div>
+                              <div className="flex flex-col items-center gap-1">
+                                <Badge
+                                  className={`text-[9px] px-1.5 py-0 font-bold ${t.status === "PAID" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                                    : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                    }`}
+                                  variant="outline"
+                                >
+                                  {t.status}
+                                </Badge>
+                                {t.status === "PAID" && t.paymentDate && (
+                                  <span className="text-[8px] text-emerald-600/80 font-bold uppercase tracking-tight">
+                                    {format(new Date(t.paymentDate), "MMM d")}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-1 border-t border-dashed border-border/40 sm:hidden">
+                              <Banknote className="h-3.5 w-3.5 text-orange-600/70" />
+                              <span className="text-sm font-black text-slate-900 dark:text-zinc-100">
+                                LKR {t.amountPaid.toLocaleString()}
+                              </span>
                             </div>
                           </div>
                         </TableCell>
@@ -502,22 +531,51 @@ export default function TransactionsPage() {
                         <TableCell className="hidden md:table-cell">
                           <div className="flex items-center gap-2.5">
                             <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center text-[10px] font-bold text-orange-600 border border-orange-500/10 shrink-0">
-                              {(t.customerEmail?.[0] || "U").toUpperCase()}
+                              {(t.customer?.name?.[0] || t.customerName?.[0] || t.customer?.email?.[0] || t.customerEmail?.[0] || "U").toUpperCase()}
                             </div>
-                            <span className="font-medium truncate max-w-[150px]">
-                              {t.customerEmail || "Unknown Client"}
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-sm truncate max-w-[150px] text-slate-900 dark:text-zinc-100 flex items-center gap-2">
+                                {t.customer?.name || t.customerName || "Unnamed Client"}
+                                {t.customer?.status === "ARCHIVED" && (
+                                  <Badge variant="outline" className="text-[8px] h-3.5 px-1 border-border/40 uppercase opacity-60">Archived</Badge>
+                                )}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground font-medium truncate max-w-[150px]">
+                                {t.customer?.email || t.customerEmail || "No Email"}
+                              </span>
+                            </div>
                           </div>
                         </TableCell>
 
                         <TableCell className="hidden lg:table-cell text-center">
-                          <div className="flex flex-col items-center leading-tight">
-                            <span className="font-semibold text-slate-900 dark:text-zinc-100">
-                              {format(new Date(t.createdAt), "MMM d, yyyy")}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground mt-0.5 uppercase font-medium">
-                              {format(new Date(t.createdAt), "hh:mm a")}
-                            </span>
+                          <div className="flex flex-col items-center leading-tight gap-1">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="font-semibold text-slate-900 dark:text-zinc-100 cursor-help w-fit">
+                                    {format(new Date(t.createdAt), "MMM d, yyyy")}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="text-[10px] font-medium">Invoiced: {format(new Date(t.createdAt), "PPP p")}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+
+                            {t.status === "PAID" && t.paymentDate && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge variant="outline" className="text-[8px] h-3.5 px-1.5 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 font-bold uppercase cursor-help">
+                                      Paid {format(new Date(t.paymentDate), "MMM d")}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="text-[10px] font-medium">Settled: {format(new Date(t.paymentDate), "PPP p")}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
                           </div>
                         </TableCell>
 
@@ -602,7 +660,9 @@ export default function TransactionsPage() {
                 <div className="bg-muted/50 p-3 rounded-lg text-[13px] border border-dashed text-left w-full">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Client:</span>
-                    <span className="font-semibold truncate ml-2 text-foreground">{pendingDelete?.customerEmail}</span>
+                    <span className="font-semibold truncate ml-2 text-foreground">
+                      {pendingDelete?.customer?.name || pendingDelete?.customerName || pendingDelete?.customer?.email || pendingDelete?.customerEmail}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Date:</span>

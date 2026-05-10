@@ -91,6 +91,26 @@ export const CustomerService = {
   },
 
   deleteCustomer: async (id: string) => {
+    // unbind all services (null in customerId field)
+    await prisma.service.updateMany({
+      where: { customerId: id },
+      data: { customerId: null },
+    });
+
+    // check for payment history
+    const paymentCount = await prisma.payment.count({
+      where: { customerId: id },
+    });
+
+    if (paymentCount > 0) {
+      // archive if history exists
+      return prisma.customer.update({
+        where: { id },
+        data: { status: "ARCHIVED" },
+      });
+    }
+
+    // perm delete if no payment history
     return prisma.customer.delete({
       where: { id },
     });

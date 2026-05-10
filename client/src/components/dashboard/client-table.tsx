@@ -368,9 +368,13 @@ export default function ClientTable({
                       <QrCode className="mr-2 h-4 w-4" />
                       QR Code / Links
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEdit(client)}>
+                    <DropdownMenuItem 
+                      onClick={() => onEdit(client)}
+                      disabled={true}
+                      className="opacity-50 cursor-not-allowed"
+                    >
                       <Pencil className="mr-2 h-4 w-4" />
-                      Edit Client
+                      Edit Client (Disabled)
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onLink?.(client)}>
                       <LinkIcon className="mr-2 h-4 w-4" />
