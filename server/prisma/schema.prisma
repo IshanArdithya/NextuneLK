@@ -42,6 +42,7 @@ model Customer {
 enum CustomerStatus {
   ACTIVE
   SUSPENDED
+  ARCHIVED
 }
 
 model Service {

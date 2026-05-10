@@ -28,7 +28,16 @@ export const PaymentService = {
           if (filter.sortBy === "amount_asc") return { amountPaid: "asc" };
           return { createdAt: "desc" };
         })(),
-        include: { preset: true },
+        include: { 
+          preset: true,
+          customer: {
+            select: {
+              name: true,
+              email: true,
+              status: true
+            }
+          }
+        },
       }),
       prisma.payment.count({ where }),
     ]);
@@ -60,14 +69,15 @@ export const PaymentService = {
   },
 
   createPayment: async (data: any) => {
-    // snapshot customer name for history
-    if (data.customerId && !data.customerName) {
+    // snapshot customer name & email for history
+    if (data.customerId && (!data.customerName || !data.customerEmail)) {
       const customer = await prisma.customer.findUnique({
         where: { id: data.customerId },
         select: { name: true, email: true }
       });
       if (customer) {
-        data.customerName = customer.name || customer.email;
+        if (!data.customerName) data.customerName = customer.name || customer.email;
+        if (!data.customerEmail) data.customerEmail = customer.email;
       }
     }
 

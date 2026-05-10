@@ -246,6 +246,7 @@ export default function CustomersPage() {
                     <SelectItem value="ALL">All Status</SelectItem>
                     <SelectItem value="ACTIVE">Active</SelectItem>
                     <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                    <SelectItem value="ARCHIVED">Archived</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -406,10 +407,19 @@ export default function CustomersPage() {
                         </TableCell>
 
                         <TableCell className="hidden lg:table-cell">
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            {format(new Date(customer.createdAt), "MMM d, yyyy")}
-                          </div>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help w-fit">
+                                  <Calendar className="h-3 w-3" />
+                                  {format(new Date(customer.createdAt), "MMM d, yyyy")}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-[10px] font-medium">Joined: {format(new Date(customer.createdAt), "PPP p")}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
@@ -429,8 +439,10 @@ export default function CustomersPage() {
                               <DropdownMenuItem
                                 onClick={() => initiateDelete(customer)}
                                 className="text-destructive focus:text-destructive cursor-pointer"
+                                disabled={customer.status === "ARCHIVED"}
                               >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete Customer
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                {customer.totalPayments > 0 ? "Archive Customer" : "Delete Customer"}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -460,12 +472,12 @@ export default function CustomersPage() {
           <AlertDialogHeader className="flex flex-col items-center">
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-5 w-5" />
-              Delete Customer?
+              {(selectedForDelete?.totalPayments || 0) > 0 ? "Archive Customer?" : "Delete Customer?"}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="pt-2 text-center space-y-2">
                 <p>
-                  Are you sure you want to delete <strong>{selectedForDelete?.name || selectedForDelete?.email}</strong>?
+                  Are you sure you want to {(selectedForDelete?.totalPayments || 0) > 0 ? "archive" : "delete"} <strong>{selectedForDelete?.name || selectedForDelete?.email}</strong>?
                 </p>
                 <div className="bg-muted/50 p-3 rounded-lg text-[13px] border border-dashed text-left w-full">
                   <div className="flex justify-between">
@@ -498,9 +510,15 @@ export default function CustomersPage() {
                   </p>
                 )}
 
-                <p className="text-xs text-destructive/80 font-medium pt-1">
-                  This action cannot be undone.
-                </p>
+                {(selectedForDelete?.totalPayments || 0) > 0 ? (
+                  <p className="text-[10px] text-orange-600 font-bold bg-orange-500/10 py-1.5 px-3 rounded-md uppercase tracking-tight">
+                    Note: Customer has transaction history and will be Archived to preserve financial records.
+                  </p>
+                ) : (
+                  <p className="text-xs text-destructive/80 font-medium pt-1">
+                    This action cannot be undone.
+                  </p>
+                )}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -519,7 +537,7 @@ export default function CustomersPage() {
               ) : deleteCountdown > 0 ? (
                 `Confirm (${deleteCountdown}s)`
               ) : (
-                "Confirm Deletion"
+                (selectedForDelete?.totalPayments || 0) > 0 ? "Confirm Archive" : "Confirm Deletion"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

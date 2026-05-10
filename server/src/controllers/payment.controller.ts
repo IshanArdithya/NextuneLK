@@ -72,6 +72,9 @@ export const createPayment = catchAsync(async (req: any, res: any) => {
   else payload.cycleStart = new Date();
   if (payload.cycleEnd) payload.cycleEnd = new Date(payload.cycleEnd);
   if (!payload.status) payload.status = "UNPAID";
+  if (payload.status === "PAID" && !payload.paymentDate) {
+    payload.paymentDate = new Date();
+  }
   payload.inboundId = parseInt(inboundId);
 
   const payment = await PaymentService.createPayment(payload);

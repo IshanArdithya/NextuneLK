@@ -43,6 +43,7 @@ import {
   History,
   Calendar,
   ExternalLink,
+  Edit3,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
@@ -97,6 +98,8 @@ export function CustomerDrawer({
   const [payments, setPayments] = useState<Payment[]>([]);
   const [paymentsLoading, setPaymentsLoading] = useState(false);
   const [localCustomer, setLocalCustomer] = useState<Customer | null>(null);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const [isHolding, setIsHolding] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -135,6 +138,25 @@ export function CustomerDrawer({
     }
   };
 
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isHolding) {
+      interval = setInterval(() => {
+        setHoldProgress((prev) => {
+          if (prev >= 100) {
+            setIsHolding(false);
+            onDelete(localCustomer!);
+            return 0;
+          }
+          return prev + 1.5; // ~1.3s hold
+        });
+      }, 20);
+    } else {
+      setHoldProgress(0);
+    }
+    return () => clearInterval(interval);
+  }, [isHolding, localCustomer, onDelete]);
+
   const handleSave = async () => {
     if (!localCustomer) return;
     setLoading(true);
@@ -164,7 +186,7 @@ export function CustomerDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent 
+      <SheetContent
         className="w-full sm:max-w-[480px] p-0 flex flex-col h-full border-l border-border/40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl [&>button]:opacity-0 gap-0"
       >
         {/* Header Section */}
@@ -192,24 +214,6 @@ export function CustomerDrawer({
           {/* Identity & Quick Actions Card */}
           {mode !== "HISTORY" && (
             <div className="bg-muted/40 border border-border/40 p-4 sm:p-5 rounded-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setMode(mode === "VIEW" ? "EDIT" : "VIEW")}
-                  className="h-8 gap-1.5 font-bold uppercase tracking-wider text-[10px] bg-background/50 hover:bg-orange-500/10 hover:text-orange-600 transition-all"
-                >
-                  {mode === "VIEW" ? (
-                    <>
-                      <Pencil className="h-3 w-3" /> Edit
-                    </>
-                  ) : (
-                    <>
-                      <X className="h-3 w-3" /> Cancel
-                    </>
-                  )}
-                </Button>
-              </div>
 
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 shrink-0">
@@ -218,6 +222,9 @@ export function CustomerDrawer({
                 <div className="min-w-0 pr-12 sm:pr-16">
                   <h2 className="text-lg sm:text-xl font-black tracking-tight truncate text-slate-900 dark:text-zinc-100">
                     {localCustomer.name || "Unnamed Customer"}
+                    {localCustomer.status === "ARCHIVED" && (
+                      <Badge variant="outline" className="ml-2 text-[9px] bg-muted/50 text-muted-foreground border-border/40 uppercase font-bold tracking-widest">Archived</Badge>
+                    )}
                   </h2>
                   <div className="flex flex-col gap-1 mt-1">
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
@@ -501,28 +508,49 @@ export function CustomerDrawer({
         </div>
 
         {/* Footer Section */}
-        <SheetFooter className="p-4 sm:p-6 border-t border-border/40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl z-10 mt-0 grid grid-cols-2 gap-3">
+        <SheetFooter className="p-4 sm:p-6 border-t border-border/40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl z-10 mt-0 flex flex-col gap-3">
           {mode === "VIEW" ? (
             <>
-              <Button
-                variant="outline"
-                className="h-10 text-xs font-bold uppercase tracking-wider gap-2 border-border/40"
-                onClick={() => setMode("HISTORY")}
-              >
-                <History className="h-4 w-4" /> Payment History
-              </Button>
+              <div className="grid grid-cols-2 gap-3 w-full">
+                <Button
+                  variant="outline"
+                  className="h-10 text-xs font-bold uppercase tracking-wider gap-2 border-border/40"
+                  onClick={() => setMode("EDIT")}
+                  disabled={localCustomer.status === "ARCHIVED"}
+                >
+                  <Edit3 className="h-4 w-4" /> Edit Profile
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-10 text-xs font-bold uppercase tracking-wider gap-2 border-border/40"
+                  onClick={() => setMode("HISTORY")}
+                >
+                  <History className="h-4 w-4" /> Payment History
+                </Button>
+              </div>
               <Button
                 variant="destructive"
-                className="h-10 text-xs font-bold uppercase tracking-wider gap-2 shadow-lg shadow-destructive/10"
-                onClick={() => {
-                  onDelete(localCustomer);
-                }}
+                className="h-10 w-full text-xs font-bold uppercase tracking-wider gap-2 shadow-lg shadow-destructive/10 relative overflow-hidden group transition-all active:scale-95"
+                onMouseDown={() => setIsHolding(true)}
+                onMouseUp={() => setIsHolding(false)}
+                onMouseLeave={() => setIsHolding(false)}
+                onTouchStart={() => setIsHolding(true)}
+                onTouchEnd={() => setIsHolding(false)}
+                disabled={localCustomer.status === "ARCHIVED"}
               >
-                <Trash2 className="h-4 w-4" /> Delete
+                {/* Progress Overlay */}
+                <div 
+                  className="absolute left-0 top-0 h-full bg-white/20 transition-all duration-75 ease-linear pointer-events-none"
+                  style={{ width: `${holdProgress}%` }}
+                />
+                <Trash2 className={`h-4 w-4 relative z-10 ${isHolding ? "animate-pulse" : ""}`} /> 
+                <span className="relative z-10">
+                  {isHolding ? "Release to Cancel" : (localCustomer.totalPayments > 0 ? "Hold to Archive" : "Hold to Delete")}
+                </span>
               </Button>
             </>
           ) : mode === "EDIT" ? (
-            <>
+            <div className="grid grid-cols-2 gap-3 w-full">
               <Button
                 variant="outline"
                 className="h-10 text-xs font-bold uppercase tracking-wider border-border/40"
@@ -539,19 +567,18 @@ export function CustomerDrawer({
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Save Changes
               </Button>
-            </>
+            </div>
           ) : (
             /* HISTORY MODE FOOTER */
-            <>
-              <div />
+            <div className="flex justify-end w-full">
               <Button
                 variant="outline"
-                className="h-10 text-xs font-bold uppercase tracking-wider gap-2 border-border/40"
+                className="h-10 text-xs font-bold uppercase tracking-wider gap-2 border-border/40 px-8"
                 onClick={() => setMode("VIEW")}
               >
                 <User className="h-4 w-4" /> Back to Profile
               </Button>
-            </>
+            </div>
           )}
         </SheetFooter>
       </SheetContent>

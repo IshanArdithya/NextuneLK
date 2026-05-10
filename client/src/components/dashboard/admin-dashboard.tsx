@@ -150,7 +150,7 @@ export default function AdminDashboard() {
       const res = await api.get("/admin/inbounds");
       if (res.data.success) {
         setInbounds(res.data.obj);
-        
+
         // auto-open first inbound on initial load
         if (res.data.obj.length > 0 && openInbounds.size === 0) {
           setOpenInbounds(new Set([res.data.obj[0].id]));
@@ -313,13 +313,13 @@ export default function AdminDashboard() {
                   Online Now
                 </p>
                 <div className="flex items-center gap-2">
-                    <p className="text-lg font-bold">{onlineClients}</p>
-                    {onlineClients > 0 && (
-                        <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                        </span>
-                    )}
+                  <p className="text-lg font-bold">{onlineClients}</p>
+                  {onlineClients > 0 && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -381,10 +381,11 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <div
-                          role="button"
-                          tabIndex={0}
-                          className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={true}
                           onClick={(e) => {
                             e.stopPropagation();
                             setAddClientModal({
@@ -393,20 +394,9 @@ export default function AdminDashboard() {
                               protocol: inbound.protocol,
                             });
                           }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              setAddClientModal({
-                                open: true,
-                                inboundId: inbound.id,
-                                protocol: inbound.protocol,
-                              });
-                            }
-                          }}
                         >
                           <Plus className="h-4 w-4" />
-                        </div>
+                        </Button>
                         <ChevronDown
                           className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${openInbounds.has(inbound.id) ? "rotate-180" : ""
                             }`}
@@ -424,6 +414,7 @@ export default function AdminDashboard() {
                             variant="outline"
                             size="sm"
                             className="mt-3"
+                            disabled={true}
                             onClick={() =>
                               setAddClientModal({
                                 open: true,
@@ -440,13 +431,7 @@ export default function AdminDashboard() {
                           clients={inbound.clients}
                           inboundId={inbound.id}
                           inboundRemark={inbound.remark}
-                          onEdit={(client) =>
-                            setEditClientModal({
-                              open: true,
-                              client,
-                              inboundId: inbound.id,
-                            })
-                          }
+                          onEdit={(client) => { }}
                           onQR={(client) =>
                             setQrModal({
                               open: true,
