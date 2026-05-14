@@ -29,16 +29,6 @@ const findClientStats = (clientStats: any[], email: string) => {
 // service methods
 
 export const XuiService = {
-  // session maintenance
-  maintainSession: async () => {
-    try {
-      console.log("Running session maintenance...");
-      await externalApi.login(true);
-    } catch (error: any) {
-      console.error("Session maintenance error:", error.response?.data?.msg || error.message);
-    }
-  },
-
   getSessionStatus: () => {
     return externalApi.getSessionStatus();
   },
