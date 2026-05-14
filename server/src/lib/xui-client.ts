@@ -1,38 +1,25 @@
 import axios from "axios";
 import dotenv from "dotenv";
-import { wrapper } from "axios-cookiejar-support";
-import { CookieJar } from "tough-cookie";
 
 dotenv.config();
 
-const SESSION_TIMEOUT = Number(process.env.SESSION_DURATION) * 60 * 60 * 1000; // 24h session timeout
-const MAX_RETRY_ATTEMPTS = 3;
-
 export class ExternalApi {
-  cookieJar: any;
   api: any;
-  lastLoginTime: number;
-  isLoggedIn: boolean;
-  loginAttempts: number;
 
   constructor() {
     this.validateEnvVars();
 
-    this.cookieJar = new CookieJar();
-    this.api = wrapper(
-      axios.create({
-        baseURL: process.env.XUI_WEB_URL,
-        jar: this.cookieJar,
-        withCredentials: true,
-      })
-    );
-    this.lastLoginTime = 0;
-    this.isLoggedIn = false;
-    this.loginAttempts = 0;
+    this.api = axios.create({
+      baseURL: process.env.XUI_WEB_URL,
+      headers: {
+        Authorization: `Bearer ${process.env.XUI_API_TOKEN}`,
+        Accept: "application/json",
+      },
+    });
   }
 
   validateEnvVars() {
-    const requiredEnvVars = ["XUI_WEB_URL", "XUI_USERNAME", "XUI_PASSWORD"];
+    const requiredEnvVars = ["XUI_WEB_URL", "XUI_API_TOKEN"];
     const missingVars = requiredEnvVars.filter(
       (envVar) => !process.env[envVar]
     );
@@ -44,99 +31,34 @@ export class ExternalApi {
     }
   }
 
-  async login(force = false) {
-    try {
-      const now = Date.now();
-      if (
-        !force &&
-        this.isLoggedIn &&
-        now - this.lastLoginTime < SESSION_TIMEOUT
-      ) {
-        return true;
-      }
-
-      const res = await this.api.post(
-        "/login",
-        `username=${process.env.XUI_USERNAME}&password=${process.env.XUI_PASSWORD}`,
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+  private assertJsonResponse(response: any, context: string) {
+    if (
+      typeof response.data === "string" &&
+      response.data.includes("<!DOCTYPE html>")
+    ) {
+      throw {
+        response: {
+          data: {
+            success: false,
+            msg: `${context}: Panel returned HTML instead of JSON — check XUI_API_TOKEN`,
+            obj: null,
           },
-        }
-      );
-
-      if (!res.data.success) {
-        throw {
-          response: {
-            data: {
-              success: false,
-              msg: res.data.msg || "Login failed",
-              obj: null,
-            },
-          },
-        };
-      }
-
-      this.isLoggedIn = true;
-      this.lastLoginTime = now;
-      this.loginAttempts = 0;
-      return true;
-    } catch (error) {
-      this.isLoggedIn = false;
-      this.loginAttempts++;
-
-      if (this.loginAttempts >= MAX_RETRY_ATTEMPTS) {
-        throw {
-          response: {
-            data: {
-              success: false,
-              msg: "Maximum login attempts reached",
-              obj: null,
-            },
-          },
-        };
-      }
-
-      throw error;
+        },
+      };
     }
+    return response;
   }
 
-  async getClientTraffics(email, attempt = 1) {
+  async getClientTraffics(email: string) {
     try {
-      if (!this.isLoggedIn) {
-        await this.login();
-      }
-
       const response = await this.api.get(
         `/panel/api/inbounds/getClientTraffics/${email}`
       );
-
-      if (
-        typeof response.data === "string" &&
-        response.data.includes("<!DOCTYPE html>")
-      ) {
-        if (attempt >= MAX_RETRY_ATTEMPTS) {
-          throw {
-            response: {
-              data: {
-                success: false,
-                msg: "Error Fetching Usage (Code - 001)",
-                obj: null,
-              },
-            },
-          };
-        }
-
-        await this.login(true);
-        return this.getClientTraffics(email, attempt + 1);
-      }
-
-      return response;
-    } catch (error) {
+      return this.assertJsonResponse(response, "Error Fetching Usage");
+    } catch (error: any) {
       if (error.response && error.response.data) {
         throw error;
       }
-
       throw {
         response: {
           data: {
@@ -150,7 +72,7 @@ export class ExternalApi {
   }
 
   // helper to find a client's uuid/id by their email
-  async findClientIdByEmail(inboundId, email) {
+  async findClientIdByEmail(inboundId: number, email: string) {
     try {
       const response = await this.getInbound(inboundId);
       if (!response.data.success || !response.data.obj.settings) {
@@ -159,8 +81,8 @@ export class ExternalApi {
 
       const settings = JSON.parse(response.data.obj.settings);
       const clients = settings.clients || [];
-      
-      const client = clients.find(c => c.email === email);
+
+      const client = clients.find((c: any) => c.email === email);
       return client ? client.id : null;
     } catch (error) {
       console.error("Error finding client ID:", error);
@@ -168,35 +90,11 @@ export class ExternalApi {
     }
   }
 
-  async getServerStatus(attempt = 1) {
+  async getServerStatus() {
     try {
-      if (!this.isLoggedIn) {
-        await this.login();
-      }
-
       const response = await this.api.get(`/panel/api/server/status`);
-
-      if (
-        typeof response.data === "string" &&
-        response.data.includes("<!DOCTYPE html>")
-      ) {
-        if (attempt >= MAX_RETRY_ATTEMPTS) {
-          throw {
-            response: {
-              data: {
-                success: false,
-                msg: "Error Fetching Server Status (Code - 001)",
-                obj: null,
-              },
-            },
-          };
-        }
-
-        await this.login(true);
-        return this.getServerStatus(attempt + 1);
-      }
-      return response;
-    } catch (error) {
+      return this.assertJsonResponse(response, "Error Fetching Server Status");
+    } catch (error: any) {
       if (error.response && error.response.data) {
         throw error;
       }
@@ -212,34 +110,11 @@ export class ExternalApi {
     }
   }
 
-  async getOnlineUsers(attempt = 1) {
+  async getOnlineUsers() {
     try {
-      if (!this.isLoggedIn) {
-        await this.login();
-      }
-
       const response = await this.api.post(`/panel/api/inbounds/onlines`);
-
-      if (
-        typeof response.data === "string" &&
-        response.data.includes("<!DOCTYPE html>")
-      ) {
-        if (attempt >= MAX_RETRY_ATTEMPTS) {
-          throw {
-            response: {
-              data: {
-                success: false,
-                msg: "Error Fetching Online Users (Code - 001)",
-                obj: null,
-              },
-            },
-          };
-        }
-        await this.login(true);
-        return this.getOnlineUsers(attempt + 1);
-      }
-      return response;
-    } catch (error) {
+      return this.assertJsonResponse(response, "Error Fetching Online Users");
+    } catch (error: any) {
       if (error.response && error.response.data) {
         throw error;
       }
@@ -256,50 +131,21 @@ export class ExternalApi {
   }
 
   getSessionStatus() {
-    const now = Date.now();
-    const sessionActive =
-      this.isLoggedIn && now - this.lastLoginTime < SESSION_TIMEOUT;
     return {
-      isLoggedIn: this.isLoggedIn,
-      lastLoginTime: new Date(this.lastLoginTime).toISOString(),
-      sessionActive,
-      remainingTime: sessionActive
-        ? SESSION_TIMEOUT - (now - this.lastLoginTime)
-        : 0,
+      isLoggedIn: true,
+      lastLoginTime: null,
+      sessionActive: true,
+      remainingTime: null,
+      authMode: "bearer-token",
     };
   }
 
   // fetch the full list of inbounds with clients
-  async getInbounds(attempt = 1) {
+  async getInbounds() {
     try {
-      if (!this.isLoggedIn) {
-        await this.login();
-      }
-
       const response = await this.api.get(`/panel/api/inbounds/list`);
-
-      if (
-        typeof response.data === "string" &&
-        response.data.includes("<!DOCTYPE html>")
-      ) {
-        if (attempt >= MAX_RETRY_ATTEMPTS) {
-          throw {
-            response: {
-              data: {
-                success: false,
-                msg: "Error Fetching Inbounds (Code - 001)",
-                obj: null,
-              },
-            },
-          };
-        }
-
-        await this.login(true);
-        return this.getInbounds(attempt + 1);
-      }
-
-      return response;
-    } catch (error) {
+      return this.assertJsonResponse(response, "Error Fetching Inbounds");
+    } catch (error: any) {
       if (error.response && error.response.data) {
         throw error;
       }
@@ -316,36 +162,11 @@ export class ExternalApi {
   }
 
   // fetch a single inbound by ID
-  async getInbound(id, attempt = 1) {
+  async getInbound(id: number) {
     try {
-      if (!this.isLoggedIn) {
-        await this.login();
-      }
-
       const response = await this.api.get(`/panel/api/inbounds/get/${id}`);
-
-      if (
-        typeof response.data === "string" &&
-        response.data.includes("<!DOCTYPE html>")
-      ) {
-        if (attempt >= MAX_RETRY_ATTEMPTS) {
-          throw {
-            response: {
-              data: {
-                success: false,
-                msg: "Error Fetching Inbound (Code - 001)",
-                obj: null,
-              },
-            },
-          };
-        }
-
-        await this.login(true);
-        return this.getInbound(id, attempt + 1);
-      }
-
-      return response;
-    } catch (error) {
+      return this.assertJsonResponse(response, "Error Fetching Inbound");
+    } catch (error: any) {
       if (error.response && error.response.data) {
         throw error;
       }
@@ -362,12 +183,8 @@ export class ExternalApi {
   }
 
   // add a new client to existing inbound
-  async addClient(data, attempt = 1) {
+  async addClient(data: any) {
     try {
-      if (!this.isLoggedIn) {
-        await this.login();
-      }
-
       const response = await this.api.post(
         `/panel/api/inbounds/addClient`,
         data,
@@ -377,29 +194,8 @@ export class ExternalApi {
           },
         }
       );
-
-      if (
-        typeof response.data === "string" &&
-        response.data.includes("<!DOCTYPE html>")
-      ) {
-        if (attempt >= MAX_RETRY_ATTEMPTS) {
-          throw {
-            response: {
-              data: {
-                success: false,
-                msg: "Error Adding Client (Code - 001)",
-                obj: null,
-              },
-            },
-          };
-        }
-
-        await this.login(true);
-        return this.addClient(data, attempt + 1);
-      }
-
-      return response;
-    } catch (error) {
+      return this.assertJsonResponse(response, "Error Adding Client");
+    } catch (error: any) {
       if (error.response && error.response.data) {
         throw error;
       }
@@ -416,12 +212,8 @@ export class ExternalApi {
   }
 
   // update an existing client in inbound
-  async updateClient(clientId, data, attempt = 1) {
+  async updateClient(clientId: string, data: any) {
     try {
-      if (!this.isLoggedIn) {
-        await this.login();
-      }
-
       const response = await this.api.post(
         `/panel/api/inbounds/updateClient/${clientId}`,
         data,
@@ -431,29 +223,8 @@ export class ExternalApi {
           },
         }
       );
-
-      if (
-        typeof response.data === "string" &&
-        response.data.includes("<!DOCTYPE html>")
-      ) {
-        if (attempt >= MAX_RETRY_ATTEMPTS) {
-          throw {
-            response: {
-              data: {
-                success: false,
-                msg: "Error Updating Client (Code - 001)",
-                obj: null,
-              },
-            },
-          };
-        }
-
-        await this.login(true);
-        return this.updateClient(clientId, data, attempt + 1);
-      }
-
-      return response;
-    } catch (error) {
+      return this.assertJsonResponse(response, "Error Updating Client");
+    } catch (error: any) {
       if (error.response && error.response.data) {
         throw error;
       }
@@ -470,38 +241,13 @@ export class ExternalApi {
   }
 
   // delete a client from inbound
-  async deleteClient(inboundId, clientId, attempt = 1) {
+  async deleteClient(inboundId: number, clientId: string) {
     try {
-      if (!this.isLoggedIn) {
-        await this.login();
-      }
-
       const response = await this.api.post(
         `/panel/api/inbounds/${inboundId}/delClient/${clientId}`
       );
-
-      if (
-        typeof response.data === "string" &&
-        response.data.includes("<!DOCTYPE html>")
-      ) {
-        if (attempt >= MAX_RETRY_ATTEMPTS) {
-          throw {
-            response: {
-              data: {
-                success: false,
-                msg: "Error Deleting Client (Code - 001)",
-                obj: null,
-              },
-            },
-          };
-        }
-
-        await this.login(true);
-        return this.deleteClient(inboundId, clientId, attempt + 1);
-      }
-
-      return response;
-    } catch (error) {
+      return this.assertJsonResponse(response, "Error Deleting Client");
+    } catch (error: any) {
       if (error.response && error.response.data) {
         throw error;
       }
@@ -518,38 +264,13 @@ export class ExternalApi {
   }
 
   // reset a single client traffic counter
-  async resetClientTraffic(inboundId, email, attempt = 1) {
+  async resetClientTraffic(inboundId: number, email: string) {
     try {
-      if (!this.isLoggedIn) {
-        await this.login();
-      }
-
       const response = await this.api.post(
         `/panel/api/inbounds/${inboundId}/resetClientTraffic/${email}`
       );
-
-      if (
-        typeof response.data === "string" &&
-        response.data.includes("<!DOCTYPE html>")
-      ) {
-        if (attempt >= MAX_RETRY_ATTEMPTS) {
-          throw {
-            response: {
-              data: {
-                success: false,
-                msg: "Error Resetting Traffic (Code - 001)",
-                obj: null,
-              },
-            },
-          };
-        }
-
-        await this.login(true);
-        return this.resetClientTraffic(inboundId, email, attempt + 1);
-      }
-
-      return response;
-    } catch (error) {
+      return this.assertJsonResponse(response, "Error Resetting Traffic");
+    } catch (error: any) {
       if (error.response && error.response.data) {
         throw error;
       }

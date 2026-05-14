@@ -281,7 +281,3 @@ export const XuiService = {
     throw new Error("Failed to fetch client usage");
   }
 };
-
-// start session maintenance
-const MAINTENANCE_INTERVAL_MS = Number(process.env.SESSION_DURATION || 24) * 60 * 60 * 1000;
-setInterval(XuiService.maintainSession, MAINTENANCE_INTERVAL_MS);
