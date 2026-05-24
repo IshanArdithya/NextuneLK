@@ -16,7 +16,9 @@ export const ClientService = {
         const stats = inbound.clientStats || [];
         let settingsClients: any[] = [];
         try {
-          const settings = JSON.parse(inbound.settings || "{}");
+          const settings = typeof inbound.settings === "string"
+            ? JSON.parse(inbound.settings || "{}")
+            : inbound.settings || {};
           settingsClients = settings.clients || [];
         } catch {}
 
@@ -112,31 +114,26 @@ export const ClientService = {
       finalExpiryTime = new Date(data.expiryTime).getTime();
     }
 
-    const clientSettings = {
-      clients: [
-        {
-          id: xuiUUID,
-          email: data.xuiEmail,
-          limitIp: data.limitIp || 0,
-          totalGB: data.totalGB ? data.totalGB * 1073741824 : 0,
-          expiryTime: finalExpiryTime,
-          enable: data.enable !== false,
-          tgId: 0,
-          subId: subId,
-          comment: data.comment || "",
-          reset: 0,
-          flow: data.flow || "",
-        },
-      ],
+    const clientPayload = {
+      client: {
+        id: xuiUUID,
+        email: data.xuiEmail,
+        limitIp: data.limitIp || 0,
+        totalGB: data.totalGB ? data.totalGB * 1073741824 : 0,
+        expiryTime: finalExpiryTime,
+        enable: data.enable !== false,
+        tgId: 0,
+        subId: subId,
+        comment: data.comment || "",
+        reset: 0,
+        flow: data.flow || "",
+      },
+      inboundIds: [parseInt(data.inboundId.toString())],
     };
-
-    const formData = new URLSearchParams();
-    formData.append("id", data.inboundId);
-    formData.append("settings", JSON.stringify(clientSettings));
 
     // add to xui
     console.log(`[ClientService] Adding client ${data.xuiEmail} to XUI inbound ${data.inboundId}`);
-    const response = await XuiService.addClientRaw(formData);
+    const response = await XuiService.addClientRaw(clientPayload);
 
     if (!response || !response.data) {
       throw new AppError("No response from XUI panel", 500);
@@ -293,29 +290,22 @@ export const ClientService = {
       finalExpiryTime = new Date(data.expiryTime).getTime();
     }
 
-    const clientSettings = {
-      clients: [
-        {
-          id: data.clientId,
-          email: data.xuiEmail,
-          limitIp: data.limitIp || 0,
-          totalGB: data.totalGB ? data.totalGB * 1073741824 : 0,
-          expiryTime: finalExpiryTime,
-          enable: data.enable !== false,
-          tgId: data.tgId || 0,
-          subId: data.subId || "",
-          comment: data.comment || "",
-          reset: data.reset || 0,
-          flow: data.flow || "",
-        },
-      ],
+    const clientPayload = {
+      id: data.clientId,
+      email: data.xuiEmail,
+      limitIp: data.limitIp || 0,
+      totalGB: data.totalGB ? data.totalGB * 1073741824 : 0,
+      expiryTime: finalExpiryTime,
+      enable: data.enable !== false,
+      tgId: data.tgId || 0,
+      subId: data.subId || "",
+      comment: data.comment || "",
+      reset: data.reset || 0,
+      flow: data.flow || "",
     };
 
-    const formData = new URLSearchParams();
-    formData.append("id", data.inboundId);
-    formData.append("settings", JSON.stringify(clientSettings));
-
-    const response = await XuiService.updateClientRaw(data.clientId, formData);
+    const lookupEmail = data.originalEmail || data.xuiEmail;
+    const response = await XuiService.updateClientRaw(lookupEmail, clientPayload);
     if (!response || !response.data) {
       throw new AppError("No response from XUI panel", 500);
     }
@@ -347,9 +337,17 @@ export const ClientService = {
   },
 
   // delete client: remove from xui + remove service
-  deleteClientConfig: async (inboundId: number, clientId: string) => {
-    // remove from xui
-    const response = await XuiService.deleteClientRaw(inboundId, clientId);
+  deleteClientConfig: async (inboundId: number, clientId: string, email?: string) => {
+    let clientEmail = email;
+    if (!clientEmail) {
+      const service = await prisma.service.findFirst({ where: { xuiId: clientId } });
+      clientEmail = service?.xuiEmail;
+    }
+    if (!clientEmail) {
+      throw new AppError("Cannot determine client email for deletion", 400);
+    }
+
+    const response = await XuiService.deleteClientRaw(clientEmail);
     if (!response.data.success) {
       throw new AppError(response.data.msg || "Failed to delete client in X-UI", 400);
     }
@@ -365,7 +363,7 @@ export const ClientService = {
 
   // reset cycle: reset traffic + create new payment
   resetClientCycleWithPayment: async (data: any) => {
-    const resetResponse = await XuiService.resetClientTrafficRaw(data.inboundId, data.email);
+    const resetResponse = await XuiService.resetClientTrafficRaw(data.email);
     if (!resetResponse.data.success) {
       throw new AppError(resetResponse.data.msg || "Failed to reset traffic in X-UI", 400);
     }
@@ -378,28 +376,21 @@ export const ClientService = {
     }
 
     if (data.totalGB || data.expiryTime || data.startAfterFirstUse) {
-      const clientSettings = {
-        clients: [
-          {
-            id: data.clientId,
-            email: data.email,
-            limitIp: 0,
-            totalGB: data.totalGB ? data.totalGB * 1073741824 : 0,
-            expiryTime: finalExpiryTime,
-            enable: true,
-            tgId: 0,
-            subId: data.subId || "",
-            comment: "",
-            reset: 0,
-            flow: "",
-          },
-        ],
+      const clientPayload = {
+        id: data.clientId,
+        email: data.email,
+        limitIp: 0,
+        totalGB: data.totalGB ? data.totalGB * 1073741824 : 0,
+        expiryTime: finalExpiryTime,
+        enable: true,
+        tgId: 0,
+        subId: data.subId || "",
+        comment: "",
+        reset: 0,
+        flow: "",
       };
 
-      const formData = new URLSearchParams();
-      formData.append("id", data.inboundId);
-      formData.append("settings", JSON.stringify(clientSettings));
-      await XuiService.updateClientRaw(data.clientId, formData);
+      await XuiService.updateClientRaw(data.email, clientPayload);
     }
 
     // find the service and its linked customer

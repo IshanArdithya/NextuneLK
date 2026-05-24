@@ -52,9 +52,31 @@ export class ExternalApi {
   async getClientTraffics(email: string) {
     try {
       const response = await this.api.get(
-        `/panel/api/inbounds/getClientTraffics/${email}`
+        `/panel/api/clients/traffic/${email}`
       );
       return this.assertJsonResponse(response, "Error Fetching Usage");
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        throw error;
+      }
+      throw {
+        response: {
+          data: {
+            success: false,
+            msg: error.message || "Unknown error",
+            obj: null,
+          },
+        },
+      };
+    }
+  }
+
+  async getClientByEmail(email: string) {
+    try {
+      const response = await this.api.get(
+        `/panel/api/clients/get/${email}`
+      );
+      return this.assertJsonResponse(response, "Error Fetching Client");
     } catch (error: any) {
       if (error.response && error.response.data) {
         throw error;
@@ -75,11 +97,13 @@ export class ExternalApi {
   async findClientIdByEmail(inboundId: number, email: string) {
     try {
       const response = await this.getInbound(inboundId);
-      if (!response.data.success || !response.data.obj.settings) {
+      if (!response.data.success || !response.data.obj) {
         return null;
       }
 
-      const settings = JSON.parse(response.data.obj.settings);
+      const settings = typeof response.data.obj.settings === "string"
+        ? JSON.parse(response.data.obj.settings)
+        : response.data.obj.settings || {};
       const clients = settings.clients || [];
 
       const client = clients.find((c: any) => c.email === email);
@@ -89,6 +113,8 @@ export class ExternalApi {
       return null;
     }
   }
+
+  // server endpoints
 
   async getServerStatus() {
     try {
@@ -112,7 +138,7 @@ export class ExternalApi {
 
   async getOnlineUsers() {
     try {
-      const response = await this.api.post(`/panel/api/inbounds/onlines`);
+      const response = await this.api.post(`/panel/api/clients/onlines`);
       return this.assertJsonResponse(response, "Error Fetching Online Users");
     } catch (error: any) {
       if (error.response && error.response.data) {
@@ -139,6 +165,8 @@ export class ExternalApi {
       authMode: "bearer-token",
     };
   }
+
+  // inbound endpoints
 
   // fetch the full list of inbounds with clients
   async getInbounds() {
@@ -182,15 +210,16 @@ export class ExternalApi {
     }
   }
 
-  // add a new client to existing inbound
-  async addClient(data: any) {
+  // client crud
+
+  async addClient(data: { client: any; inboundIds: number[] }) {
     try {
       const response = await this.api.post(
-        `/panel/api/inbounds/addClient`,
+        `/panel/api/clients/add`,
         data,
         {
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Type": "application/json",
           },
         }
       );
@@ -211,15 +240,14 @@ export class ExternalApi {
     }
   }
 
-  // update an existing client in inbound
-  async updateClient(clientId: string, data: any) {
+  async updateClient(email: string, clientData: any) {
     try {
       const response = await this.api.post(
-        `/panel/api/inbounds/updateClient/${clientId}`,
-        data,
+        `/panel/api/clients/update/${email}`,
+        clientData,
         {
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Type": "application/json",
           },
         }
       );
@@ -240,11 +268,10 @@ export class ExternalApi {
     }
   }
 
-  // delete a client from inbound
-  async deleteClient(inboundId: number, clientId: string) {
+  async deleteClient(email: string) {
     try {
       const response = await this.api.post(
-        `/panel/api/inbounds/${inboundId}/delClient/${clientId}`
+        `/panel/api/clients/del/${email}`
       );
       return this.assertJsonResponse(response, "Error Deleting Client");
     } catch (error: any) {
@@ -263,11 +290,10 @@ export class ExternalApi {
     }
   }
 
-  // reset a single client traffic counter
-  async resetClientTraffic(inboundId: number, email: string) {
+  async resetClientTraffic(email: string) {
     try {
       const response = await this.api.post(
-        `/panel/api/inbounds/${inboundId}/resetClientTraffic/${email}`
+        `/panel/api/clients/resetTraffic/${email}`
       );
       return this.assertJsonResponse(response, "Error Resetting Traffic");
     } catch (error: any) {

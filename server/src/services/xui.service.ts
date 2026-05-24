@@ -14,7 +14,9 @@ const formatBytes = (bytes: number) => {
 
 const parseClients = (inbound: any) => {
   try {
-    const settings = JSON.parse(inbound.settings || "{}");
+    const settings = typeof inbound.settings === "string"
+      ? JSON.parse(inbound.settings || "{}")
+      : inbound.settings || {};
     return settings.clients || [];
   } catch {
     return [];
@@ -34,20 +36,20 @@ export const XuiService = {
   },
 
   // raw api wrappers
-  addClientRaw: async (formData: URLSearchParams) => {
-    return externalApi.addClient(formData);
+  addClientRaw: async (data: { client: any; inboundIds: number[] }) => {
+    return externalApi.addClient(data);
   },
 
-  updateClientRaw: async (clientId: string, formData: URLSearchParams) => {
-    return externalApi.updateClient(clientId, formData);
+  updateClientRaw: async (email: string, clientData: any) => {
+    return externalApi.updateClient(email, clientData);
   },
 
-  deleteClientRaw: async (inboundId: number, clientId: string) => {
-    return externalApi.deleteClient(inboundId, clientId);
+  deleteClientRaw: async (email: string) => {
+    return externalApi.deleteClient(email);
   },
 
-  resetClientTrafficRaw: async (inboundId: number, email: string) => {
-    return externalApi.resetClientTraffic(inboundId, email);
+  resetClientTrafficRaw: async (email: string) => {
+    return externalApi.resetClientTraffic(email);
   },
 
   getServerStatus: async () => {
@@ -168,7 +170,9 @@ export const XuiService = {
         totalFormatted: inbound.total === 0 ? "Unlimited" : formatBytes(inbound.total),
         clients: enrichedClients,
         clientCount: enrichedClients.length,
-        streamSettings: inbound.streamSettings ? JSON.parse(inbound.streamSettings) : null,
+        streamSettings: typeof inbound.streamSettings === "string"
+          ? JSON.parse(inbound.streamSettings)
+          : inbound.streamSettings || null,
       };
     });
 
