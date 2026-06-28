@@ -1,5 +1,6 @@
 import { ExternalApi } from "../lib/xui-client.js";
 import prisma from "../config/prisma.js";
+import { AppError } from "../utils/AppError.js";
 
 const externalApi = new ExternalApi();
 
@@ -179,11 +180,11 @@ export const XuiService = {
     const response = await externalApi.getClientTraffics(email);
 
     if (!response.data.obj) {
-      throw new Error("User not found");
+      throw new AppError("User not found", 404);
     }
 
     if (response.data.success) {
-      const { enable, up, down, total, expiryTime } = response.data.obj;
+      const { enable, up, down, total, expiryTime, lastOnline } = response.data.obj;
       const uploadGB = up / 1073741824;
       const downloadGB = down / 1073741824;
       const totalUsedGB = uploadGB + downloadGB;
@@ -242,11 +243,11 @@ export const XuiService = {
         }
       } catch { }
 
-      let onlineStatus = "Unavailable";
+      let isUserOnline = false;
       try {
         const onlineRes = await externalApi.getOnlineUsers();
         if (onlineRes?.data?.success && Array.isArray(onlineRes.data.obj)) {
-          onlineStatus = onlineRes.data.obj.includes(email) ? "Online" : "Offline";
+          isUserOnline = onlineRes.data.obj.includes(email);
         }
       } catch { }
 
@@ -255,7 +256,8 @@ export const XuiService = {
         user: {
           name: email,
           status,
-          isOnline: onlineStatus,
+          isOnline: isUserOnline,
+          lastOnline: lastOnline || null,
           quota: {
             upload: uploadGB.toFixed(2),
             download: downloadGB.toFixed(2),

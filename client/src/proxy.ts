@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const blockedRoutes = ["/", "/setup"];
+// const blockedRoutes = ["/", "/setup"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (blockedRoutes.includes(pathname)) {
-    return NextResponse.redirect(new URL("/usage", request.url));
-  }
+  // if (blockedRoutes.includes(pathname)) {
+  //   return NextResponse.redirect(new URL("/usage", request.url));
+  // }
 
   const secretPath = process.env.NEXT_PUBLIC_ADMIN_URI_PATH || "admin";
   const pathSegments = pathname.split("/").filter(Boolean);

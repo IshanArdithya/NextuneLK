@@ -2,7 +2,7 @@
 
 import { useParams, notFound } from "next/navigation";
 import { setupData } from "@/data/setup-guides";
-import Navigation from "@/components/header";
+import Navigation from "@/components/landing/navbar";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,7 +18,7 @@ import {
   Plus,
   Minus
 } from "lucide-react";
-import Footer from "@/components/footer";
+import Footer from "@/components/landing/footer";
 import { useState, useEffect } from "react";
 
 const Accordion = ({ title, children, isOpen, onClick }: { title: string, children: React.ReactNode, isOpen: boolean, onClick: () => void }) => {

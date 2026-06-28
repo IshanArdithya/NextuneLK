@@ -2,8 +2,8 @@
 
 import { motion, Variants } from "framer-motion";
 import { useEffect, useState } from "react";
-import Navigation from "@/components/header";
-import Footer from "@/components/footer";
+import Navigation from "@/components/landing/navbar";
+import Footer from "@/components/landing/footer";
 import { setupData } from "@/data/setup-guides";
 import { Monitor, Smartphone, Apple, ArrowRight, Terminal, Zap, ShieldCheck } from "lucide-react";
 import Link from "next/link";

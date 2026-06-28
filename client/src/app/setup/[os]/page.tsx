@@ -1,8 +1,8 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
-import Navigation from "@/components/header";
-import Footer from "@/components/footer";
+import Navigation from "@/components/landing/navbar";
+import Footer from "@/components/landing/footer";
 import { setupData } from "@/data/setup-guides";
 import { ArrowLeft, ArrowRight, ChevronRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";

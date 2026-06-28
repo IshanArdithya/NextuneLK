@@ -28,10 +28,12 @@ function CopyableLink({
   label,
   link,
   variant = "green",
+  showQR = true,
 }: {
   label: string;
   link: string;
   variant?: "green" | "purple";
+  showQR?: boolean;
 }) {
   const [copied, setCopied] = React.useState(false);
   const { toast } = useToast();
@@ -70,26 +72,28 @@ function CopyableLink({
       </div>
 
       {/* QR Code */}
-      <div
-        className="flex justify-center cursor-pointer group"
-        onClick={handleCopy}
-        title="Click to copy link"
-      >
-        <div className="relative bg-white p-3 rounded-lg shadow-sm border border-border/10 transition-transform group-hover:scale-[1.02] group-active:scale-95">
-          <QRCodeSVG
-            value={link}
-            size={180}
-            level="M"
-            bgColor="white"
-            fgColor="black"
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-white/90 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">
-              Copy URL
-            </p>
+      {showQR && (
+        <div
+          className="flex justify-center cursor-pointer group"
+          onClick={handleCopy}
+          title="Click to copy link"
+        >
+          <div className="relative bg-white p-3 rounded-lg shadow-sm border border-border/10 transition-transform group-hover:scale-[1.02] group-active:scale-95">
+            <QRCodeSVG
+              value={link}
+              size={180}
+              level="M"
+              bgColor="white"
+              fgColor="black"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-white/90 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">
+                Copy URL
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Link preview */}
       <div className="flex items-center gap-2 bg-muted/40 border border-border/40 rounded-lg px-2 py-1.5">
@@ -143,30 +147,43 @@ export default function QRCodeModal({
 
   vlessLink += `#${inboundRemark}-${client.email}`;
 
+  // Construct Usage Link (Deep Link)
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const usageLink = `${baseUrl}/usage?u=${client.email}`;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[440px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Direct VLESS Link
+            Client Links & QR
             <Badge variant="secondary" className="text-[10px] font-normal">
               {client.email}
             </Badge>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {vlessHost ? (
             <>
-              <CopyableLink
-                label="Direct VLESS URL"
-                link={vlessLink}
-                variant="purple"
-              />
+              <div className="grid gap-4">
+                <CopyableLink
+                  label="Direct VLESS URL"
+                  link={vlessLink}
+                  variant="purple"
+                />
+                
+                <CopyableLink
+                  label="Usage Dashboard URL"
+                  link={usageLink}
+                  variant="green"
+                  showQR={false}
+                />
+              </div>
 
               <div className="p-3 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/20">
                 <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-                  Scan this QR code with any compatible client (V2RayNG, Shadowrocket) for instant connection.
+                  Share the <strong>Usage Link</strong> with the client so they can track their data without logging in.
                 </p>
               </div>
             </>

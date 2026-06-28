@@ -2,11 +2,6 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import {
-  modalVariants,
-  overlayVariants,
-  buttonVariants,
-} from "@/lib/animation-variants";
 
 interface PaymentUnavailableModalProps {
   isOpen: boolean;
@@ -22,92 +17,60 @@ export default function PaymentUnavailableModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          <motion.div
-            variants={overlayVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            onClick={onClose}
-          />
-
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={onClose}
+          />
+
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="relative bg-card border border-border rounded-xl shadow-xl p-8 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
           >
-            <motion.div
-              variants={modalVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full pointer-events-auto"
-              onClick={(e) => e.stopPropagation()}
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              aria-label="Close modal"
             >
-              {/* close btn */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+              <X size={18} />
+            </button>
+
+            {/* Content */}
+            <h2 className="text-xl font-semibold mb-3">
+              Online Payment Unavailable
+            </h2>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+              Our online payment system is currently under maintenance. Please
+              contact our support team to get your package set up.
+            </p>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={onContactSupport}
+                className="flex-1 py-2.5 bg-primary text-primary-foreground font-medium text-sm rounded-lg hover:opacity-90 transition-opacity"
+              >
+                Contact Support
+              </button>
+              <button
                 onClick={onClose}
-                className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Close modal"
+                className="flex-1 py-2.5 border border-border text-foreground font-medium text-sm rounded-lg hover:bg-accent transition-colors"
               >
-                <X size={24} />
-              </motion.button>
-
-              {/* title */}
-              <motion.h2
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-                className="text-2xl font-bold text-gray-900 mb-4"
-              >
-                Pay Online Unavailable
-              </motion.h2>
-
-              {/* message */}
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.15 }}
-                className="text-gray-600 mb-8 leading-relaxed"
-              >
-                Our Pay Online feature is currently under maintenance. Please
-                contact our support team to get your package.
-              </motion.p>
-
-              {/* btns */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-                className="flex flex-col gap-4 md:flex-row md:gap-3"
-              >
-                <motion.button
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
-                  onClick={onContactSupport}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-3 rounded-full hover:shadow-lg hover:shadow-orange-500/30 transition-all"
-                >
-                  Contact Support
-                </motion.button>
-                <motion.button
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
-                  onClick={onClose}
-                  className="flex-1 bg-gray-100 text-gray-700 font-semibold py-3 rounded-full hover:bg-gray-200 transition-all"
-                >
-                  Close
-                </motion.button>
-              </motion.div>
-            </motion.div>
+                Close
+              </button>
+            </div>
           </motion.div>
-        </>
+        </div>
       )}
     </AnimatePresence>
   );

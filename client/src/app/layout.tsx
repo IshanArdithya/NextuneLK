@@ -1,22 +1,19 @@
 import type React from "react";
 import type { Metadata } from "next";
-import { Lexend, Source_Sans_3 } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import ClientLayout from "./ClientLayout";
 
-const lexend = Lexend({
-  variable: "--font-lexend",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-});
-
-const sourceSans = Source_Sans_3({
-  variable: "--font-source-sans",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "NextuneLK",
-  description: "View your current data usage and account status",
+  title: "NextuneLK — Fast, Private VPN",
+  description:
+    "NextuneLK delivers encrypted, high-speed VPN tunnels with zero logs. Check your usage, manage your connection, and stay private.",
 };
 
 export default function RootLayout({
@@ -26,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${lexend.variable} ${sourceSans.variable} antialiased font-sans`}>
+      <body className={`${inter.variable} font-sans`}>
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
