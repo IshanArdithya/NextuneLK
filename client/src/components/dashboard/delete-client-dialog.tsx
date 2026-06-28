@@ -59,6 +59,7 @@ export default function DeleteClientDialog({
       await api.post("/admin/client/delete", {
         inboundId: inboundId.toString(),
         clientId: client.id,
+        email: client.email,
       });
 
       toast({

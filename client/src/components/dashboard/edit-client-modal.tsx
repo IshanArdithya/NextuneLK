@@ -161,6 +161,7 @@ export default function EditClientModal({
       const submitData = {
         inboundId: inboundId.toString(),
         clientId: client.id,
+        originalEmail: client.email,
         xuiEmail,
         totalGB: parseFloat(totalGB) || 0,
         limitIp: parseInt(limitIp) || 0,

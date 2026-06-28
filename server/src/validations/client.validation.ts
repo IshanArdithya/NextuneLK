@@ -35,6 +35,7 @@ export const updateClientSchema = z.object({
         subId: z.string().optional(),
         tgId: z.number().optional(),
         reset: z.number().optional(),
+        originalEmail: z.string().min(1).optional(),
     })
 });
 
@@ -42,6 +43,7 @@ export const deleteClientSchema = z.object({
     body: z.object({
         inboundId: z.string().min(1, "Inbound ID is required"),
         clientId: z.string().min(1, "Client ID is required"),
+        email: z.string().min(1, "Client email is required").optional(),
     })
 });
 

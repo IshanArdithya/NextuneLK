@@ -24,12 +24,16 @@ export const updateClient = catchAsync(async (req: any, res: any) => {
 });
 
 export const deleteClient = catchAsync(async (req: any, res: any) => {
-  const { inboundId, clientId } = req.body;
+  const { inboundId, clientId, email } = req.body;
   if (!inboundId || !clientId) {
     throw new AppError("inboundId and clientId are required", 400);
   }
 
-  await ClientService.deleteClientConfig(inboundId, clientId);
+  await ClientService.deleteClientConfig(
+    parseInt(inboundId, 10),
+    clientId,
+    email
+  );
 
   return res.json({ success: true, msg: "Client deleted successfully" });
 });
